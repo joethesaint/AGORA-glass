@@ -35,3 +35,19 @@ The agent features "Skin in the Game." The creator posts a USDC performance bond
 This PoC is being developed for the **Agora Agents Hackathon** (hosted by Canteen and Circle). It directly addresses:
 * **RFB 01 (Perpetual Futures Trading Agent):** 24/7 monitoring and autonomous liquidation protection.
 * **RFB 06 (Social Trading Intelligence):** Providing verifiable, accountable AI logic rather than blind copy-trading.
+
+
+```mcp
+{
+  "mcpServers": {
+    "notebooklm": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@roomi-fields/notebooklm-mcp"
+      ]
+    }
+  }
+}
+
+```
