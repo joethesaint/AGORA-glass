@@ -28,9 +28,22 @@ async def test_perp_monitor_mock_publish(monkeypatch):
 
     monkeypatch.setattr(asyncio, "sleep", mock_sleep)
 
-    await monitor.run()
+    # Start monitor in background
+    monitor_task = asyncio.create_task(monitor.run())
 
-    assert len(received_updates) == 3
+    # Wait until we have 3 updates
+    for _ in range(50):  # timeout after 5s
+        if len(received_updates) >= 3:
+            break
+        await asyncio.sleep(0.1)
+
+    monitor_task.cancel()
+    try:
+        await monitor_task
+    except asyncio.CancelledError:
+        pass
+
+    assert len(received_updates) >= 3
     assert received_updates[0].symbol == "BTC-PERP"
     assert received_updates[0].margin_ratio == 0.15
     assert received_updates[1].margin_ratio == 0.13

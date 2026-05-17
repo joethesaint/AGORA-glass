@@ -13,14 +13,29 @@ class PerpMonitor(BaseComponent):
 
         if self.mode == "mock":
             # Mock data sequence
-            for m in [0.15, 0.13, 0.09]:
-                self.logger.info(f"TICK: Margin {m:.2%}")
-                await self.publish(
-                    PositionUpdate(symbol="BTC-PERP", margin_ratio=m, leverage=5.0)
-                )
-                await asyncio.sleep(1)
+            while True:
+                for m in [0.15, 0.13, 0.09]:
+                    self.logger.info(f"TICK: Margin {m:.2%}")
+                    await self.publish(
+                        PositionUpdate(
+                            symbol="BTC-PERP",
+                            margin_ratio=m,
+                            leverage=5.0,
+                            account="0xMOCK_USER",
+                        )
+                    )
+                    await asyncio.sleep(5)
+        elif self.mode == "live":
+            await self._run_live()
         else:
-            self.logger.warning("Live mode not implemented yet.")
+            self.logger.error(f"Unknown mode: {self.mode}")
+
+    async def _run_live(self):
+        self.logger.info("Initializing Hyperliquid API client...")
+        # Implementation will go here using hyperliquid-python-sdk
+        self.logger.warning("Live mode logic not yet fully implemented.")
+        while True:
+            await asyncio.sleep(60)
 
 
 # Monitor is started in main.py
