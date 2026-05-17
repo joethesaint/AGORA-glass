@@ -22,8 +22,12 @@ async def main():
 
     # Register signal handlers
     loop = asyncio.get_running_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, handle_exit)
+    try:
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            loop.add_signal_handler(sig, handle_exit)
+    except NotImplementedError:
+        # add_signal_handler is not implemented on Windows
+        pass
 
     # Start the monitor in a background task
     monitor_task = asyncio.create_task(monitor.run())

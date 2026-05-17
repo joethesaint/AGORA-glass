@@ -6,12 +6,23 @@ from src.errors import safe_handler
 
 
 class ReasoningTracer(BaseComponent):
+    """Generates verifiable reasoning traces for critical risk decisions.
+
+    These traces are hashed and eventually pinned to the Arc blockchain.
+    """
+
     def __init__(self):
+        """Initializes the tracer and subscribes to RiskVerdict events."""
         super().__init__("ReasoningTracer")
         self.subscribe(RiskVerdict, self.on_risk_verdict)
 
     @safe_handler("ReasoningTracer")
     async def on_risk_verdict(self, event: RiskVerdict):
+        """Processes critical risk verdicts to generate a reasoning trace.
+
+        Args:
+            event: The RiskVerdict event to process.
+        """
         if event.status == "CRITICAL":
             trace_event = self.create_trace(event)
             self.logger.info(
@@ -20,14 +31,26 @@ class ReasoningTracer(BaseComponent):
             await self.publish(trace_event)
 
     def create_trace(self, event: RiskVerdict) -> ReasoningTrace:
+        """Creates a deterministic reasoning trace and hash.
+
+        Args:
+            event: The RiskVerdict event providing the context.
+
+        Returns:
+            ReasoningTrace: The structured trace event with hash and evidence.
+        """
         agent_id = "antigravity_sentinel_v0.1"
         action = "RESCUE_INITIATED"
         rescue_amount = 500.0  # Default mock amount
-        
+
         evidence = [
-            f"Margin ratio {event.margin:.4f} is below 12%" if event.margin < 0.12 else f"Leverage {event.leverage:.1f}x exceeds 5x",
+            (
+                f"Margin ratio {event.margin:.4f} is below 12%"
+                if event.margin < 0.12
+                else f"Leverage {event.leverage:.1f}x exceeds 5x"
+            ),
             f"Symbol: {event.symbol}",
-            "Autonomous sentinel triggered rescue protocol"
+            "Autonomous sentinel triggered rescue protocol",
         ]
 
         # Payload for hashing (standardizing keys for transparency)
@@ -40,9 +63,9 @@ class ReasoningTracer(BaseComponent):
             "rescue_amount_usdc": rescue_amount,
             "evidence": evidence,
             "risk_rating": "CRITICAL",
-            "timestamp": event.timestamp
+            "timestamp": event.timestamp,
         }
-        
+
         # Deterministic JSON hash
         payload_json = json.dumps(payload, sort_keys=True)
         reason_hash = hashlib.sha256(payload_json.encode()).hexdigest()
@@ -57,7 +80,7 @@ class ReasoningTracer(BaseComponent):
             evidence=evidence,
             risk_rating="CRITICAL",
             reason_hash=f"0x{reason_hash}",
-            reasoning_text=payload_json  # Store full payload for verification
+            reasoning_text=payload_json,  # Store full payload for verification
         )
 
 

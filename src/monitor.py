@@ -7,12 +7,27 @@ from src.events import PositionUpdate
 
 
 class PerpMonitor(BaseComponent):
-    def __init__(self, mode="mock"):
+    """Monitors asset positions on the Hyperliquid exchange.
+
+    Supports both 'mock' and 'live' modes.
+
+    Attributes:
+        mode (str): The operational mode (mock or live).
+        target_address (str): The account address to monitor.
+    """
+
+    def __init__(self, mode: str = "mock"):
+        """Initializes the monitor with a mode and optional account address.
+
+        Args:
+            mode: The operational mode, either 'mock' or 'live'.
+        """
         super().__init__("PerpMonitor")
         self.mode = mode
         self.target_address = os.getenv("MONITOR_ACCOUNT")
 
     async def run(self):
+        """Starts the monitoring loop based on the current mode."""
         self.logger.info(f"Starting Hyperliquid monitor (mode: {self.mode})")
 
         if self.mode == "mock":
@@ -35,6 +50,7 @@ class PerpMonitor(BaseComponent):
             self.logger.error(f"Unknown mode: {self.mode}")
 
     async def _run_live(self):
+        """Internal loop for live monitoring using the Hyperliquid SDK."""
         self.logger.info("Initializing Hyperliquid API client...")
         if not self.target_address:
             self.logger.error("MONITOR_ACCOUNT not set. Cannot run live monitor.")
@@ -56,8 +72,6 @@ class PerpMonitor(BaseComponent):
                     p = pos["position"]
                     symbol = p["coin"]
                     # Calculate margin ratio (simplified for mock/structure)
-                    # Real calculation would involve entry price, mark price, etc.
-                    # For now, we use a placeholder or check if the SDK provides it
                     margin_ratio = float(p.get("marginRatio", 0.5))
                     leverage = float(p.get("leverage", 1.0))
 
