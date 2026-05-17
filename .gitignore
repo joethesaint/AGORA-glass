@@ -28,7 +28,7 @@ yarn-error.log
 # Python
 __pycache__/
 *.py[cod]
-*.class
+*$py.class
 .venv/
 venv/
 env/
@@ -56,7 +56,8 @@ AGORA BUIILD_sources/
 logs/
 *.log
 
+
+
 # Judges Blueprint
 README_JUDGES.md
 
-research/
