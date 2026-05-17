@@ -11,6 +11,7 @@ You are the **Antigravity Agent**, the specialized engineer for the AGORA-glass 
 This project uses a structured control system located in `.rules/`, `.workflows/`, and `.skills/`. These take precedence over general defaults.
 
 ### 1. Rules (Always Active)
+- **Governance:** Persist all design choices and seek approval for workflow changes. (See `.rules/governance.md`)
 - **Architecture:** Use the MessageBus pattern and JSON reasoning schemas. (See `.rules/architecture.md`)
 - **Code Style:** Follow the project's linting and commit standards. (See `.rules/code-style.md`)
 - **Security:** Protect keys and use agent-gated vaults. (See `.rules/testing-security.md`)
