@@ -43,16 +43,25 @@ class RiskEngine(BaseComponent):
         )
 
         is_critical = margin < dynamic_threshold or leverage > self.config.max_leverage
+        verdict = "CRITICAL" if is_critical else "SAFE"
+
+        self.logger.info(
+            "risk_verdict",
+            level=verdict,
+            margin_ratio=margin,
+            leverage=leverage,
+            account=event.account,
+            symbol=event.symbol,
+            vol_factor=vol_factor,
+            dynamic_threshold=dynamic_threshold,
+            thresholds_applied={
+                "base_critical": self.config.base_critical_threshold,
+                "max_leverage": self.config.max_leverage,
+                "volatility_multiplier": self.config.volatility_multiplier
+            }
+        )
 
         if is_critical:
-            reason = (
-                f"margin {margin:.2%} below dynamic threshold {dynamic_threshold:.2%}"
-                if margin < dynamic_threshold
-                else f"leverage {leverage} exceeds max {self.config.max_leverage}"
-            )
-            self.logger.warning(
-                f"CRITICAL: {event.symbol} {reason} (Vol Factor: {vol_factor:.2f})!"
-            )
             await self.publish(
                 RiskVerdict(
                     status="CRITICAL",
@@ -62,10 +71,6 @@ class RiskEngine(BaseComponent):
                     risk_rating=5,
                     account=event.account,
                 )
-            )
-        else:
-            self.logger.info(
-                f"Position {event.symbol} is safe (Margin: {margin:.2%}, Threshold: {dynamic_threshold:.2%})"
             )
 
 

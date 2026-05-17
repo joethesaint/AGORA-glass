@@ -26,7 +26,10 @@ class ReasoningTracer(BaseComponent):
         if event.status == "CRITICAL":
             trace_event = self.create_trace(event)
             self.logger.info(
-                f"Generated reasoning trace. Hash: {trace_event.reason_hash}"
+                "reasoning_trace_generated",
+                reason_hash=trace_event.reason_hash,
+                risk_rating=trace_event.risk_rating,
+                evidence_count=len(trace_event.evidence),
             )
             await self.publish(trace_event)
 

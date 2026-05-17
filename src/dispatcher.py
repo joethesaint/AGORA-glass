@@ -26,31 +26,42 @@ class RescueDispatcher(BaseComponent):
         self.subscribe(ReasoningTrace, self.on_reasoning_trace)
 
     async def on_reasoning_trace(self, event: ReasoningTrace):
-        self.logger.info(f"Received reasoning trace for {event.account}. Hash: {event.reason_hash}")
-        
+        self.logger.info(
+            "rescue_initiated",
+            amount_usdc=event.rescue_amount_usdc,
+            account=event.account,
+            reason_hash=event.reason_hash,
+        )
+
         # 1. On-Chain Proof (Glass-Box Pinning)
         tx_hash = await self.pin_to_arc(event.reason_hash)
-        
+
         # 2. Financial Action (Circle Gateway Rescue)
         await self.execute_circle_rescue(event.rescue_amount_usdc, event.account)
 
         # 3. Completion Notification
-        await self.publish(RescueComplete(
-            status="SUCCESS",
-            tx_hash=tx_hash or "0xSIMULATED_TX",
-            amount=event.rescue_amount_usdc
-        ))
+        self.logger.info(
+            "rescue_complete",
+            amount_usdc=event.rescue_amount_usdc,
+            final_tx_hash=tx_hash or "0xSIMULATED_TX",
+        )
+        await self.publish(
+            RescueComplete(
+                status="SUCCESS",
+                tx_hash=tx_hash or "0xSIMULATED_TX",
+                amount=event.rescue_amount_usdc,
+            )
+        )
 
     async def pin_to_arc(self, reason_hash: str) -> str:
         """Pins the reasoning hash to the Arc AttributionRegistry."""
         if not self.w3 or not self.account or not self.registry_address:
-            self.logger.info(f"[SIMULATION] Pinning hash {reason_hash} to Arc Network... [SUCCESS]")
+            self.logger.debug("simulating_arc_pin", reason_hash=reason_hash)
             await asyncio.sleep(0.2)
             return None
 
-        self.logger.info(f"Pinning hash {reason_hash} to Arc Network...")
         try:
-            # Minimal ABI for storeReason
+            # ... (ABI and contract setup)
             abi = [
                 {
                     "inputs": [{"name": "_hash", "type": "bytes32"}],
@@ -61,41 +72,42 @@ class RescueDispatcher(BaseComponent):
                 }
             ]
             contract = self.w3.eth.contract(address=self.registry_address, abi=abi)
-            
+
             # Note: reason_hash is a 0x-prefixed hex string from the Tracer
             hash_bytes = bytes.fromhex(reason_hash[2:])
-            
+
             nonce = self.w3.eth.get_transaction_count(self.account.address)
             # Use 18 decimals for native USDC gas as per docs
-            gas_price = self.w3.to_wei('0.01', 'mwei') # Example fixed price
-            
-            tx = contract.functions.storeReason(hash_bytes).build_transaction({
-                'from': self.account.address,
-                'nonce': nonce,
-                'gas': 100000,
-                'gasPrice': gas_price,
-                'chainId': 5042002
-            })
-            
-            signed_tx = self.w3.eth.account.sign_transaction(tx, private_key=self.private_key)
+            gas_price = self.w3.to_wei("0.01", "mwei")  # Example fixed price
+
+            tx = contract.functions.storeReason(hash_bytes).build_transaction(
+                {
+                    "from": self.account.address,
+                    "nonce": nonce,
+                    "gas": 100000,
+                    "gasPrice": gas_price,
+                    "chainId": 5042002,
+                }
+            )
+
+            signed_tx = self.w3.eth.account.sign_transaction(
+                tx, private_key=self.private_key
+            )
             tx_send = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-            
-            self.logger.info(f"Transaction sent! Hash: {tx_send.hex()}")
+
+            self.logger.info(
+                "reasoning_hash_stored", reason_hash=reason_hash, tx_hash=tx_send.hex()
+            )
             return tx_send.hex()
-            
+
         except Exception as e:
-            self.logger.error(f"Failed to pin hash to Arc: {e}")
+            self.logger.error("trace_pinning_failed", error_message=str(e))
             return None
 
     async def execute_circle_rescue(self, amount: float, recipient: str):
         """Executes the cross-chain rescue via Circle Gateway API."""
-        self.logger.info(f"Initiating Circle Gateway rescue: {amount} USDC to {recipient}...")
-        
         # For PoC, we simulate the API call to Circle Gateway
-        # In production, this would use httpx to call https://api.circle.com/v1/transfers
-        await asyncio.sleep(0.3) # Simulate <500ms latency
-        
-        self.logger.info("Circle Gateway: Sub-500ms rescue transfer COMPLETE.")
+        await asyncio.sleep(0.3)  # Simulate <500ms latency
 
 # Instantiate singleton
 dispatcher = RescueDispatcher()

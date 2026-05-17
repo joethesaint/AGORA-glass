@@ -7,11 +7,11 @@ Based on the review of the `dev_joe` branch objectives, the `src/` codebase, and
 | Component | Status | Remaining Work |
 | :--- | :--- | :--- |
 | **Message Bus & Events** | ✅ Implemented | Stable foundation in `src/bus.py` and `src/events.py`. |
-| **Risk Engine** | ⚠️ Scaffolded | `src/engine.py` has logic but uses hardcoded thresholds. Needs volatility integration. |
-| **Perp Monitor** | ⚠️ Partially Live | `src/monitor.py` has Hyperliquid logic but needs WebSocket stabilization. |
+| **Risk Engine** | ✅ Integrated | Dynamic thresholds implemented based on live market volatility (numpy). |
+| **Perp Monitor** | ✅ Live Ready | Real-time monitoring and volatility tracking via Hyperliquid SDK. |
 | **Reasoning Tracer** | ⚠️ Scaffolded | `src/tracer.py` creates traces. Hashing logic is deterministic. |
 | **Rescue Dispatcher** | ✅ Implemented | `src/dispatcher.py` now utilizes live SDKs for Arc and Circle. |
-| **Smart Contracts** | ✅ Infrastructure Ready | Hardhat setup, deployment scripts, and typechain generation complete. |
+| **Smart Contracts** | ✅ Infrastructure Ready | Hardhat setup, deployment scripts, and unit tests complete. |
 
 ---
 
@@ -32,5 +32,5 @@ Based on the review of the `dev_joe` branch objectives, the `src/` codebase, and
 
 ---
 
-**Project Completion:** ~45% (Infrastructure & Services Ready)
-**Current Focus:** Stabilizing Live Monitoring and Finalizing Contract Logic.
+**Project Completion:** ~60% (Core Engine & Data Feeds Live)
+**Current Focus:** Finalizing Smart Contract Business Logic & Frontend Dashboard.

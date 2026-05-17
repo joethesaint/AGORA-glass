@@ -1,45 +1,118 @@
 import asyncio
-import random
+import numpy as np
+from collections import deque
 from src.base import BaseComponent
 from src.events import MarketVolatilityUpdate
+from hyperliquid.info import Info
+from hyperliquid.utils import constants
 
 
 class MarketDataMonitor(BaseComponent):
     """
-    Monitor for market-wide data, such as volatility.
-    In production, this would fetch data from Hyperliquid or an external oracle.
+    Monitor for live market data, specifically mid-price volatility.
+    Calculates realized volatility using a rolling window of mid-prices
+    fetched from the Hyperliquid API.
     """
 
-    def __init__(self, mode="mock"):
+    def __init__(self, mode="mock", window_size=30):
+        """
+        Initializes the monitor.
+        :param mode: "mock" or "live"
+        :param window_size: Number of observations to use for volatility calculation.
+        """
         super().__init__("MarketDataMonitor")
         self.mode = mode
+        self.window_size = window_size
+        # Store price history per symbol: Symbol -> Deque[mid_price]
+        self.price_history = {}
+        self._info = Info(constants.TESTNET_API_URL, skip_ws=True)
 
     async def run(self):
-        self.logger.info(f"Starting MarketData monitor (mode: {self.mode})")
+        self.logger.info("market_monitor_started", mode=self.mode)
 
         if self.mode == "mock":
-            # Mock volatility updates
-            symbols = ["BTC-PERP", "ETH-PERP", "SOL-PERP"]
-            while True:
-                for symbol in symbols:
-                    # Random volatility factor between 0.0 and 1.0
-                    vol_factor = random.uniform(0.1, 0.8)
-                    self.logger.info(f"MARKET: {symbol} Volatility {vol_factor:.2f}")
-                    await self.publish(
-                        MarketVolatilityUpdate(
-                            symbol=symbol,
-                            volatility_factor=vol_factor,
-                        )
-                    )
-                await asyncio.sleep(10)
-        elif self.mode == "live":
-            await self._run_live()
+            await self._run_mock()
         else:
-            self.logger.error(f"Unknown mode: {self.mode}")
+            await self._run_live()
+
+    async def _run_mock(self):
+        """Mock volatility updates for testing."""
+        symbols = ["BTC-PERP", "ETH-PERP"]
+        import random
+
+        while True:
+            for symbol in symbols:
+                vol_factor = random.uniform(0.1, 0.5)
+                self.logger.debug("mock_volatility_update", symbol=symbol, vol=vol_factor)
+                await self.publish(
+                    MarketVolatilityUpdate(
+                        symbol=symbol,
+                        volatility_factor=vol_factor,
+                    )
+                )
+            await asyncio.sleep(10)
 
     async def _run_live(self):
-        self.logger.warning("Live market data monitoring not yet implemented. Falling back to mock.")
-        await self.run()
+        """Live volatility monitoring loop."""
+        self.logger.info("live_volatility_tracking_start")
+        
+        while True:
+            try:
+                # Fetch all mid prices
+                mids = self._info.all_mids()
+                
+                # We only care about major assets for now
+                target_assets = ["BTC", "ETH", "SOL"]
+                
+                for asset in target_assets:
+                    mid_price = float(mids.get(asset, 0))
+                    if mid_price == 0:
+                        continue
+                    
+                    symbol = f"{asset}-PERP"
+                    if symbol not in self.price_history:
+                        self.price_history[symbol] = deque(maxlen=self.window_size)
+                    
+                    self.price_history[symbol].append(mid_price)
+                    
+                    if len(self.price_history[symbol]) >= 5:
+                        vol_factor = self._calculate_volatility_factor(symbol)
+                        self.logger.info(
+                            "live_volatility_update", 
+                            symbol=symbol, 
+                            vol_factor=vol_factor,
+                            price=mid_price
+                        )
+                        await self.publish(
+                            MarketVolatilityUpdate(
+                                symbol=symbol,
+                                volatility_factor=vol_factor,
+                            )
+                        )
+
+                # Poll every 2 seconds for granular volatility
+                await asyncio.sleep(2)
+                
+            except Exception as e:
+                self.logger.error("volatility_fetch_failure", error=str(e))
+                await asyncio.sleep(5)
+
+    def _calculate_volatility_factor(self, symbol: str) -> float:
+        """
+        Calculates a normalized volatility factor (0.0 to 1.0)
+        based on the standard deviation of logarithmic returns.
+        """
+        prices = list(self.price_history[symbol])
+        # Calculate log returns
+        returns = np.diff(np.log(prices))
+        # Standard deviation of returns
+        std_dev = np.std(returns)
+        
+        # Normalize to 0.0 - 1.0 range
+        # Typical crypto 2-second log return std dev ranges from 0.0001 to 0.01
+        # We'll use a conservative scaling
+        normalized_vol = np.clip(std_dev * 100, 0.0, 1.0)
+        return float(normalized_vol)
 
 
 # Component instance

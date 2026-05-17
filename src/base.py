@@ -1,22 +1,7 @@
 import os
-import logging
-import sys
 from src.bus import bus
 from src.events import BaseEvent
-
-# Create logs directory if it doesn't exist
-os.makedirs("logs", exist_ok=True)
-
-# Configure logging once
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler("logs/agent.log", encoding="utf-8"),
-    ],
-)
-
+from src.log_config import get_logger
 
 class BaseComponent:
     """Base class for all agent components.
@@ -25,7 +10,7 @@ class BaseComponent:
 
     Attributes:
         name (str): The name of the component for logging purposes.
-        logger (logging.Logger): Logger instance for the component.
+        logger (structlog.BoundLogger): Structured logger instance.
         bus (MessageBus): The global message bus instance.
     """
 
@@ -36,9 +21,9 @@ class BaseComponent:
             name: The display name for this component.
         """
         self.name = name
-        self.logger = logging.getLogger(name)
+        self.logger = get_logger(name)
         self.bus = bus
-        self.logger.debug(f"Component '{name}' initialized.")
+        self.logger.debug("component_initialized", component=name)
 
     def subscribe(self, event_type: type[BaseEvent], callback: callable):
         """Subscribes to a specific event type on the global bus.
