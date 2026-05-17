@@ -78,10 +78,10 @@ flowchart TD
     Vault -.->|funds managed by| Wallets
     UI -.->|read events| Registry
 
-    style OffChain fill:#fdfcf0,stroke:#d4a017,stroke-width:2px
-    style OnChain fill:#f0f7ff,stroke:#0052ff,stroke-width:2px
-    style CircleStack fill:#f5f0ff,stroke:#6700eb,stroke-width:2px
-    style Frontend fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style OffChain fill:none,stroke:#d4a017,stroke-width:2px,stroke-dasharray:5 5,color:#000
+    style OnChain fill:none,stroke:#0052ff,stroke-width:2px,stroke-dasharray:5 5,color:#000
+    style CircleStack fill:none,stroke:#6700eb,stroke-width:2px,stroke-dasharray:5 5,color:#000
+    style Frontend fill:none,stroke:#333,stroke-width:2px,stroke-dasharray:5 5,color:#000
 ```
 
 ---
@@ -122,7 +122,7 @@ This project directly addresses the following tracks:
 * **RFB 01 (Perpetual Futures Trading Agent):** 24/7 monitoring and autonomous liquidation protection.
 * **RFB 06 (Social Trading Intelligence):** Providing verifiable "Reasoning-Traces" and slash-bonded copy-trading rather than blind execution.
 
-#### ���� Hackathon Strategy (Agora x Circle)
+#### 🚀 Hackathon Strategy (Agora x Circle)
 
 | Judging Criterion (weight) | How AGORA-glass Scores |
 |---------------------------|------------------------|
