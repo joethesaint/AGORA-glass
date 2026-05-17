@@ -3,6 +3,8 @@ import signal
 import argparse
 from src.monitor import PerpMonitor
 from src.market_monitor import market_monitor
+from src.ws_server import ws_server
+from src.analytics import analytics
 from src.log_config import configure_logging, get_logger
 
 # Initialize Structured Logging
@@ -48,19 +50,21 @@ async def main():
     # Start monitor tasks
     perp_task = asyncio.create_task(perp_monitor.run())
     market_task = asyncio.create_task(market_monitor.run())
+    ws_task = asyncio.create_task(ws_server.run())
     stop_task = asyncio.create_task(stop_event.wait())
 
-    logger.info("sentinel_active", status="monitoring")
+    logger.info("sentinel_active", status="monitoring", ws_port=8765)
 
     try:
         # Run until stop_event is set or monitors finish
         done, pending = await asyncio.wait(
-            [perp_task, market_task, stop_task],
+            [perp_task, market_task, ws_task, stop_task],
             return_when=asyncio.FIRST_COMPLETED
         )
     finally:
         perp_task.cancel()
         market_task.cancel()
+        ws_task.cancel()
         stop_task.cancel()
         logger.info("agent_shutdown_complete")
 
