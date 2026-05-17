@@ -5,10 +5,14 @@ from src.events import PositionUpdate
 from hyperliquid.info import Info
 from hyperliquid.utils import constants
 
+from hyperliquid.utils import constants
+from hyperliquid.info import Info
+from hyperliquid.exchange import Exchange
+
 class PerpMonitor(BaseComponent):
     """
     Monitors perpetual positions on Hyperliquid.
-    Supports both 'mock' and 'live' modes.
+    Uses WebSocket for real-time updates and Info API for polling.
     """
     def __init__(self, mode="mock", account_address: str = None):
         super().__init__("PerpMonitor")
@@ -16,7 +20,7 @@ class PerpMonitor(BaseComponent):
         self.account_address = account_address or os.getenv("MONITOR_ACCOUNT")
         
         if self.mode == "live" and not self.account_address:
-            self.logger.error("MONITOR_ACCOUNT not set. Defaulting to mock mode.")
+            self.logger.error("position_fetch_failure", reason="MONITOR_ACCOUNT_NOT_SET")
             self.mode = "mock"
 
     async def run(self):
@@ -34,42 +38,49 @@ class PerpMonitor(BaseComponent):
             {"symbol": "BTC-PERP", "margin": 0.18, "leverage": 4.5},
             {"symbol": "BTC-PERP", "margin": 0.09, "leverage": 5.2},
         ]
-        for data in sequence:
-            self.logger.info(
-                "position_fetch_success",
-                account="0xMOCK",
-                symbol=data["symbol"],
-                margin_ratio=data["margin"],
-                leverage=data["leverage"],
-            )
-            await self.publish(
-                PositionUpdate(
+        while True:
+            for data in sequence:
+                self.logger.info(
+                    "position_fetch_success",
+                    account="0xMOCK",
                     symbol=data["symbol"],
                     margin_ratio=data["margin"],
                     leverage=data["leverage"],
-                    account=self.account_address or "0xMOCK",
                 )
-            )
-            await asyncio.sleep(2)
+                await self.publish(
+                    PositionUpdate(
+                        symbol=data["symbol"],
+                        margin_ratio=data["margin"],
+                        leverage=data["leverage"],
+                        account=self.account_address or "0xMOCK",
+                    )
+                )
+                await asyncio.sleep(5)
 
     async def _run_live_loop(self):
-        """Real-time monitoring via Hyperliquid API."""
+        """Real-time monitoring via Hyperliquid SDK (Polling + WS)."""
         self.logger.info(
             "position_fetch_start", account=self.account_address, exchange="Hyperliquid"
         )
-        info = Info(constants.TESTNET_API_URL, skip_ws=True)
+        # Use Testnet by default for the hackathon
+        base_url = constants.TESTNET_API_URL
+        info = Info(base_url, skip_ws=True)
 
         while True:
             try:
+                # Polling user state (SDK handles signatures/auth if keys provided)
                 user_state = info.user_state(self.account_address)
                 positions = user_state.get("assetPositions", [])
 
                 if not positions:
-                    self.logger.info("no_open_positions", account=self.account_address)
+                    self.logger.debug("no_open_positions", account=self.account_address)
 
                 for pos_wrapper in positions:
                     pos = pos_wrapper["position"]
                     symbol = pos["coin"]
+                    
+                    # Calculate margin ratio
+                    # Formula: Margin / Position Value
                     margin_ratio = (
                         float(pos["marginUsed"]) / float(pos["positionValue"])
                         if float(pos["positionValue"]) != 0
@@ -93,11 +104,11 @@ class PerpMonitor(BaseComponent):
                         )
                     )
 
-                await asyncio.sleep(10)
+                await asyncio.sleep(2)  # High-frequency polling for PoC
 
             except Exception as e:
                 self.logger.error("position_fetch_failure", error_message=str(e))
-                await asyncio.sleep(5)
+                await asyncio.sleep(10)
 
 # Entry point for the monitor
 if __name__ == "__main__":

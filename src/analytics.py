@@ -1,76 +1,66 @@
-import polars as pl
-from typing import Dict, List, Optional
-from datetime import datetime
-import logging
+import time
+from src.base import BaseComponent
+from src.events import ReasoningTrace, RescueComplete, WSSignal
 
-class RiskAnalytics:
+class GlassBoxAnalytics(BaseComponent):
     """
-    High-performance risk analytics using Polars.
-    Calculates rolling volatility, drawdowns, and risk trends from event streams.
+    Tracks and publishes real-time safety metrics for the AGORA-glass dashboard.
+    Demonstrates 'Agentic Sophistication' to hackathon judges.
     """
 
-    def __init__(self, window_size: int = 100):
-        self.logger = logging.getLogger("RiskAnalytics")
-        self.window_size = window_size
-        # Store raw history in a simple list, then convert to Polars for computation
-        self.history: List[Dict] = []
-        self.df: Optional[pl.DataFrame] = None
-
-    def add_data_point(self, symbol: str, margin_ratio: float, leverage: float):
-        """Adds a new data point to the history."""
-        self.history.append({
-            "timestamp": datetime.now(),
-            "symbol": symbol,
-            "margin_ratio": margin_ratio,
-            "leverage": leverage
-        })
+    def __init__(self):
+        super().__init__("AnalyticsEngine")
+        self.total_rescued_usdc = 0.0
+        self.rescue_count = 0
+        self.latency_history = []
+        self.start_time = time.time()
         
-        # Prune history to keep it efficient
-        if len(self.history) > self.window_size * 2:
-            self.history = self.history[-self.window_size:]
+        # In-flight traces to measure latency
+        self._pending_traces = {} # reason_hash -> timestamp
 
-    def get_rolling_stats(self, symbol: str) -> Dict:
-        """
-        Computes rolling statistics for a symbol using Polars.
-        Returns mean margin, max leverage, and volatility (std dev).
-        """
-        if not self.history:
-            return {}
+        # Subscribe to signals
+        self.subscribe(ReasoningTrace, self.on_trace)
+        self.subscribe(RescueComplete, self.on_rescue)
 
-        # Convert to Polars DataFrame
-        df = pl.DataFrame(self.history).filter(pl.col("symbol") == symbol)
-        
-        if df.is_empty():
-            return {}
+    async def on_trace(self, event: ReasoningTrace):
+        """Track the start of a rescue cycle."""
+        self._pending_traces[event.reason_hash] = time.time()
+        await self._publish_metrics()
 
-        # Perform high-performance aggregations
-        stats = df.select([
-            pl.col("margin_ratio").mean().alias("avg_margin"),
-            pl.col("margin_ratio").std().alias("margin_volatility"),
-            pl.col("leverage").max().alias("max_leverage"),
-            pl.col("margin_ratio").count().alias("sample_count")
-        ]).to_dicts()[0]
+    async def on_rescue(self, event: RescueComplete):
+        """Finalize rescue metrics on completion."""
+        if event.status == "SUCCESS":
+            self.total_rescued_usdc += event.amount
+            self.rescue_count += 1
+            
+            # Calculate latency (Glass-Box Performance)
+            start_ts = self._pending_traces.pop(event.reason_hash, None)
+            if start_ts:
+                latency = (time.time() - start_ts) * 1000 # ms
+                self.latency_history.append(latency)
+                self.logger.info("rescue_latency_measured", 
+                                 reason_hash=event.reason_hash, 
+                                 latency_ms=round(latency, 2))
 
-        return stats
+        await self._publish_metrics()
 
-    def is_trend_deteriorating(self, symbol: str, threshold: float = -0.05) -> bool:
-        """
-        Detects if the margin ratio is trending downwards using linear regression or simple delta.
-        Returns True if the trend is negative and exceeds the threshold.
-        """
-        if len(self.history) < 10:
-            return False
+    async def _publish_metrics(self):
+        """Broadcasts aggregated analytics to the WebSocket bridge."""
+        avg_latency = sum(self.latency_history) / len(self.latency_history) if self.latency_history else 0
+        uptime = time.time() - self.start_time
 
-        df = pl.DataFrame(self.history).filter(pl.col("symbol") == symbol)
-        if len(df) < 10:
-            return False
+        metrics = {
+            "total_rescued_usdc": self.total_rescued_usdc,
+            "rescue_count": self.rescue_count,
+            "avg_latency_ms": round(avg_latency, 2),
+            "protection_uptime_sec": int(uptime),
+            "agent_status": "ACTIVE"
+        }
 
-        # Calculate delta between recent and older window
-        recent = df.tail(5).select(pl.col("margin_ratio").mean()).item()
-        older = df.head(5).select(pl.col("margin_ratio").mean()).item()
-        
-        delta = recent - older
-        return delta < threshold
+        await self.publish(WSSignal(
+            event_type="ANALYTICS_UPDATE",
+            payload=metrics
+        ))
 
-# Singleton instance
-analytics = RiskAnalytics()
+# Instantiate singleton
+analytics = GlassBoxAnalytics()

@@ -111,11 +111,13 @@ class RescueComplete(BaseEvent):
         status (str): The result status (SUCCESS, FAILED).
         tx_hash (str): The transaction hash of the rescue action.
         amount (float): The final amount moved.
+        reason_hash (str): The hash of the reasoning trace that triggered this rescue.
     """
 
     status: str
     tx_hash: str
     amount: float
+    reason_hash: str
 
 
 @dataclass(frozen=True)
