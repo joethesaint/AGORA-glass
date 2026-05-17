@@ -39,3 +39,15 @@ dist/
 build/
 .pdm-build/
 .pytest_cache/
+_sources/
+AGORA_build_sources/
+
+# Hackathon
+HACKATHON.md
+ARCHITECTURE.md
+CONTROLS.md
+arc_context.md
+agent_loop.py
+
+# Private Research Sources
+AGORA BUIILD_sources/
