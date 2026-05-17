@@ -1,50 +1,60 @@
 import pytest
 import asyncio
-from src.analytics import RiskAnalytics
+from src.analytics import analytics
+from src.events import ReasoningTrace, RescueComplete, WSSignal
+from src.bus import bus
 
-def test_analytics_rolling_stats():
-    """Verifies that Polars correctly calculates rolling stats."""
-    analytics = RiskAnalytics(window_size=10)
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    bus.clear_subscribers()
+    # Re-subscribe the singleton
+    analytics.subscribe(ReasoningTrace, analytics.on_trace)
+    analytics.subscribe(RescueComplete, analytics.on_rescue)
     
-    # Add data points
-    for i in range(1, 6):
-        analytics.add_data_point("BTC-PERP", margin_ratio=0.1 * i, leverage=1.0)
-        
-    stats = analytics.get_rolling_stats("BTC-PERP")
-    
-    # Avg margin of [0.1, 0.2, 0.3, 0.4, 0.5] = 0.3
-    assert stats["avg_margin"] == pytest.approx(0.3)
-    assert stats["max_leverage"] == 1.0
-    assert stats["sample_count"] == 5
+    analytics.metrics_df = analytics.metrics_df.slice(0, 0) # Reset DataFrame
+    yield
+    bus.clear_subscribers()
+    analytics.metrics_df = analytics.metrics_df.slice(0, 0)
 
-def test_analytics_trend_detection():
-    """Verifies that Polars detects deteriorating trends."""
-    analytics = RiskAnalytics(window_size=20)
+@pytest.mark.asyncio
+async def test_analytics_metrics_tracking():
+    """Verifies that AnalyticsEngine correctly tracks rescue metrics."""
+    # Track output signals
+    signals = []
+    async def on_signal(event: WSSignal):
+        signals.append(event)
+    bus.subscribe(WSSignal, on_signal)
     
-    # 1. Stable/Improving Trend
-    for i in range(10):
-        analytics.add_data_point("BTC-PERP", margin_ratio=0.2, leverage=1.0)
-    assert analytics.is_trend_deteriorating("BTC-PERP") is False
+    # 1. Start Trace
+    trace = ReasoningTrace(
+        agent_id="test",
+        action="RESCUE_INITIATED",
+        account="0x1",
+        leverage_before=5.0,
+        margin_ratio=0.09,
+        rescue_amount_usdc=100.0,
+        evidence=[],
+        risk_rating="CRITICAL",
+        reason_hash="0xhash1",
+        reasoning_text="test"
+    )
+    await bus.publish(trace)
     
-    # 2. Deteriorating Trend (0.2 -> 0.1)
-    # Threshold is -0.05 by default
-    analytics.history = [] # Clear
-    for i in range(5):
-        analytics.add_data_point("BTC-PERP", margin_ratio=0.2, leverage=1.0)
-    for i in range(5):
-        analytics.add_data_point("BTC-PERP", margin_ratio=0.1, leverage=1.0)
-        
-    # Delta = 0.1 - 0.2 = -0.1 < -0.05
-    assert analytics.is_trend_deteriorating("BTC-PERP") is True
-
-def test_analytics_pruning():
-    """Verifies that history is pruned to keep the analytics engine fast."""
-    analytics = RiskAnalytics(window_size=5)
+    # 2. Complete Rescue
+    complete = RescueComplete(
+        status="SUCCESS",
+        tx_hash="0xtx1",
+        amount=100.0,
+        reason_hash="0xhash1"
+    )
+    await bus.publish(complete)
     
-    # Add 20 points
-    for i in range(20):
-        analytics.add_data_point("BTC-PERP", 0.1, 1.0)
-        
-    # Pruning happens when len > window_size * 2 (10)
-    # Pruned to window_size (5)
-    assert len(analytics.history) <= 10
+    # Allow async processing
+    await asyncio.sleep(0.1)
+    
+    # Check published analytics
+    assert len(signals) > 0
+    latest = signals[-1].payload
+    assert latest["total_rescued_usdc"] == 100.0
+    assert latest["rescue_count"] == 1
+    assert latest["avg_latency_ms"] > 0

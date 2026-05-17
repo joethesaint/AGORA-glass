@@ -1,21 +1,26 @@
 import time
+import polars as pl
+from datetime import datetime
 from src.base import BaseComponent
 from src.events import ReasoningTrace, RescueComplete, WSSignal
 
 class GlassBoxAnalytics(BaseComponent):
     """
     Tracks and publishes real-time safety metrics for the AGORA-glass dashboard.
-    Demonstrates 'Agentic Sophistication' to hackathon judges.
+    Demonstrates 'Agentic Sophistication' using Polars for high-performance analytics.
     """
 
     def __init__(self):
         super().__init__("AnalyticsEngine")
-        self.total_rescued_usdc = 0.0
-        self.rescue_count = 0
-        self.latency_history = []
-        self.start_time = time.time()
         
-        # In-flight traces to measure latency
+        # Initialize Polars DataFrames for tracking
+        self.metrics_df = pl.DataFrame({
+            "timestamp": pl.Series([], dtype=pl.Datetime),
+            "amount": pl.Series([], dtype=pl.Float64),
+            "latency_ms": pl.Series([], dtype=pl.Float64)
+        })
+        
+        self.start_time = time.time()
         self._pending_traces = {} # reason_hash -> timestamp
 
         # Subscribe to signals
@@ -25,38 +30,48 @@ class GlassBoxAnalytics(BaseComponent):
     async def on_trace(self, event: ReasoningTrace):
         """Track the start of a rescue cycle."""
         self._pending_traces[event.reason_hash] = time.time()
-        await self._publish_metrics()
 
     async def on_rescue(self, event: RescueComplete):
-        """Finalize rescue metrics on completion."""
+        """Finalize rescue metrics on completion using Polars."""
+        self.logger.info("rescue_received", rescue_event=event)
+        latency = None
         if event.status == "SUCCESS":
-            self.total_rescued_usdc += event.amount
-            self.rescue_count += 1
-            
-            # Calculate latency (Glass-Box Performance)
             start_ts = self._pending_traces.pop(event.reason_hash, None)
             if start_ts:
                 latency = (time.time() - start_ts) * 1000 # ms
-                self.latency_history.append(latency)
-                self.logger.info("rescue_latency_measured", 
-                                 reason_hash=event.reason_hash, 
-                                 latency_ms=round(latency, 2))
+            
+            # Append new record to Polars DataFrame
+            new_record = pl.DataFrame({
+                "timestamp": [datetime.fromtimestamp(event.timestamp)],
+                "amount": [event.amount],
+                "latency_ms": [latency]
+            })
+            self.metrics_df = pl.concat([self.metrics_df, new_record])
+            
+            self.logger.info("rescue_recorded", amount=event.amount, latency_ms=latency)
 
         await self._publish_metrics()
 
     async def _publish_metrics(self):
-        """Broadcasts aggregated analytics to the WebSocket bridge."""
-        avg_latency = sum(self.latency_history) / len(self.latency_history) if self.latency_history else 0
-        uptime = time.time() - self.start_time
+        """Broadcasts aggregated analytics via Polars to the WebSocket bridge."""
+        if self.metrics_df.is_empty():
+            metrics = {
+                "total_rescued_usdc": 0.0,
+                "rescue_count": 0,
+                "avg_latency_ms": 0.0,
+                "protection_uptime_sec": int(time.time() - self.start_time),
+                "agent_status": "ACTIVE"
+            }
+        else:
+            metrics = {
+                "total_rescued_usdc": self.metrics_df["amount"].sum(),
+                "rescue_count": self.metrics_df.shape[0],
+                "avg_latency_ms": round(self.metrics_df["latency_ms"].mean(), 2),
+                "protection_uptime_sec": int(time.time() - self.start_time),
+                "agent_status": "ACTIVE"
+            }
 
-        metrics = {
-            "total_rescued_usdc": self.total_rescued_usdc,
-            "rescue_count": self.rescue_count,
-            "avg_latency_ms": round(avg_latency, 2),
-            "protection_uptime_sec": int(uptime),
-            "agent_status": "ACTIVE"
-        }
-
+        self.logger.info("publishing_metrics", metrics=metrics)
         await self.publish(WSSignal(
             event_type="ANALYTICS_UPDATE",
             payload=metrics
@@ -64,3 +79,4 @@ class GlassBoxAnalytics(BaseComponent):
 
 # Instantiate singleton
 analytics = GlassBoxAnalytics()
+
