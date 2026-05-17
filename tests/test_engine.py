@@ -62,3 +62,27 @@ async def test_risk_engine_safe():
     
     critical_verdicts = [v for v in verdicts if v.symbol == "ETH-PERP"]
     assert len(critical_verdicts) == 0
+
+@pytest.mark.asyncio
+async def test_risk_engine_dynamic_volatility():
+    _engine = RiskEngine()
+    
+    verdicts = []
+    def on_verdict(event: RiskVerdict):
+        verdicts.append(event)
+    
+    bus.subscribe(RiskVerdict, on_verdict)
+    
+    # 1. High volatility update for SOL
+    from src.events import MarketVolatilityUpdate
+    await bus.publish(MarketVolatilityUpdate(symbol="SOL-PERP", volatility_factor=0.9))
+    
+    # 2. Position that would be SAFE under base (0.12) but CRITICAL under high vol
+    # Threshold = 0.12 + (0.9 * 0.10) = 0.21
+    await bus.publish(PositionUpdate(symbol="SOL-PERP", margin_ratio=0.18, leverage=3.0))
+    
+    await asyncio.sleep(0.1)
+    
+    sol_verdicts = [v for v in verdicts if v.symbol == "SOL-PERP"]
+    assert len(sol_verdicts) > 0
+    assert sol_verdicts[0].status == "CRITICAL"
