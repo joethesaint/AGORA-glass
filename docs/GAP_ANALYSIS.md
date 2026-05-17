@@ -11,35 +11,26 @@ Based on the review of the `dev_joe` branch objectives, the `src/` codebase, and
 | **Perp Monitor** | ⚠️ Partially Live | `src/monitor.py` has Hyperliquid logic but needs WebSocket stabilization. |
 | **Reasoning Tracer** | ⚠️ Scaffolded | `src/tracer.py` creates traces. Hashing logic is deterministic. |
 | **Rescue Dispatcher** | ✅ Implemented | `src/dispatcher.py` now utilizes live SDKs for Arc and Circle. |
-| **Smart Contracts** | 🏗️ Under Construction | **[Antigravity Agent]** Working on `AttributionRegistry` and `Vault` live deployment & ABI sync. |
+| **Smart Contracts** | ✅ Infrastructure Ready | Hardhat setup, deployment scripts, and typechain generation complete. |
 
 ---
 
 ## 🚀 Critical Path: What is Left to Build
 
 ### 1. Live Monitoring Layer (`src/monitor.py`)
-*   **Hyperliquid Integration:** Switch from `mode="mock"` to a real WebSocket connection to Hyperliquid.
-*   **Data Normalization:** Map Hyperliquid's raw `marginRatio` and `leverage` responses into the project's internal `PositionUpdate` event.
+*   **Hyperliquid Integration:** Switch from `mode="mock"` to a real WebSocket connection to Hyperliquid. (Currently in progress by Market Monitor sub-tasks).
 
 ### 2. The "Glass-Box" On-Chain Registry (Solidity)
-*   **AttributionRegistry.sol:** Implementation of the registry on Arc Testnet to store `reasonHash`.
-*   **Vault.sol:** The actual USDC holding contract that will release funds only when the agent signs a rescue transaction.
-*   **Deployment Script:** A workflow to deploy these to Arc (Chain ID 5042002).
+*   **Finalization:** Ayo to finalize logic in `AttributionRegistry.sol` and `Vault.sol`.
+*   **Deployment:** Live deployment to Arc (Chain ID 5042002) once RPC session is refreshed.
 
 ### 3. Financial Execution Layer (`src/dispatcher.py`)
-*   **Circle Gateway Integration:** Implement the `execute_circle_rescue` function using the Circle SDK to move USDC from the Arc Vault to the trader's account.
-*   **Arc Pinning:** Implement the `pin_to_arc` function to send the `reasonHash` to the `AttributionRegistry`.
+*   **Integration:** Connection between `CircleRescuer` and the live `Vault` address.
 
 ### 4. The Dashboard (Frontend)
-*   **Next.js Implementation:** Visualize live margin levels, real-time "Reasoning Traces," and Rescue History with Arcscan links.
+*   **Next.js Implementation:** Andy to visualize live margin levels and reasoning traces.
 
 ---
 
-## 🛠️ Strategic Use of Context
-I will utilize the following documentation from `_sources/` to complete these tasks:
-*   **Arc Network & Build on Arc:** For sub-second finality deployment patterns.
-*   **Circle Gateway vs CCTP:** To implement the preferred <500ms rescue route.
-*   **Agent Stack Docs:** For utilizing Circle Developer-Controlled Wallets.
-
-**Project Completion:** ~30% (Technical Skeleton)
-**Current Focus:** Moving from "Mock" to "Live" integrations.
+**Project Completion:** ~45% (Infrastructure & Services Ready)
+**Current Focus:** Stabilizing Live Monitoring and Finalizing Contract Logic.
