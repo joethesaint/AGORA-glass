@@ -1,8 +1,18 @@
 # Testing & Security
 
-- Unit tests for every Python module using `pytest`.
-- Solidity tests with Hardhat/Foundry; test rescue flow with a mock Gateway.
-- Frontend: at minimum, a smoke test that the dashboard loads and connects to the WebSocket.
-- Smart contracts must not use `tx.origin` for authorization; use `msg.sender` with role‑based access.
-- Agent private keys must be stored in environment variables and never committed.
-- Reasoning hash must be verified on‑chain after submission (the agent must check the transaction receipt).
+- **Unit Testing**:
+  - Python: 100% coverage for `RiskEngine` logic using `pytest`.
+  - Solidity: Use Foundry or Hardhat for invariant testing of the `Vault`.
+  - Frontend: Smoke tests for WebSocket connectivity using Vitest.
+- **Smart Contract Security**:
+  - Strictly use `msg.sender` for authorization.
+  - Implement reentrancy guards on all `USDC` transfer functions.
+  - Follow the **Checks-Effects-Interactions** pattern.
+- **Agent Security**:
+  - Private keys *must* be stored in environment variables (`AGENT_PRIVATE_KEY`).
+  - No plain-text secrets in reasoning traces; only public hashes.
+- **Verification**:
+  - Every `CRITICAL` action must be verifiable on-chain via the `AttributionRegistry`.
+  - The agent must wait for and verify the transaction receipt before confirming a rescue.
+- **Mocking**:
+  - CI/CD pipelines must use mock Hyperliquid and Circle Gateway responses.

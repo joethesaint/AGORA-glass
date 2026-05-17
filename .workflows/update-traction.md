@@ -1,13 +1,25 @@
-# /update-traction – Submit a Traction Update via Arc CLI
+# /update-traction – Report Progress via Arc CLI
 
 ## Steps
-1. Gather metrics from the last session (e.g., number of test users, mock rescues performed, USDC moved).
-2. Format a concise update: “Onboarded 2 new test users; total mock rescues: 12; USDC saved: 3,500.”
-3. Submit:
+1. **Compile Metrics**
+   - Extract data from logs or `arc-canteen status`:
+     - Test users onboarded.
+     - Total USDC "Rescued" in simulation.
+     - Number of unique reasoning traces pinned to Arc.
+2. **Submit Product Update**
    ```bash
-   arc-canteen update-traction "Onboarded 2 new test users; total rescues: 12; USDC saved: 3,500."
+   arc-canteen update-product "Refactored agent with BaseClasses, logging, and 100% test coverage for risk logic."
    ```
-4. Verify with:
+3. **Submit Traction Update**
+   ```bash
+   arc-canteen update-traction "Reached milestone: First successful end-to-end autonomous rescue in mock mode."
+   ```
+4. **Verify Status**
    ```bash
    arc-canteen status
+   ```
+5. **Sync Context**
+   - Keep development grounded in the latest research:
+   ```bash
+   arc-canteen context sync
    ```

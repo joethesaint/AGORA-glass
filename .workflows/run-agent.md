@@ -1,30 +1,28 @@
-# /run-agent – Start the Glass‑Box Sentinel Agent
+# /run-agent – Start the Glass‑Box Sentinel
 
 ## Steps
-1. Activate Python environment:
+1. **Environment Initialization**
    ```bash
+   # Load environment variables
+   set -a && source .env && set +a
+   # Activate virtual environment
    source .venv/bin/activate
    ```
-2. Ensure environment variables are loaded:
+2. **Start Signal Bridge**
+   - In a separate terminal, start the WebSocket bridge for the frontend:
    ```bash
-   set -a && source .env && set +a
+   $env:PYTHONPATH = "."; uv run python src/ws_bridge.py
    ```
-3. Start the agent (live mode):
+3. **Start Agent (Mock Mode)**
+   - For rapid testing and demo purposes:
    ```bash
-   python src/main.py --live
+   $env:PYTHONPATH = "."; uv run python src/main.py --mock
    ```
-   - The agent will fetch live Hyperliquid testnet data.
-   - If the API is down, use mock mode:
+4. **Start Agent (Live Mode)**
+   - Once API keys are configured and contracts deployed:
    ```bash
-   python src/main.py --mock
+   $env:PYTHONPATH = "."; uv run python src/main.py --live
    ```
-4. Open the BusSpy console to monitor signals:
-   ```bash
-   python -m src.bus
-   ```
-   (This is already included in `main.py`; just watch the coloured output.)
-5. In a separate terminal, start the WebSocket bridge for the frontend:
-   ```bash
-   python src/ws_bridge.py
-   ```
-6. Frontend should now display live data at `http://localhost:3000`.
+5. **Monitor Logs**
+   - Watch the colored output from `BaseComponent` loggers.
+   - Verify `TICK` events and `RiskVerdict` publications.

@@ -8,27 +8,29 @@ This workflow bootstraps the entire project for a new team member.
    uv tool install git+https://github.com/the-canteen-dev/ARC-cli.git
    arc-canteen login
    ```
-2. **Export RPC & context**
+2. **Export RPC & Sync Context**
    ```bash
    arc-canteen shell-init
    arc-canteen context sync
    ```
-3. **Python virtual environment**
+3. **Python Environment**
    ```bash
-   python -m venv .venv && source .venv/bin/activate
-   pip install -r requirements.txt
+   uv venv
+   source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+   uv sync
    ```
-4. **Node dependencies (frontend)**
+4. **Node Dependencies**
    ```bash
    cd frontend && npm install
+   cd ../contracts && npm install
    ```
-5. **Configure environment**
+5. **Secrets Configuration**
    ```bash
    cp .env.example .env
-   # Fill in required keys: HYPERLIQUID_API_KEY, AGENT_PRIVATE_KEY, etc.
+   # Ensure RPC, AGENT_PRIVATE_KEY, and HYPERLIQUID_API_KEY are set.
    ```
-6. **Verify**
+6. **Integrity Check**
    ```bash
+   $env:PYTHONPATH = "."; uv run pytest
    arc-canteen rpc eth_blockNumber
-   python -c "from src.bus import MessageBus; print('OK')"
    ```

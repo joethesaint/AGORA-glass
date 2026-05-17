@@ -1,44 +1,48 @@
 import asyncio
 from collections import defaultdict
-from typing import Callable, Any, Dict, List
+from typing import Callable, Any, Dict, List, Type, TypeVar
+from src.events import BaseEvent
+
+T = TypeVar("T", bound=BaseEvent)
 
 class MessageBus:
     """
-    A simple in-memory async message bus for inter-module coordination.
-    Modules can subscribe to topics and publish JSON-serializable signals.
-    
-    Design Choice: Decoupled Event-Driven Architecture.
-    Modules do not know about each other; they only interact via the bus.
+    A type-safe, in-memory async message bus for inter-module coordination.
+    Modules subscribe to Event Types rather than string topics.
     """
     def __init__(self):
-        # Using a list of callbacks for each topic
-        self._subscribers: Dict[str, List[Callable]] = defaultdict(list)
+        self._subscribers: Dict[Type[BaseEvent], List[Callable]] = defaultdict(list)
 
-    def subscribe(self, topic: str, callback: Callable[[Any], None]):
-        """Subscribe to a specific topic."""
-        if callback not in self._subscribers[topic]:
-            self._subscribers[topic].append(callback)
+    def subscribe(self, event_type: Type[T], callback: Callable[[T], Any]):
+        """Subscribe to a specific Event Type."""
+        if callback not in self._subscribers[event_type]:
+            self._subscribers[event_type].append(callback)
 
-    async def publish(self, topic: str, data: Any):
-        """Publish a message to all subscribers of a topic."""
-        if topic in self._subscribers:
-            # Execute all callbacks registered for this topic
+    async def publish(self, event: BaseEvent):
+        """
+        Publish an event to all subscribers of its type.
+        """
+        event_type = type(event)
+        if event_type in self._subscribers:
             tasks = []
-            for callback in self._subscribers[topic]:
+            for callback in self._subscribers[event_type]:
                 if asyncio.iscoroutinefunction(callback):
-                    tasks.append(callback(data))
+                    tasks.append(callback(event))
                 else:
-                    # For non-async callbacks, we wrap them to keep the loop moving
-                    callback(data)
+                    callback(event)
             
             if tasks:
                 await asyncio.gather(*tasks)
 
-    def unsubscribe(self, topic: str, callback: Callable):
-        """Remove a subscriber from a topic."""
-        if topic in self._subscribers:
-            if callback in self._subscribers[topic]:
-                self._subscribers[topic].remove(callback)
+    def unsubscribe(self, event_type: Type[T], callback: Callable[[T], Any]):
+        """Remove a subscriber from an event type."""
+        if event_type in self._subscribers:
+            if callback in self._subscribers[event_type]:
+                self._subscribers[event_type].remove(callback)
 
-# Global bus instance for easy import across modules
+    def clear_subscribers(self):
+        """Remove all subscribers (useful for testing)."""
+        self._subscribers.clear()
+
+# Global bus instance
 bus = MessageBus()

@@ -1,9 +1,14 @@
 # Architecture & Domain Constraints
 
-- The Python agent must use the MessageBus pattern for inter-module communication.
-- Centralized event topics must be defined in `src/events.py` to prevent string hardcoding across modules.
-- All risk assessments must cite the Cheng et al. (2021) leverage bands: max 5× leverage, rescue target margin ratio 25%.
-- Reasoning traces must follow the JSON schema: timestamp, agent_id, action, account, leverage_before, margin_ratio, rescue_amount_usdc, evidence[], risk_rating, reason_hash.
-- Smart contracts must be deployed only on Arc testnet (chain ID 5042002) during development.
-- Frontend must use Circle App Kit for wallet, bridge, and swap components.
-- Never hard‑code RPC URLs; always read from the environment variable `$RPC` set by `arc-canteen shell-init`.
+- **Communication**: The Python agent *must* use the `MessageBus` pattern (Event-Driven Architecture) for inter-module coordination.
+- **Risk Model**: All assessments *must* cite the Cheng et al. (2021) leverage bands:
+  - **SAFE**: Margin Ratio > 30%
+  - **WARNING**: Margin Ratio 12–30%
+  - **CRITICAL**: Margin Ratio < 12%
+- **Leverage Limit**: Max 5× leverage for BTC/ETH perpetuals to minimize margin-call risk.
+- **Rescue Logic**: Automated rescues *must* target a post-rescue margin ratio of exactly 25%.
+- **Glass-Box Traces**: Every action (Monitor tick, Risk assessment, Rescue) *must* generate a structured JSON reasoning trace.
+- **Trace Schema**: Must include `timestamp`, `agent_id`, `action`, `account`, `leverage_before`, `margin_ratio`, `rescue_amount_usdc`, `evidence[]`, `risk_rating`, and `reason_hash`.
+- **Settlement**: Smart contracts *must* be deployed on Arc Testnet (Chain ID 5042002).
+- **Gas Policy**: RPC URLs must be read from the `$RPC` environment variable. Native gas token is USDC.
+- **Financial Primitive**: Utilize Circle App Kit and Gateway for all cross-chain USDC movements.

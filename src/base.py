@@ -1,14 +1,13 @@
 import logging
 import sys
 from src.bus import bus
+from src.events import BaseEvent
 
-# Configure logging
+# Configure logging once
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout)
-    ]
+    handlers=[logging.StreamHandler(sys.stdout)]
 )
 
 class BaseComponent:
@@ -20,14 +19,10 @@ class BaseComponent:
         self.name = name
         self.logger = logging.getLogger(name)
         self.bus = bus
-        self.logger.info(f"Component '{name}' initialized.")
+        self.logger.debug(f"Component '{name}' initialized.")
 
-    def subscribe(self, topic: str, callback):
-        """Standardized subscription via the global bus."""
-        self.bus.subscribe(topic, callback)
-        self.logger.debug(f"Subscribed to topic: {topic}")
+    def subscribe(self, event_type, callback):
+        self.bus.subscribe(event_type, callback)
 
-    async def publish(self, topic: str, data: dict):
-        """Standardized publishing via the global bus."""
-        self.logger.debug(f"Publishing to {topic}: {data}")
-        await self.bus.publish(topic, data)
+    async def publish(self, event: BaseEvent):
+        await self.bus.publish(event)

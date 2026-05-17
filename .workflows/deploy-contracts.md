@@ -1,31 +1,24 @@
-# /deploy-contracts – Deploy AGORA‑glass Smart Contracts to Arc Testnet
+# /deploy-contracts – Deploy AGORA‑glass to Arc Testnet
 
 ## Steps
-1. Ensure `$RPC` is set (`arc-canteen shell-init`).
-2. Navigate to the contracts directory and install deps:
+1. **Environment Validation**
+   - Ensure `$RPC` is active.
+   - Verify `AGENT_PRIVATE_KEY` has testnet USDC for gas.
+2. **Compile**
    ```bash
-   cd contracts && npm install
-   ```
-3. Compile:
-   ```bash
+   cd contracts
    npx hardhat compile
    ```
-4. Deploy AttributionRegistry:
+3. **Deploy Registry**
    ```bash
    npx hardhat run scripts/deploy_registry.ts --network arcTestnet
    ```
-   The script should output the contract address – save it to `config/addresses.json`.
-5. Deploy Vault:
+4. **Deploy Vault**
    ```bash
    npx hardhat run scripts/deploy_vault.ts --network arcTestnet
    ```
-   Add the address to the same config file.
-6. (Optional) Deploy BondEscrow:
-   ```bash
-   npx hardhat run scripts/deploy_bond.ts --network arcTestnet
-   ```
-7. Verify contracts on Arcscan (if explorer API available):
-   ```bash
-   npx hardhat verify --network arcTestnet <address>
-   ```
-8. Update the frontend `.env` with the new contract addresses.
+5. **Whitelisting**
+   - Call `Vault.setAgent(AGENT_ADDRESS)` to authorize the Python sentinel.
+6. **Verification**
+   - Save addresses to `docs/config/addresses.json`.
+   - Update frontend and agent `.env` files.
