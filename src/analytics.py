@@ -1,8 +1,9 @@
 import time
 import polars as pl
+from collections import deque
 from datetime import datetime
 from src.base import BaseComponent
-from src.events import ReasoningTrace, RescueComplete, WSSignal
+from src.events import ReasoningTrace, RescueComplete, WSSignal, PositionUpdate
 
 class GlassBoxAnalytics(BaseComponent):
     """
@@ -26,6 +27,28 @@ class GlassBoxAnalytics(BaseComponent):
         # Subscribe to signals
         self.subscribe(ReasoningTrace, self.on_trace)
         self.subscribe(RescueComplete, self.on_rescue)
+        self.subscribe(PositionUpdate, self.on_position)
+        self._position_history = {} # symbol -> Deque[float]
+
+    def on_position(self, event: PositionUpdate):
+        if event.symbol not in self._position_history:
+            self._position_history[event.symbol] = deque(maxlen=20)
+        self._position_history[event.symbol].append(event.margin_ratio)
+
+    def is_trend_deteriorating(self, symbol: str) -> bool:
+        """Checks if margin ratio is consistently decreasing."""
+        history = list(self._position_history.get(symbol, []))
+        if len(history) < 5:
+            return False
+        # Simple trend check: is the latest margin lower than the average of the last 5?
+        return history[-1] < sum(history[-5:]) / 5
+
+    def get_rolling_stats(self, symbol: str) -> dict:
+        """Returns basic stats for the dashboard."""
+        history = list(self._position_history.get(symbol, []))
+        if not history:
+            return {"avg_margin": 0}
+        return {"avg_margin": sum(history) / len(history)}
 
     async def on_trace(self, event: ReasoningTrace):
         """Track the start of a rescue cycle."""

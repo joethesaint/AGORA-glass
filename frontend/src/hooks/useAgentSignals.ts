@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 export interface AgentSignal {
-  event_type: string;
+  event_type: 'PositionUpdate' | 'RiskVerdict' | 'ReasoningTrace' | 'RescueComplete' | 'RescueInitiated' | 'SystemError';
   payload: any;
   timestamp: number;
 }

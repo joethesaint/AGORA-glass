@@ -29,7 +29,7 @@ export default function Home() {
           {latestPosition && <PositionCard data={latestPosition} />}
           
           {latestVerdict && (
-            <div className={`p-6 rounded-xl shadow-sm border ${latestVerdict.status === 'CRITICAL' ? 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800' : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'}`}>
+            <div className={`p-6 rounded-2xl shadow-lg glass ${latestVerdict.status === 'CRITICAL' ? 'border-red-500/50' : ''}`}>
               <h2 className="text-sm font-semibold text-zinc-500 mb-2">Risk Status</h2>
               <p className={`text-4xl font-black ${latestVerdict.status === 'CRITICAL' ? 'text-red-600 dark:text-red-400' : 'text-green-600'}`}>
                 {latestVerdict.status}
@@ -44,10 +44,10 @@ export default function Home() {
           
           <div className="mt-8">
             <h2 className="text-xl font-semibold mb-4">Event Log</h2>
-            <div className="h-[400px] overflow-y-auto space-y-2 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2 bg-white dark:bg-zinc-900">
+            <div className="h-[400px] overflow-y-auto space-y-2 glass rounded-2xl p-4">
                 {signals.map((s, i) => (
-                    <div key={i} className="text-xs font-mono p-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                        <span className="text-zinc-400 mr-2">[{new Date(s.timestamp).toLocaleTimeString()}]</span>
+                    <div key={i} className="text-xs font-mono p-2 border-b border-zinc-200/20 dark:border-zinc-800 last:border-0">
+                        <span className="text-zinc-500 mr-2">[{new Date(s.timestamp).toLocaleTimeString()}]</span>
                         <span className="font-semibold text-blue-600 dark:text-blue-400 mr-2">{s.event_type}</span>
                         <span className="text-zinc-700 dark:text-zinc-300">{JSON.stringify(s.payload || {}).substring(0, 80)}...</span>
                     </div>
