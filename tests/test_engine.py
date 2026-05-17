@@ -65,24 +65,49 @@ async def test_risk_engine_safe():
 
 @pytest.mark.asyncio
 async def test_risk_engine_dynamic_volatility():
+    from src.events import MarketVolatilityUpdate
     _engine = RiskEngine()
     
     verdicts = []
     def on_verdict(event: RiskVerdict):
         verdicts.append(event)
-    
     bus.subscribe(RiskVerdict, on_verdict)
     
-    # 1. High volatility update for SOL
-    from src.events import MarketVolatilityUpdate
-    await bus.publish(MarketVolatilityUpdate(symbol="SOL-PERP", volatility_factor=0.9))
+    # 1. Update volatility to high (1.0)
+    # Critical threshold = base(0.12) + (vol(1.0) * mult(0.05)) = 0.17
+    await bus.publish(MarketVolatilityUpdate(symbol="VOL-PERP", volatility_factor=1.0))
     
-    # 2. Position that would be SAFE under base (0.12) but CRITICAL under high vol
-    # Threshold = 0.12 + (0.9 * 0.10) = 0.21
-    await bus.publish(PositionUpdate(symbol="SOL-PERP", margin_ratio=0.18, leverage=3.0))
+    # 2. Publish margin that is safe normally (0.15) but critical with high vol (0.15 < 0.17)
+    await bus.publish(PositionUpdate(symbol="VOL-PERP", margin_ratio=0.15, leverage=2.0))
     
     await asyncio.sleep(0.1)
     
-    sol_verdicts = [v for v in verdicts if v.symbol == "SOL-PERP"]
-    assert len(sol_verdicts) > 0
-    assert sol_verdicts[0].status == "CRITICAL"
+    my_verdicts = [v for v in verdicts if v.symbol == "VOL-PERP"]
+    assert len(my_verdicts) > 0
+    assert my_verdicts[0].status == "CRITICAL"
+
+@pytest.mark.asyncio
+async def test_risk_engine_deteriorating_trend():
+    from src.analytics import analytics
+    _engine = RiskEngine()
+    
+    verdicts = []
+    def on_verdict(event: RiskVerdict):
+        verdicts.append(event)
+    bus.subscribe(RiskVerdict, on_verdict)
+    
+    # 1. Establish a sharp downward trend
+    # analytics.is_trend_deteriorating needs at least 10 points
+    symbol = "TREND-PERP"
+    for i in range(12):
+        # Margin drops from 0.40 to 0.29. 
+        # older (first 5) avg approx 0.38, recent (last 5) avg approx 0.31.
+        # delta = 0.31 - 0.38 = -0.07 < -0.05 threshold.
+        margin = 0.40 - (i * 0.01) 
+        await bus.publish(PositionUpdate(symbol=symbol, margin_ratio=margin, leverage=2.0))
+        await asyncio.sleep(0.01)
+    
+    # Check if a critical verdict was triggered due to trend even though margin (0.29) > threshold (0.12)
+    my_verdicts = [v for v in verdicts if v.symbol == symbol]
+    assert len(my_verdicts) > 0
+    assert any(v.status == "CRITICAL" for v in my_verdicts)

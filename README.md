@@ -7,13 +7,22 @@
 ---
 
 ## 1. The Hook & Core Mandates
-Retail leverage on decentralized perpetual exchanges averages ~60x, leaving professional traders highly vulnerable to liquidation cascades during sudden market volatility. Research shows that main[...]
+Retail leverage on decentralized perpetual exchanges averages ~60x, leaving
+professional traders highly vulnerable to liquidation cascades during sudden
+market volatility. Research shows that maintaining a tighter leverage band
+(3–5x) dramatically reduces margin-call risk, yet 24/7 manual monitoring is
+a practical impossibility.
 
-**Project GLASS** is an autonomous "Perp Safety Copilot" that defy the gravity of market crashes through two fundamental pillars:
-*   **Sub-500ms Cross-Chain Rescues:** Utilizing **Circle Gateway** to move USDC from a unified inventory directly to endangered positions in under half a second.
-*   **"Glass-Box" Transparency:** Every risk assessment and rescue decision is backed by a structured **Reasoning-Trace**, permanently hashed and pinned to the **Arc Network** for trustless verifi[...]
+**Project GLASS** is an autonomous "Perp Safety Copilot" that defy the gravity
+of market crashes through two fundamental pillars:
+*   **Sub-500ms Cross-Chain Rescues:** Utilizing **Circle Gateway** to move USDC
+    from a unified inventory directly to endangered positions in under half a second.
+*   **"Glass-Box" Transparency:** Every risk assessment and rescue decision is
+    backed by a structured **Reasoning-Trace**, permanently hashed and pinned
+    to the **Arc Network** for trustless verification.
 
-GLASS enforces research-backed thresholds (Cheng et al. 2021), hard-capping leverage at **5x** and executing rescues to maintain a **25% target margin ratio**.
+GLASS enforces research-backed thresholds (Cheng et al. 2021), hard-capping
+leverage at **5x** and executing rescues to maintain a **25% target margin ratio**.
 
 ---
 
@@ -62,14 +71,14 @@ flowchart TD
     Vault -.->|funds managed by| Wallets
     UI -.->|read events| Registry
 
-    style OffChain stroke:#d4a017,stroke-width:2px,stroke-dasharray: 5 5
-    style OnChain stroke:#0052ff,stroke-width:2px,stroke-dasharray: 5 5
-    style CircleStack stroke:#6700eb,stroke-width:2px,stroke-dasharray: 5 5
-    style Frontend stroke:#333,stroke-width:2px,stroke-dasharray: 5 5
+    style OffChain fill:#fdfcf0,stroke:#d4a017,stroke-width:2px
+    style OnChain fill:#f0f7ff,stroke:#0052ff,stroke-width:2px
+    style CircleStack fill:#f5f0ff,stroke:#6700eb,stroke-width:2px
+    style Frontend fill:#f9f9f9,stroke:#333,stroke-width:2px
 ```
 
 ### Off-Chain Python Sentinel
-The core logic resides in a Python-based sentinel. Crucially, the internal `MessageBus` is built using **Python `asyncio` queues**, not OS-level threads. This ensures non-blocking, lightning-fast [...]
+The core logic resides in a Python-based sentinel. Crucially, the internal `MessageBus` is built using **Python `asyncio` queues**, not OS-level threads. This ensures non-blocking, lightning-fast I/O coordination that can match the sub-second finality of the Arc Network and the millisecond response times of the Circle Gateway API.
 
 ---
 
@@ -80,10 +89,10 @@ Working on the Arc Network requires precision. Project GLASS correctly handles A
 *   **Native USDC for Gas:** 18 Decimals.
 *   **ERC-20 USDC for Transfers:** 6 Decimals.
 
-Our smart contracts and agent logic strictly differentiate between these two to ensure gas sponsorship and cross-chain transfers are calculated with absolute accuracy, avoiding the common "decimal[...]
+Our smart contracts and agent logic strictly differentiate between these two to ensure gas sponsorship and cross-chain transfers are calculated with absolute accuracy, avoiding the common "decimal mismatch" trap that plagues multi-stack implementations.
 
 ### Mature Engineering Standards
-The repository includes a strict contributor ruleset [`.skills/python-agent_improved.md`](./.skills/python-agent_improved.md) and automated TDD anchors for every module. We maintain a 100% test co[...]
+The repository includes a strict contributor ruleset [`.skills/python-agent_improved.md`](./.skills/python-agent_improved.md) and automated TDD anchors for every module. We maintain a 100% test coverage requirement for all risk-calculating functions in the `RiskEngine`.
 
 ---
 
@@ -133,5 +142,4 @@ This project uses **ARC-cli** (`arc-canteen`) for progress tracking and document
 - **Hackathon Notes:** [HACKATHON.md](./docs/HACKATHON.md)
 
 ---
-
 *Maintained by the AGORA-glass Team.*

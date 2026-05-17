@@ -33,7 +33,7 @@ class RiskEngine(BaseComponent):
         Evaluate risk using dynamic thresholds and Polars analytics:
         1. Log data to analytics for trend tracking.
         2. Calculate Dynamic Threshold (Base + Volatility).
-        3. Check for threshold breach or deteriorating trends (Polars).
+        3. Check for threshold breach or deteriorating trends.
         """
         # 1. High-performance analytics logging
         analytics.add_data_point(event.symbol, event.margin_ratio, event.leverage)
@@ -64,7 +64,6 @@ class RiskEngine(BaseComponent):
             self.logger.warning(
                 f"CRITICAL: {event.symbol} {reason} (Vol Factor: {vol_factor:.2f})!"
             )
-            
             await self.publish(
                 RiskVerdict(
                     status="CRITICAL",
