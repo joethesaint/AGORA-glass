@@ -51,3 +51,8 @@ agent_loop.py
 
 # Private Research Sources
 AGORA BUIILD_sources/
+
+# Logs
+logs/
+*.log
+
