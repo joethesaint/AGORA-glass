@@ -1,0 +1,11 @@
+[profile.default]
+src = "contracts"
+out = "out"
+libs = ["node_modules"]
+
+# Arc Testnet Configuration
+[rpc_endpoints]
+arc_testnet = "${RPC}"
+
+[etherscan]
+arc_testnet = { key = "unnecessary", url = "https://testnet.arcscan.app/api" }

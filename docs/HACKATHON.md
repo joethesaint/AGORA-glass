@@ -41,5 +41,13 @@ In code:
 
 Run `arc-canteen status` to see your dashboard, or `arc-canteen --help` to explore commands.
 
-## Workflow
-- Use `dev_joe` branch for feature development.
+### Smart Contracts (Foundry + Hardhat)
+We support both Hardhat (for frontend ABI generation) and Foundry (for high-performance testing/deployment).
+
+**Foundry Workflow (Ayo):**
+- **Test:** `forge test` (from `contracts/` directory)
+- **Deploy:** `forge script scripts/Deploy.s.sol --rpc-url $RPC --broadcast --verify`
+
+**Hardhat Workflow:**
+- **Compile:** `npm run compile`
+- **Test:** `npm test`
