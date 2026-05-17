@@ -36,7 +36,7 @@ class RiskEngine(BaseComponent):
         3. Check for threshold breach or deteriorating trends.
         """
         # 1. High-performance analytics logging
-        analytics.add_data_point(event.symbol, event.margin_ratio, event.leverage)
+        # analytics.add_data_point(event.symbol, event.margin_ratio, event.leverage)
         
         # 2. Dynamic threshold calculation
         margin = event.margin_ratio
