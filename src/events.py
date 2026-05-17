@@ -34,6 +34,11 @@ class PositionUpdate(BaseEvent):
 
 
 @dataclass(frozen=True)
+class MarketVolatilityUpdate(BaseEvent):
+    symbol: str
+    volatility_factor: float  # Normalized 0.0 to 1.0
+
+@dataclass(frozen=True)
 class RiskVerdict(BaseEvent):
     """Event representing the result of a risk evaluation.
 

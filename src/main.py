@@ -1,6 +1,7 @@
 import asyncio
 import signal
 from src.monitor import PerpMonitor
+from src.market_monitor import market_monitor
 
 # Register components to ensure singletons are initialized and subscribed
 import src.engine as _engine  # noqa: F401
@@ -11,7 +12,7 @@ import src.dispatcher as _dispatcher  # noqa: F401
 async def main():
     print("🛡️ AGORA-glass: Glass-Box Sentinel Starting...")
 
-    monitor = PerpMonitor(mode="mock")
+    perp_monitor = PerpMonitor(mode="mock")
 
     # Define stop event for graceful shutdown
     stop_event = asyncio.Event()
@@ -29,21 +30,21 @@ async def main():
         # add_signal_handler is not implemented on Windows
         pass
 
-    # Start the monitor in a background task
-    monitor_task = asyncio.create_task(monitor.run())
+    # Start monitors in background tasks
+    perp_task = asyncio.create_task(perp_monitor.run())
+    market_task = asyncio.create_task(market_monitor.run())
 
-    print("✅ Sentinel is active and monitoring positions.")
+    print("✅ Sentinel is active and monitoring positions + market data.")
 
     # Keep the main loop alive until stop_event is set
     try:
         await stop_event.wait()
     finally:
         # Cleanup
-        monitor_task.cancel()
-        try:
-            await monitor_task
-        except asyncio.CancelledError:
-            pass
+        perp_task.cancel()
+        market_task.cancel()
+        
+        await asyncio.gather(perp_task, market_task, return_exceptions=True)
         print("👋 AGORA-glass shutdown complete.")
 
 
