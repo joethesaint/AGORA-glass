@@ -135,12 +135,13 @@ This project directly addresses the following tracks:
 
 ### 🛠️ Development Tools
 This project uses **ARC-cli** (`arc-canteen`) for tracking progress and interacting with the Arc network.
+- **Guide:** See our [ARC CLI Guide](./docs/ARC_CLI_GUIDE.md) for detailed commands.
 - **Status:** `arc-canteen status`
 - **Traction Updates:** `arc-canteen update-traction`
 - **Product Updates:** `arc-canteen update-product`
 - **Context/Docs:** `arc-canteen context`
 
-See [HACKATHON.md](./HACKATHON.md) for full installation and usage details.
+See [HACKATHON.md](./docs/HACKATHON.md) for full installation and usage details.
 
 ---
 

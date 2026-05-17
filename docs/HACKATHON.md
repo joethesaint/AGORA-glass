@@ -3,7 +3,9 @@
 ## Tools
 
 ### ARC-cli (arc-canteen)
-The ARC-cli is used to track project progress and submit updates to Arc.
+The ARC-cli is used to track project progress and submit updates to Arc. 
+
+**Full Guide:** See [ARC CLI Guide](./ARC_CLI_GUIDE.md) for detailed commands.
 
 **Installation:**
 ```bash
