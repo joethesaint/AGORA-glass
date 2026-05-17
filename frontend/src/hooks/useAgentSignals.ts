@@ -27,8 +27,14 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
 
       ws.onmessage = (event) => {
         try {
-          const signal: AgentSignal = JSON.parse(event.data);
-          setSignals((prev) => [signal, ...prev].slice(0, 100)); // Keep last 100 signals
+          const rawMessage = JSON.parse(event.data);
+          // Bridge sends { type, data, timestamp }, we map to { event_type, payload, timestamp }
+          const signal: AgentSignal = {
+            event_type: rawMessage.type,
+            payload: rawMessage.data,
+            timestamp: rawMessage.timestamp * 1000 // Ensure ms
+          };
+          setSignals((prev) => [signal, ...prev].slice(0, 100));
         } catch (err) {
           console.error('🛡️ GLASS: Failed to parse signal', err);
         }
