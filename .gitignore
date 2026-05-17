@@ -46,9 +46,6 @@ AGORA_build_sources/
 HACKATHON.md
 ARCHITECTURE.md
 CONTROLS.md
-.rules/
-.workflows/
-.skills/
 arc_context.md
 agent_loop.py
 
