@@ -1,43 +1,45 @@
 # Project GLASS: Gateway Liquidation Autonomous Safety Sentinel 🛡️
-**(Internal Codename: Antigravity)**
 
-### 📖 Overview (Proof of Concept)
-Project GLASS is a high-autonomy AI agent acting as a "Perp Safety Copilot" for professional traders on decentralized perpetual exchanges (like Hyperliquid and dYdX). Designed to defy the "gravity" of market crashes, GLASS prevents liquidation cascades by continuously monitoring risk and executing autonomous, sub-second cross-chain collateral rescues. 
+### 📖 Overview
+Project GLASS is a high-autonomy AI agent acting as a **"Perp Safety Copilot"** for professional traders on decentralized perpetual exchanges. Designed to defy the "gravity" of market crashes, GLASS prevents liquidation cascades by continuously monitoring risk and executing autonomous, sub-second cross-chain collateral rescues. 
 
-Instead of acting as a "black box" trading bot, GLASS introduces a **"Glass-Box" transparency model** where the agent is accountable for its decisions, emitting verifiable, on-chain reasoning traces for every action it takes.
+Instead of acting as a "black box" trading bot, GLASS introduces a **"Glass-Box" transparency model** (Reasoning-Traces as a Product). The agent is accountable for its decisions, emitting verifiable, on-chain reasoning traces for every action it takes.
 
 ### ⚠️ The Problem
-1. **Liquidation Cascades:** Professional traders face immense liquidation risks due to crypto volatility, with retail leverage often reaching ~60x. Research shows that maintaining leverage between 3–5x significantly reduces margin-call risk, but manual 24/7 monitoring is impossible.
-2. **Bridge Latency:** Current cross-chain bridging solutions can take hundreds of seconds, which is far too slow to "rescue" a position facing an immediate margin call.
-3. **Opaque AI & Expensive Gas:** Existing automated trading bots provide no justification for their risk decisions. Furthermore, frequent risk-balancing on traditional Layer-1 blockchains is uneconomical due to volatile gas token prices.
+1. **Liquidation Cascades:** Traders often face forced liquidations due to extreme leverage (retail averages ~60x). Research shows maintaining a tighter leverage band (3–5x) dramatically reduces margin-call risk, but 24/7 manual monitoring is impossible.
+2. **Bridge Latency:** Cross-chain bridging can take hundreds of seconds, making it far too slow to "rescue" a position facing an immediate margin call.
+3. **Opaque AI & Blind Copy-Trading:** "Smart copycats" can be profitable, but blindly copying bots without understanding their rationale is dangerous. There is a massive need for transparent, slashable accountability.
 
 ### 💡 The Solution & Architecture
 GLASS solves the cross-chain liquidity gap by merging Python-based AI orchestration with the Circle and Arc technology stacks.
 
-#### 1. Agent Layer (Python / TradingAgents)
-Built using the Python-based `TradingAgents` framework, the agent continuously monitors funding rates, volatility, and margin levels. It enforces safe leverage bands (3-5x) and autonomously decides when to deleverage or move collateral. 
+#### 1. Agent Layer (Arc Portfolio Sentinel & Perp Safety Copilot)
+Built using a `TradingAgents`-style LLM framework, the agent continuously monitors funding rates, volatility, and margin levels. It enforces safe leverage bands and autonomously decides when to deleverage or move collateral across exchanges to prevent liquidations.
 
-#### 2. Settlement & Safety Layer (Arc Blockchain)
-GLASS leverages the **Arc Network**, an EVM-compatible Layer-1 built by Circle specifically for stablecoin finance. 
-* **Sub-Second Finality:** Arc's Malachite consensus engine delivers deterministic finality in under one second (~780 milliseconds), ensuring rescue transactions settle instantly and irreversibly before a liquidation block hits.
-* **USDC Gas Fees:** Arc uses USDC as its native gas token, meaning the agent's rescue budget is predictable (~$0.01 per transaction) and immune to the sudden cost spikes seen on chains using volatile tokens like ETH.
+#### 2. Settlement Layer (Arc Blockchain)
+GLASS leverages the **Arc Network**, Circle's EVM-compatible Layer-1 built specifically for stablecoin finance. 
+* **Sub-Second Finality:** Arc's Malachite consensus engine delivers deterministic finality in under one second, ensuring rescue transactions settle instantly before a liquidation block hits.
+* **USDC Gas Fees:** Arc uses USDC natively, making the agent's rescue budget predictable (~$0.01 per transaction) without exposing it to volatile gas tokens.
 
-#### 3. Interoperability Layer (Circle Gateway & CCTP)
-To achieve "antigravity" rescues, the agent uses **Circle Gateway** to access a unified USDC balance across multiple chains. This enables sub-500ms cross-chain transfers, ensuring that emergency collateral arrives exactly when and where it is needed. The agent executes these actions autonomously using **Circle Developer-Controlled Wallets**.
+#### 3. Interoperability Layer (Arc Cross-Chain Inventory Router)
+To achieve "antigravity" rescues, the agent uses **Circle Gateway** and CCTP to access a unified USDC balance. A custom cross-chain inventory router helps pre-position liquidity across EVMs to bypass standard bridge latency, ensuring emergency collateral arrives sub-500ms.
 
-#### 4. Identity & Transparency Layer (The "Glass-Box" Twist)
-To fulfill the requirements of Social Trading Intelligence, GLASS is entirely transparent. The agent emits structured JSON "Reasoning-Traces" for every rescue or risk decision. These traces are hashed and pinned to an **Attribution Registry on Arc**, creating a permanent, low-cost (cents per transaction) audit trail of *why* the AI took action. 
+#### 4. Identity & Transparency Layer (Reasoning-Trace Dashboard)
+GLASS is entirely transparent. The agent emits structured JSON "Reasoning-Traces" for every rescue or risk decision. These traces are hashed and stored on an **Attribution Registry on Arc**, creating a permanent, low-cost audit trail of *why* the AI took action. Users can rank "reasoning templates" by backtested PnL.
 
-#### 5. Risk Layer (Slash-Bonding)
-The agent features "Skin in the Game." The creator posts a USDC performance bond on Arc. If the agent's reasoning diverges from its actions, or if it breaches hardcoded safety bands (e.g., exceeding 5x leverage), an oracle triggers the smart contract to automatically slash the bond.
+#### 5. Risk Layer (Leaderboard Risk Wrapper & Slash-Bonding)
+The agent features "Skin in the Game." An on-chain "copy score" registry maintains a USDC performance bond on Arc. If the agent's reasoning diverges from its actions, or if risk metrics breach thresholds derived from RL risk-management, an oracle triggers a smart contract to automatically slash the bond and cut follower exposure.
 
-### 🎯 Hackathon Focus
-This PoC is being developed for the **Agora Agents Hackathon** (hosted by Canteen and Circle). It directly addresses:
+### 🎯 Hackathon Focus (Agora Agents)
+This project directly addresses the following tracks:
 * **RFB 01 (Perpetual Futures Trading Agent):** 24/7 monitoring and autonomous liquidation protection.
-* **RFB 06 (Social Trading Intelligence):** Providing verifiable, accountable AI logic rather than blind copy-trading.
+* **RFB 06 (Social Trading Intelligence):** Providing verifiable "Reasoning-Traces" and slash-bonded copy-trading rather than blind execution.
 
+---
 
-```mcp
+### ⚙️ Environment Configuration
+
+```json
 {
   "mcpServers": {
     "notebooklm": {
@@ -49,5 +51,4 @@ This PoC is being developed for the **Agora Agents Hackathon** (hosted by Cantee
     }
   }
 }
-
 ```
