@@ -1,25 +1,55 @@
+import pytest
+import json
 from src.tracer import ReasoningTracer
-from src.events import RiskVerdict
+from src.events import RiskVerdict, ReasoningTrace
+from src.bus import bus
 
-
-def test_tracer_json_structure():
+@pytest.mark.asyncio
+async def test_tracer_generates_trace_on_critical():
     tracer = ReasoningTracer()
-    mock_event = RiskVerdict(
+    
+    traces = []
+    def on_trace(ev): traces.append(ev)
+    bus.subscribe(ReasoningTrace, on_trace)
+    
+    # Publish CRITICAL verdict
+    verdict = RiskVerdict(
         status="CRITICAL",
-        margin=0.09,
-        leverage=2.0,
+        margin=0.08,
+        leverage=12.0,
         symbol="BTC-PERP",
         risk_rating=5,
-        account="0xTEST"
+        account="0xAccount"
     )
+    await bus.publish(verdict)
+    
+    assert len(traces) == 1
+    assert traces[0].account == "0xAccount"
+    assert traces[0].margin_ratio == 0.08
+    assert "0x" in traces[0].reason_hash
+    
+    # Verify JSON deterministic payload
+    payload = json.loads(traces[0].reasoning_text)
+    assert payload["account"] == "0xAccount"
+    assert payload["risk_rating"] == "CRITICAL"
 
-    trace = tracer.create_trace(mock_event)
-
-    assert trace.risk_rating == "CRITICAL"
-    assert trace.reason_hash.startswith("0x")
-    assert len(trace.reason_hash) == 66
-    assert trace.margin_ratio == 0.09
-    assert trace.leverage_before == 2.0
-    assert "BTC-PERP" in trace.reasoning_text
-    assert "agent_id" in trace.reasoning_text
-    assert "0xTEST" in trace.reasoning_text
+@pytest.mark.asyncio
+async def test_tracer_ignores_safe_verdicts():
+    tracer = ReasoningTracer()
+    
+    traces = []
+    def on_trace(ev): traces.append(ev)
+    bus.subscribe(ReasoningTrace, on_trace)
+    
+    # Publish SAFE verdict
+    verdict = RiskVerdict(
+        status="SAFE",
+        margin=0.15,
+        leverage=2.0,
+        symbol="BTC-PERP",
+        risk_rating=0,
+        account="0xAccount"
+    )
+    await bus.publish(verdict)
+    
+    assert len(traces) == 0

@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from src.errors import safe_handler
 from src.bus import bus
@@ -29,3 +30,25 @@ async def test_safe_handler_async_decorator():
     assert errors[0].module == "TestModule"
     assert errors[0].error_type == "RuntimeError"
     assert "Crash inside async handler" in errors[0].message
+
+@pytest.mark.asyncio
+async def test_safe_handler_exception_logic():
+    from src.errors import safe_handler
+    from src.bus import bus
+    
+    # Track errors published to the bus
+    system_errors = []
+    def on_error(ev): system_errors.append(ev)
+    bus.subscribe(SystemError, on_error)
+
+    @safe_handler("TestModuleLogic")
+    async def failing_async_task():
+        raise ValueError("Triggered failure")
+
+    await failing_async_task()
+    
+    # Give the async loop a moment to process bus publication if needed
+    await asyncio.sleep(0.1)
+    
+    assert len(system_errors) > 0
+    assert "Triggered failure" in system_errors[0].message
