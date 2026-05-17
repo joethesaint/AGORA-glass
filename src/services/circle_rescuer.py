@@ -39,21 +39,21 @@ class CircleRescuer:
             self.client = None
             self.logger.warning("CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET not set. Rescuer in mock mode.")
 
-    async def rescue(self, amount: float, destination_address: str) -> str:
+    async def rescue(self, amount: float, destination_address: str, reason_hash: str) -> str:
         """Executes a USDC transfer to rescue a position.
 
         Args:
             amount: The amount of USDC to transfer.
             destination_address: The EVM address to send the USDC to.
+            reason_hash: The cryptographic hash of the reasoning trace (for auditing).
 
         Returns:
             str: The transaction ID if successful, or a failure placeholder.
         """
         if not self.client:
-            self.logger.info(f"MOCK RESCUE: Moving {amount} USDC to {destination_address}")
+            self.logger.info(f"MOCK RESCUE: Moving {amount} USDC to {destination_address} (Audit Hash: {reason_hash})")
             await asyncio.sleep(0.1)
             return "0xSIMULATED_CIRCLE_TX"
-
         if not self.wallet_id:
             self.logger.error("CIRCLE_WALLET_ID not set. Cannot execute live rescue.")
             return "0xMISSING_WALLET_ID"
