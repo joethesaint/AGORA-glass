@@ -41,12 +41,12 @@ Refer to the `docs/` directory for deep-dive technical specifications and archit
 - **Protocols:** [docs/STEALTH_SYNC_GUIDE.md](docs/STEALTH_SYNC_GUIDE.md) & [docs/GAP_ANALYSIS.md](docs/GAP_ANALYSIS.md)
 
 ## 🚀 Active Objectives
-- **Joe:** Finalize Python agent loop and polish service documentation. **[COMPLETE]**
+- **Joe:** Finalize Python agent loop, implement `VaultService`, and align ports. **[COMPLETE]**
 - **Ayo:** Implement the `AttributionRegistry` and `Vault` contracts. **[COMPLETE]**
-- **Andy:** Implement the Next.js dashboard. **[COMPLETE]**
+- **Andy:** Implement the Next.js dashboard and real Web3 connectivity. **[COMPLETE]**
 - **Lani:** Update traction and product via `arc-canteen`.
-    - `arc-canteen update-product "Completed high-fidelity Next.js dashboard with live 'Glass-Box' transparency auditing and integrated rescue metrics."`
-    - `arc-canteen update-traction "Integrated real-time sentinel bridge connection with automated alert system and granular position management."`
+    - `arc-canteen update-product "Completed high-fidelity Next.js dashboard with live 'Glass-Box' transparency auditing, integrated rescue metrics, and real Web3 connectivity."`
+    - `arc-canteen update-traction "Integrated full 'Glass-Box' rescue cycle: Monitoring -> Risk Eval -> Reasoning Hash -> Arc Pinning -> Vault Authorization -> Circle DCW Execution."`
 
 *Always run `arc-canteen context` if you need the latest Arc/Circle documentation.*
 
