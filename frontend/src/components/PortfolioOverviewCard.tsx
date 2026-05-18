@@ -54,9 +54,9 @@ export const PortfolioOverviewCard = memo<PortfolioOverviewCardProps>(
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-6 lg:gap-x-8">
           {/* Total Value */}
-          <div className="space-y-3">
+          <div className="space-y-3 border-b border-white/5 sm:border-none pb-6 sm:pb-0">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
                 <Wallet className="w-3.5 h-3.5 text-indigo-400" />
@@ -77,7 +77,7 @@ export const PortfolioOverviewCard = memo<PortfolioOverviewCardProps>(
           </div>
 
           {/* Avg Margin */}
-          <div className="space-y-3">
+          <div className="space-y-3 border-b border-white/5 sm:border-none pb-6 sm:pb-0">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-[#00D98F]/10 border border-[#00D98F]/20">
                 <Activity className="w-3.5 h-3.5 text-[#00D98F]" />
@@ -98,7 +98,7 @@ export const PortfolioOverviewCard = memo<PortfolioOverviewCardProps>(
           </div>
 
           {/* Avg Leverage */}
-          <div className="space-y-3">
+          <div className="space-y-3 border-b border-white/5 sm:border-none pb-6 sm:pb-0">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-[#00A3FF]/10 border border-[#00A3FF]/20">
                 <TrendingUp className="w-3.5 h-3.5 text-[#00A3FF]" />
@@ -119,7 +119,7 @@ export const PortfolioOverviewCard = memo<PortfolioOverviewCardProps>(
           </div>
 
           {/* Critical Alerts */}
-          <div className="space-y-3">
+          <div className="space-y-3 pb-2 sm:pb-0">
             <div className="flex items-center gap-2">
               <div className={`p-1.5 rounded-lg ${criticalPositions > 0 ? 'bg-[#FF3B3B]/10 border-[#FF3B3B]/20' : 'bg-[#00D98F]/10 border-[#00D98F]/20'}`}>
                 <AlertTriangle className={`w-3.5 h-3.5 ${criticalPositions > 0 ? 'text-[#FF3B3B]' : 'text-[#00D98F]'}`} />

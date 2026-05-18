@@ -17,10 +17,10 @@ export const RescueMetricsCard = memo<RescueMetricsCardProps>(
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="agora-card grid grid-cols-2 lg:grid-cols-4 gap-8"
+        className="agora-card p-5 sm:p-6 lg:p-7 grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-6 lg:gap-x-8"
       >
         {/* Total Rescued */}
-        <div className="space-y-3 relative group">
+        <div className="space-y-3 relative group border-b border-white/5 sm:border-none pb-6 sm:pb-0">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-[#00D98F]/10 border border-[#00D98F]/20">
               <Shield className="w-3.5 h-3.5 text-[#00D98F]" />
@@ -41,7 +41,7 @@ export const RescueMetricsCard = memo<RescueMetricsCardProps>(
         </div>
 
         {/* Avg Latency */}
-        <div className="space-y-3">
+        <div className="space-y-3 border-b border-white/5 sm:border-none pb-6 sm:pb-0">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-[#00A3FF]/10 border border-[#00A3FF]/20">
               <Zap className="w-3.5 h-3.5 text-[#00A3FF]" />
@@ -62,7 +62,7 @@ export const RescueMetricsCard = memo<RescueMetricsCardProps>(
         </div>
 
         {/* Success Rate */}
-        <div className="space-y-3">
+        <div className="space-y-3 border-b border-white/5 sm:border-none pb-6 sm:pb-0">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
               <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
@@ -83,7 +83,7 @@ export const RescueMetricsCard = memo<RescueMetricsCardProps>(
         </div>
 
         {/* Health */}
-        <div className="space-y-3">
+        <div className="space-y-3 pb-2 sm:pb-0">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-[#00D98F]/10 border border-[#00D98F]/20">
               <div className="w-3.5 h-3.5 flex items-center justify-center">

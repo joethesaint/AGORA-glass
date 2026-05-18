@@ -13,7 +13,7 @@ interface LiveMetricsHeaderProps {
 
 export const LiveMetricsHeader = ({ latencyMs, totalRescued, agentStatus, connectionStatus = 'connected' }: LiveMetricsHeaderProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 lg:gap-6 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
       <MetricCard 
         label="E2E Engine Latency" 
         value={`${latencyMs.toFixed(0)}ms`} 
