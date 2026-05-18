@@ -34,9 +34,9 @@ class PerpMonitor(BaseComponent):
     async def _run_mock_loop(self):
         """Simulated data sequence for demonstration."""
         sequence = [
-            {"symbol": "BTC-PERP", "margin": 0.35, "leverage": 3.0},
-            {"symbol": "BTC-PERP", "margin": 0.18, "leverage": 4.5},
-            {"symbol": "BTC-PERP", "margin": 0.09, "leverage": 5.2},
+            {"symbol": "BTC-PERP", "margin": 0.35, "leverage": 3.0, "price": 63200.0},
+            {"symbol": "BTC-PERP", "margin": 0.18, "leverage": 4.5, "price": 61500.0},
+            {"symbol": "BTC-PERP", "margin": 0.09, "leverage": 5.2, "price": 60200.0},
         ]
         while True:
             for data in sequence:
@@ -46,6 +46,7 @@ class PerpMonitor(BaseComponent):
                     symbol=data["symbol"],
                     margin_ratio=data["margin"],
                     leverage=data["leverage"],
+                    current_price=data["price"],
                 )
                 await self.publish(
                     PositionUpdate(
@@ -53,6 +54,7 @@ class PerpMonitor(BaseComponent):
                         margin_ratio=data["margin"],
                         leverage=data["leverage"],
                         account=self.account_address or "0xMOCK",
+                        current_price=data["price"],
                     )
                 )
                 await asyncio.sleep(5)
@@ -94,6 +96,7 @@ class PerpMonitor(BaseComponent):
                         symbol=symbol,
                         margin_ratio=margin_ratio,
                         leverage=leverage,
+                        current_price=float(pos.get("entryPrice", 0.0)),
                     )
                     await self.publish(
                         PositionUpdate(
@@ -101,6 +104,7 @@ class PerpMonitor(BaseComponent):
                             margin_ratio=margin_ratio,
                             leverage=leverage,
                             account=self.account_address,
+                            current_price=float(pos.get("entryPrice", 0.0)),
                         )
                     )
 

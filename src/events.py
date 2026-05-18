@@ -25,12 +25,14 @@ class PositionUpdate(BaseEvent):
         margin_ratio (float): The current margin ratio (0.0 to 1.0).
         leverage (float): The current leverage (e.g., 5.0).
         account (str): The account address or identifier.
+        current_price (float): The current mark price of the asset.
     """
 
     symbol: str
     margin_ratio: float
     leverage: float
     account: str = "0xDEFAULT"
+    current_price: float = 0.0
 
 
 @dataclass(frozen=True)

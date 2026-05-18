@@ -60,6 +60,11 @@ export default function Dashboard() {
     if (latestSignal.event_type === 'PositionUpdate') {
       addMarginHistory(latestSignal.timestamp * 1000, latestSignal.payload.margin_ratio);
       addLeverageHistory(latestSignal.timestamp * 1000, latestSignal.payload.leverage);
+      
+      // Update price if available for BTC
+      if (latestSignal.payload.symbol === 'BTC-PERP' && latestSignal.payload.current_price) {
+        setBtcPrice(latestSignal.payload.current_price);
+      }
     }
 
     // 3. Map signals to rescue stages for visual progress
