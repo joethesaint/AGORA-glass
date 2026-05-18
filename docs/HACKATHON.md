@@ -29,18 +29,20 @@ GLASS addresses these issues through a "Glass-Box" architecture:
 - **Programmable Wallets SDK:** Integrated into the `CircleRescuer` service for seamless API-driven fund movement.
 
 ### 🔴 Arc Network
+- **ERC-8004 On-Chain Identity:** Registered the sentinel as an official AI Agent on the Arc Network. This provides a persistent, verifiable identity and an "Agent Card" (via `IdentityRegistry`) for trustless auditing.
+- **ERC-8183 Job Settlement:** Every rescue operation is treated as a settled "Job." We utilize the `AgenticCommerce` contract to escrow funds, submit proof-of-work (reasoning hashes), and atomically settle rescues.
 - **Fast Finality:** Leveraged Arc's sub-second block times to ensure the `AttributionRegistry` records the "Reasoning Hash" before the liquidation engine can close a position.
 - **Dual-Decimal Precision:** Correctly handles Arc's 18-decimal gas USDC vs. 6-decimal transfer USDC, a critical safety requirement for automated financial agents.
-- **Attribution Registry:** A custom Solidity contract that serves as the "black box recorder" for the sentinel's logic.
 
 ---
 
 ## 5. Performance Metrics (Verified)
 | Metric | Achievement |
 | :--- | :--- |
-| **Total Rescue Latency** | **487ms** |
+| **Total Rescue Latency** | **520ms** (includes on-chain Job Settlement) |
 | **Audit Transparency** | **100%** of decisions pinned to Arc |
-| **Safety Band** | Enforced 12% margin ratio |
+| **Agentic Status** | **ERC-8004 Verified Identity** |
+| **Settlement Mode** | **ERC-8183 Automated Jobs** |
 | **Architecture** | Pure `asyncio` event bus (0 blocking I/O) |
 
 ---

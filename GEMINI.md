@@ -42,7 +42,7 @@ Refer to the `docs/` directory for deep-dive technical specifications and archit
 
 ## 🚀 Active Objectives
 - **Joe:** Finalize Python agent loop, implement `VaultService`, and align ports. **[COMPLETE]**
-- **Ayo:** Implement the `AttributionRegistry` and `Vault` contracts. **[COMPLETE]**
+- **Ayo:** Implement `AttributionRegistry`, `Vault`, `ERC-8004` Identity, and `ERC-8183` Job Settlement. **[COMPLETE]**
 - **Andy:** Implement the Next.js dashboard and real Web3 connectivity. **[COMPLETE]**
 - **Lani:** Update traction and product via `arc-canteen`.
     - `arc-canteen update-product "Completed high-fidelity Next.js dashboard with live 'Glass-Box' transparency auditing, integrated rescue metrics, and real Web3 connectivity."`

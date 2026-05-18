@@ -5,20 +5,24 @@ interface WalletState {
   address: string | null;
   isConnected: boolean;
   isConnecting: boolean;
+  isModalOpen: boolean;
   connectionType: 'web2' | 'web3' | null;
   chain: string | null;
   balance: string;
   connect: (type: 'web2' | 'web3') => Promise<void>;
   disconnect: () => void;
+  setIsModalOpen: (isOpen: boolean) => void;
 }
 
 export const useWalletStore = create<WalletState>((set, get) => ({
   address: null,
   isConnected: false,
   isConnecting: false,
+  isModalOpen: false,
   connectionType: null,
   chain: null,
   balance: '0.00',
+  setIsModalOpen: (isOpen) => set({ isModalOpen: isOpen }),
   connect: async (type: 'web2' | 'web3') => {
     set({ isConnecting: true, connectionType: type });
     
@@ -35,6 +39,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
             address,
             isConnected: true,
             isConnecting: false,
+            isModalOpen: false,
             chain: network.name === 'unknown' ? 'Arc Testnet' : network.name,
             balance: parseFloat(ethers.formatEther(balance)).toFixed(4),
           });
@@ -46,6 +51,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
             address: '0xWeb3Native_Mock_35Cc...844e',
             isConnected: true,
             isConnecting: false,
+            isModalOpen: false,
             chain: 'Arc Testnet (Simulated)',
             balance: '12,450.00',
           });
@@ -57,6 +63,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
           address: '0xCircleUser_742d...f44e',
           isConnected: true,
           isConnecting: false,
+          isModalOpen: false,
           chain: 'Arc Testnet',
           balance: '5,000.00',
         });

@@ -7,9 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UnifiedWalletModal } from './UnifiedWalletModal';
 
 export const WalletConnect = () => {
-  const { address, isConnected, isConnecting, connect, disconnect, chain } = useWalletStore();
+  const { address, isConnected, isConnecting, connect, disconnect, chain, isModalOpen, setIsModalOpen } = useWalletStore();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const formatAddress = (addr: string) => {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
@@ -17,7 +16,6 @@ export const WalletConnect = () => {
 
   const handleConnect = (type: 'web2' | 'web3') => {
     connect(type);
-    setIsModalOpen(false);
   };
 
   if (!isConnected) {

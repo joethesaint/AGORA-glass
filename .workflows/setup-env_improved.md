@@ -34,8 +34,9 @@ cd agora-glass
 
 ### 4. Python Virtual Environment
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+uv venv
+source .venv/bin/activate
+uv sync
 ```
 
 ### 5. Node Dependencies (Frontend)

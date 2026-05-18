@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { X, TrendingUp, TrendingDown, Clock, AlertTriangle, Plus, Minus, RefreshCw, BarChart3, History } from 'lucide-react';
+import { useWalletStore } from '@/stores/walletStore';
+import { X, TrendingUp, TrendingDown, Clock, AlertTriangle, Plus, Minus, RefreshCw, BarChart3, History, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Position } from '@/types/position';
 import {
@@ -59,9 +60,18 @@ export const PositionDetailModal = ({
   onDeleverage,
   onClosePosition,
 }: PositionDetailModalProps) => {
+  const { isConnected, setIsModalOpen } = useWalletStore();
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'actions'>('overview');
   const [marginAmount, setMarginAmount] = useState('');
   const [deleverageAmount, setDeleverageAmount] = useState('');
+
+  const handleGatedAction = (action: () => void) => {
+    if (!isConnected) {
+      setIsModalOpen(true);
+    } else {
+      action();
+    }
+  };
 
   const riskInfo = useMemo(() => {
     if (!position) return getRiskLevel(1);
@@ -389,9 +399,10 @@ export const PositionDetailModal = ({
                           className="flex-1 px-4 py-2 bg-[#0a0907] border border-[#1e1e1e] rounded-lg text-white text-sm font-mono placeholder-[#484848] focus:outline-none focus:border-[#00A3FF]"
                         />
                         <button
-                          onClick={handleAddMargin}
-                          className="px-6 py-2 bg-[#00D98F] text-white rounded-lg hover:bg-[#00C77E] transition-colors font-medium"
+                          onClick={() => handleGatedAction(handleAddMargin)}
+                          className="px-6 py-2 bg-[#00D98F] text-white rounded-lg hover:bg-[#00C77E] transition-colors font-medium flex items-center gap-2"
                         >
+                          {!isConnected && <Lock size={12} />}
                           Add
                         </button>
                       </div>
@@ -423,9 +434,10 @@ export const PositionDetailModal = ({
                           className="flex-1 px-4 py-2 bg-[#0a0907] border border-[#1e1e1e] rounded-lg text-white text-sm font-mono placeholder-[#484848] focus:outline-none focus:border-[#00A3FF]"
                         />
                         <button
-                          onClick={handleDeleverage}
-                          className="px-6 py-2 bg-[#FF6B35] text-white rounded-lg hover:bg-[#E85A24] transition-colors font-medium"
+                          onClick={() => handleGatedAction(handleDeleverage)}
+                          className="px-6 py-2 bg-[#FF6B35] text-white rounded-lg hover:bg-[#E85A24] transition-colors font-medium flex items-center gap-2"
                         >
+                          {!isConnected && <Lock size={12} />}
                           Reduce
                         </button>
                       </div>
@@ -452,9 +464,10 @@ export const PositionDetailModal = ({
                           </p>
                         </div>
                         <button
-                          onClick={handleForceClose}
-                          className="px-6 py-2 bg-[#FF3B3B] text-white rounded-lg hover:bg-[#E82A2A] transition-colors font-medium"
+                          onClick={() => handleGatedAction(handleForceClose)}
+                          className="px-6 py-2 bg-[#FF3B3B] text-white rounded-lg hover:bg-[#E82A2A] transition-colors font-medium flex items-center gap-2"
                         >
+                          {!isConnected && <Lock size={12} />}
                           Close Position
                         </button>
                       </div>

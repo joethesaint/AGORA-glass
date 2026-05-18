@@ -4,6 +4,7 @@ import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { StatusBadge } from './StatusBadge';
 import { Position } from '@/types/position';
+import { useWalletStore } from '@/stores/walletStore';
 import {
   Plus,
   Minus,
@@ -14,6 +15,7 @@ import {
   MoreVertical,
   ArrowUpRight,
   ArrowDownRight,
+  Lock,
 } from 'lucide-react';
 
 interface PositionCardEnhancedProps {
@@ -26,6 +28,17 @@ interface PositionCardEnhancedProps {
 
 export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
   ({ position, onClose, onAddMargin, onDeleverage, onClick }) => {
+    const { isConnected, setIsModalOpen } = useWalletStore();
+
+    const handleGatedAction = (e: React.MouseEvent, action?: (id: string) => void) => {
+      e.stopPropagation();
+      if (!isConnected) {
+        setIsModalOpen(true);
+      } else {
+        action?.(position.id);
+      }
+    };
+
     const getStatusType = (leverage: number): 'safe' | 'warning' | 'critical' => {
       if (leverage > 5) return 'critical';
       if (leverage > 3) return 'warning';
@@ -160,27 +173,30 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
           <motion.button
             whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => onAddMargin?.(position.id)}
-            className="py-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col items-center justify-center gap-1.5 transition-colors"
+            onClick={(e) => handleGatedAction(e, onAddMargin)}
+            className="py-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col items-center justify-center gap-1.5 transition-colors relative group/btn"
           >
+            {!isConnected && <Lock className="w-2 h-2 absolute top-1.5 right-1.5 text-[#484848] group-hover/btn:text-[#8A93A3]" />}
             <Plus className="w-3 h-3 text-[#8A93A3]" />
             <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Add Margin</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => onDeleverage?.(position.id)}
-            className="py-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col items-center justify-center gap-1.5 transition-colors"
+            onClick={(e) => handleGatedAction(e, onDeleverage)}
+            className="py-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col items-center justify-center gap-1.5 transition-colors relative group/btn"
           >
+            {!isConnected && <Lock className="w-2 h-2 absolute top-1.5 right-1.5 text-[#484848] group-hover/btn:text-[#8A93A3]" />}
             <Minus className="w-3 h-3 text-[#8A93A3]" />
             <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Deleverage</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 59, 59, 0.15)' }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => onClose?.(position.id)}
-            className="py-2.5 rounded-lg bg-[#FF3B3B]/10 border border-[#FF3B3B]/10 flex flex-col items-center justify-center gap-1.5 transition-colors"
+            onClick={(e) => handleGatedAction(e, onClose)}
+            className="py-2.5 rounded-lg bg-[#FF3B3B]/10 border border-[#FF3B3B]/10 flex flex-col items-center justify-center gap-1.5 transition-colors relative group/btn"
           >
+            {!isConnected && <Lock className="w-2 h-2 absolute top-1.5 right-1.5 text-[#FF3B3B]/40 group-hover/btn:text-[#FF3B3B]" />}
             <X className="w-3 h-3 text-[#FF3B3B]" />
             <span className="text-[8px] font-bold text-[#FF3B3B] uppercase tracking-tighter">Close Pos</span>
           </motion.button>
