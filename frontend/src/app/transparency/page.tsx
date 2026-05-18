@@ -45,7 +45,7 @@ export default function Transparency() {
           <h3 className="text-sm font-semibold text-[#787878] uppercase tracking-widest">Live Reasoning Stream</h3>
           {traces.length > 0 ? (
             traces.map((trace, i) => (
-              <ReasoningTraceCard key={trace.reason_hash || i} data={trace} />
+              <ReasoningTraceCard key={`${trace.reason_hash}-${i}`} data={trace} />
             ))
           ) : (
             <div className="h-64 flex items-center justify-center border border-dashed border-[#1e1e1e] rounded-2xl text-[#484848] text-sm italic">
