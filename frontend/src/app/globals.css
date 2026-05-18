@@ -51,12 +51,12 @@
   filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
   transition: all 0.5s ease;
   position: relative;
-}
 
-@utility glass-text:hover {
-  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
-  animation: glitter 1.5s linear infinite;
-  background-size: 200% auto;
+  &:hover {
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
+    animation: glitter 1.5s linear infinite;
+    background-size: 200% auto;
+  }
 }
 
 @keyframes glitter {
