@@ -53,7 +53,7 @@ async def main():
     ws_task = asyncio.create_task(ws_server.run())
     stop_task = asyncio.create_task(stop_event.wait())
 
-    logger.info("sentinel_active", status="monitoring", ws_port=8766)
+    logger.info("sentinel_active", status="monitoring", ws_port=8765)
 
     try:
         # Run until stop_event is set or monitors finish

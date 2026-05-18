@@ -17,20 +17,21 @@ Based on the review of the `dev_joe` branch objectives, the `src/` codebase, and
 
 ## 🚀 Critical Path: What is Left to Build
 
-### 1. Live Monitoring Layer (`src/monitor.py`)
-*   **Hyperliquid Integration:** Switch from `mode="mock"` to a real WebSocket connection to Hyperliquid. (Currently in progress by Market Monitor sub-tasks).
+### 1. Ultra-Low Latency Execution (`src/services/circle_rescuer.py`)
+*   **Circle Gateway Migration:** Transition from standard CCTP to **Circle Gateway** for instant (**<500ms**) cross-chain USDC movement. This is critical for meeting the sub-500ms rescue mandate in high-volatility scenarios.
+*   **Unified Balance Integration:** Leverage Gateway's Unified Balance to allow users to fund rescues from any of the 11+ supported chains seamlessly.
 
-### 2. The "Glass-Box" On-Chain Registry (Solidity)
-*   **Finalization:** Ayo to finalize logic in `AttributionRegistry.sol` and `Vault.sol`.
-*   **Deployment:** Live deployment to Arc (Chain ID 5042002) once RPC session is refreshed.
+### 2. Autonomous Agent Security (`src/services/circle_rescuer.py`)
+*   **Circle Agent Stack:** Refactor internal wallet management to use **Agent Wallets** (`@circle-fin/cli`). This replaces manual private key handling with a secure, policy-driven MPC wallet specifically designed for AI agents.
 
-### 3. Financial Execution Layer (`src/dispatcher.py`)
-*   **Integration:** Connection between `CircleRescuer` and the live `Vault` address.
+### 3. "Agentic Economy" Standards (Solidity & Deploy)
+*   **ERC-8004 Identity:** Register the AGORA sentinel as an official AI Agent on the Arc blockchain to establish on-chain reputation and verifiable identity.
+*   **ERC-8183 Job Settlement:** Implement the "Job" standard for rescue operations, ensuring every intervention is treated as a settled on-chain task with verifiable deliverables.
 
-### 4. The Dashboard (Frontend)
-*   **Next.js Implementation:** Andy to visualize live margin levels and reasoning traces.
+### 4. Decimal Precision Audit (Arc-Specific)
+*   **Dual-Decimal Safety:** Rigorously verify that Arc-native gas (**18 decimals**) and ERC-20 USDC (**6 decimals**) are never conflated in the `arc_pinner.py` or contract logic.
 
 ---
 
-**Project Completion:** ~60% (Core Engine & Data Feeds Live)
-**Current Focus:** Finalizing Smart Contract Business Logic & Frontend Dashboard.
+**Project Completion:** ~75% (Core Engine Live, Modern SDK Integration in Progress)
+**Current Focus:** Migrating to Circle Gateway and implementing Agentic standards.
