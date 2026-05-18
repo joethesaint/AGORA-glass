@@ -10,12 +10,14 @@ interface SettingsSection {
 }
 
 const SettingsSection = ({ title, icon, children }: SettingsSection) => (
-  <div className="bg-[#111111] border border-[#1e1e1e] rounded-2xl p-6 space-y-6">
-    <div className="flex items-center gap-3 pb-4 border-b border-[#1e1e1e]">
+  <div className="agora-card p-5 space-y-4">
+    <div className="flex items-center gap-3 pb-3 border-b border-white/5">
       <div className="text-[#00A3FF]">{icon}</div>
-      <h2 className="text-lg font-semibold text-white">{title}</h2>
+      <h2 className="text-base font-bold text-white uppercase tracking-wider">{title}</h2>
     </div>
-    {children}
+    <div className="space-y-1">
+      {children}
+    </div>
   </div>
 );
 
@@ -27,19 +29,19 @@ interface ToggleProps {
 }
 
 const Toggle = ({ label, description, checked, onChange }: ToggleProps) => (
-  <div className="flex items-center justify-between">
-    <div className="space-y-1">
-      <p className="text-sm font-medium text-white">{label}</p>
-      <p className="text-xs text-[#8A93A3]">{description}</p>
+  <div className="flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.02] transition-colors border border-transparent hover:border-white/5 group">
+    <div className="space-y-0.5">
+      <p className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">{label}</p>
+      <p className="text-[11px] text-[#8A93A3]">{description}</p>
     </div>
     <button
       onClick={() => onChange(!checked)}
-      className={`relative w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
-        checked ? 'bg-[#00A3FF]' : 'bg-[#1e1e1e]'
+      className={`relative w-10 h-5 rounded-full transition-all duration-300 ease-in-out ${
+        checked ? 'bg-[#00A3FF] shadow-[0_0_10px_rgba(0,163,255,0.4)]' : 'bg-white/10'
       }`}
     >
       <span
-        className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-200 ease-in-out mt-1 ml-1 ${
+        className={`absolute top-1 left-1 w-3 h-3 transform bg-white rounded-full transition-all duration-300 ease-in-out ${
           checked ? 'translate-x-5' : 'translate-x-0'
         }`}
       />
@@ -59,13 +61,13 @@ interface SliderProps {
 }
 
 const Slider = ({ label, description, value, min, max, step, unit, onChange }: SliderProps) => (
-  <div className="space-y-3">
+  <div className="p-3 rounded-xl hover:bg-white/[0.02] transition-colors border border-transparent hover:border-white/5 group space-y-3">
     <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-white">{label}</p>
-        <p className="text-xs text-[#8A93A3]">{description}</p>
+      <div className="space-y-0.5">
+        <p className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">{label}</p>
+        <p className="text-[11px] text-[#8A93A3]">{description}</p>
       </div>
-      <span className="text-sm font-mono text-[#00A3FF]">
+      <span className="text-sm font-mono font-bold text-[#00A3FF] bg-[#00A3FF]/10 px-2 py-0.5 rounded">
         {value}
         {unit}
       </span>
@@ -77,18 +79,8 @@ const Slider = ({ label, description, value, min, max, step, unit, onChange }: S
       step={step}
       value={value}
       onChange={(e) => onChange(parseFloat(e.target.value))}
-      className="w-full h-1 bg-[#1e1e1e] rounded-lg appearance-none cursor-pointer accent-[#00A3FF]"
+      className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#00A3FF]"
     />
-    <div className="flex justify-between text-xs text-[#484848]">
-      <span>
-        {min}
-        {unit}
-      </span>
-      <span>
-        {max}
-        {unit}
-      </span>
-    </div>
   </div>
 );
 
@@ -102,17 +94,17 @@ interface InputProps {
 }
 
 const Input = ({ label, description, value, placeholder, type = 'text', onChange }: InputProps) => (
-  <div className="space-y-2">
-    <div>
-      <p className="text-sm font-medium text-white">{label}</p>
-      <p className="text-xs text-[#8A93A3]">{description}</p>
+  <div className="p-3 rounded-xl hover:bg-white/[0.02] transition-colors border border-transparent hover:border-white/5 group space-y-2">
+    <div className="space-y-0.5">
+      <p className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">{label}</p>
+      <p className="text-[11px] text-[#8A93A3]">{description}</p>
     </div>
     <input
       type={type}
       value={value}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-2 bg-[#0a0907] border border-[#1e1e1e] rounded-lg text-white text-sm font-mono placeholder-[#484848] focus:outline-none focus:border-[#00A3FF] transition-colors"
+      className="w-full px-3 py-1.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs font-mono placeholder-white/20 focus:outline-none focus:border-[#00A3FF]/50 transition-all"
     />
   </div>
 );
