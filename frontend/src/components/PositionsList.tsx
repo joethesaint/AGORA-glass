@@ -30,10 +30,11 @@ interface PositionCardEnhancedProps {
   onClose?: (id: string) => void;
   onAddMargin?: (id: string) => void;
   onDeleverage?: (id: string) => void;
+  onClick?: (id: string) => void;
 }
 
 export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
-  ({ position, onClose, onAddMargin, onDeleverage }) => {
+  ({ position, onClose, onAddMargin, onDeleverage, onClick }) => {
     const getStatusType = (leverage: number): 'safe' | 'warning' | 'critical' => {
       if (leverage > 5) return 'critical';
       if (leverage > 3) return 'warning';
@@ -51,7 +52,8 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="agora-card p-5 space-y-6"
+        onClick={() => onClick?.(position.id)}
+        className="agora-card p-5 space-y-6 cursor-pointer hover:border-[#00A3FF]/50 transition-colors"
       >
         {/* Header */}
         <div className="flex justify-between items-start">
@@ -190,10 +192,11 @@ interface PositionsListProps {
   onPositionClose?: (id: string) => void;
   onAddMargin?: (id: string) => void;
   onDeleverage?: (id: string) => void;
+  onPositionClick?: (id: string) => void;
 }
 
 export const PositionsList = memo<PositionsListProps>(
-  ({ positions, onPositionClose, onAddMargin, onDeleverage }) => {
+  ({ positions, onPositionClose, onAddMargin, onDeleverage, onPositionClick }) => {
     const criticalCount = positions.filter((p) => p.leverage > 5).length;
     const warningCount = positions.filter((p) => p.leverage > 3 && p.leverage <= 5).length;
 
@@ -242,6 +245,7 @@ export const PositionsList = memo<PositionsListProps>(
                 onClose={onPositionClose}
                 onAddMargin={onAddMargin}
                 onDeleverage={onDeleverage}
+                onClick={onPositionClick}
               />
             ))}
           </div>

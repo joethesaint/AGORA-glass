@@ -14,11 +14,14 @@ import { useAgentSignals } from '@/hooks/useAgentSignals';
 import { LiveMetricsHeader } from '@/components/LiveMetricsHeader';
 import { RescuePath } from '@/components/RescuePath';
 import { ReasoningTraceCard } from '@/components/ReasoningTraceCard';
+import { PositionDetailModal } from '@/components/PositionDetailModal';
 
 export default function Dashboard() {
   const { rescueMetrics, positionMetrics, marginHistory, leverageHistory, updateRescueMetrics, addMarginHistory, addLeverageHistory } = useAnalyticsStore();
-  const { signals } = useAgentSignals();
+  const { signals, status: connectionStatus } = useAgentSignals();
   const [rescueStage, setRescueStage] = useState<'idle' | 'pinning' | 'releasing' | 'bridging' | 'complete'>('idle');
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Find latest reasoning trace for display
   const latestTrace = useMemo(() => {
@@ -124,6 +127,14 @@ export default function Dashboard() {
     console.log('Deleverage:', id);
   }, []);
 
+  const handlePositionClick = useCallback((id: string) => {
+    const pos = positions.find(p => p.id === id);
+    if (pos) {
+      setSelectedPosition(pos);
+      setIsModalOpen(true);
+    }
+  }, [positions]);
+
   return (
     <main className="p-8 max-w-7xl mx-auto space-y-8">
       {/* Page Title */}
@@ -142,6 +153,7 @@ export default function Dashboard() {
         latencyMs={rescueMetrics.avgLatency}
         totalRescued={rescueMetrics.totalRescued}
         agentStatus={rescueMetrics.totalRescues > 0 ? "PROTECTING" : "IDLE"}
+        connectionStatus={connectionStatus}
       />
       
       {/* Rescue Flow & Latest Trace */}
@@ -189,8 +201,19 @@ export default function Dashboard() {
           onPositionClose={handlePositionClose}
           onAddMargin={handleAddMargin}
           onDeleverage={handleDeleverage}
+          onPositionClick={handlePositionClick}
         />
       </div>
+
+      {/* Position Detail Modal */}
+      <PositionDetailModal
+        position={selectedPosition}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAddMargin={handleAddMargin}
+        onDeleverage={handleDeleverage}
+        onClosePosition={handlePositionClose}
+      />
 
       {/* Events Section */}
       <div>
