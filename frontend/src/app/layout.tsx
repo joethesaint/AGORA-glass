@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navigation } from "@/components/Navigation";
 import { AlertSystem } from "@/components/AlertSystem";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { WalletConnect } from "@/components/WalletConnect";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
@@ -39,6 +40,7 @@ export default function RootLayout({
                 <p className="text-[10px] lg:text-[11px] text-[#8A93A3] uppercase">Unified Balance</p>
                 <p className="text-base lg:text-xl font-bold text-[#00A3FF]">$12,450.00</p>
               </div>
+              <WalletConnect />
               <AlertSystem />
             </div>
           </header>
