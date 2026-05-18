@@ -3,8 +3,8 @@
 @theme {
   --color-background: #060608;
   --color-foreground: #F2F2F2;
-  --color-accent: #00D98F;
-  --color-accent-blue: #00A3FF;
+  --color-accent: var(--accent, #00D98F);
+  --color-accent-blue: var(--accent, #00A3FF);
   --color-muted: #8A93A3;
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
