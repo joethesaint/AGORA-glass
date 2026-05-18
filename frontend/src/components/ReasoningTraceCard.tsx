@@ -18,6 +18,16 @@ export interface ReasoningTrace {
 export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
   const [copied, setCopied] = useState(false);
 
+  // Prepare data for display: try to parse reasoning_text if it's a JSON string
+  const displayData = { ...data };
+  try {
+    if (typeof displayData.reasoning_text === 'string' && displayData.reasoning_text.startsWith('{')) {
+        displayData.reasoning_text = JSON.parse(displayData.reasoning_text);
+    }
+  } catch (e) {
+    // If parsing fails, leave as is
+  }
+
   const handleCopy = () => {
     // Pretty-print with 2-space indentation
     const jsonString = JSON.stringify(data, null, 2);
@@ -45,7 +55,7 @@ export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
       
       <div className="bg-zinc-950 dark:bg-black p-4 rounded-xl border border-zinc-800 mb-6 overflow-x-auto">
         <pre className="text-xs font-mono text-zinc-300 whitespace-pre-wrap">
-          {JSON.stringify(data, null, 2)}
+          {JSON.stringify(displayData, null, 2)}
         </pre>
       </div>
       
