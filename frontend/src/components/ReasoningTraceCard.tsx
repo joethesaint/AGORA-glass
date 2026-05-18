@@ -17,6 +17,7 @@ export interface ReasoningTrace {
 
 export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const handleCopy = () => {
     const jsonString = JSON.stringify(data, null, 2);
@@ -26,50 +27,85 @@ export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
   };
 
   return (
-    <div className="glass rounded-2xl p-6 shadow-xl border border-zinc-200/20 dark:border-zinc-800/50 bg-white/5 dark:bg-black/20">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="agora-card relative overflow-hidden"
+    >
+      {/* Background Accent */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-[#00D98F]/5 blur-3xl -z-10 rounded-full translate-x-1/2 -translate-y-1/2" />
+      
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6 mb-8">
         <div>
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Glass-Box Reasoning Trace</h3>
-            <p className="text-xs text-zinc-500 font-mono mt-1">{data.agent_id} • {data.action}</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-1.5 rounded bg-[#00D98F]/10 border border-[#00D98F]/20">
+                <Shield className="w-4 h-4 text-[#00D98F]" />
+              </div>
+              <h3 className="text-xl font-bold text-white tracking-tight">Glass-Box Reasoning</h3>
+            </div>
+            <p className="text-[10px] text-[#8A93A3] font-mono uppercase tracking-[0.2em]">{data.agent_id} • {data.action}</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${data.risk_rating === 'CRITICAL' ? 'bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30' : 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30'}`}>
+          <span className={`px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest ${data.risk_rating === 'CRITICAL' ? 'bg-[#FF3B3B]/10 text-[#FF3B3B] border border-[#FF3B3B]/20' : 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20'}`}>
             {data.risk_rating}
           </span>
           <button 
             onClick={handleCopy}
-            className="text-xs px-3 py-1 rounded-lg bg-zinc-200/50 dark:bg-zinc-800 hover:bg-zinc-300/50 dark:hover:bg-zinc-700 transition-colors"
+            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all active:scale-95"
+            title="Copy Trace JSON"
           >
-            {copied ? 'Copied!' : 'Copy Trace'}
+            {copied ? <Check className="w-4 h-4 text-[#00D98F]" /> : <Copy className="w-4 h-4 text-[#8A93A3]" />}
           </button>
         </div>
       </div>
       
-      <div className="bg-zinc-950 p-5 rounded-xl border border-zinc-800 mb-6 overflow-x-auto shadow-inner">
-        <pre className="text-xs font-mono text-emerald-400 whitespace-pre-wrap leading-relaxed">
+      <div className="bg-black/40 backdrop-blur-md p-6 rounded-2xl border border-white/5 mb-8 group relative">
+        <div className="absolute top-4 right-6 text-[9px] text-[#484848] font-mono font-bold uppercase group-hover:text-[#8A93A3] transition-colors">
+          Deterministic Reasoning Log
+        </div>
+        <pre className="text-[11px] font-mono text-[#00D98F]/90 whitespace-pre-wrap leading-relaxed custom-scrollbar max-h-[300px] overflow-y-auto pr-4">
           {JSON.stringify(data.reasoning_text, null, 2)}
         </pre>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-zinc-200/10 dark:border-zinc-800/50">
-        <div className="space-y-3">
-            <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Evidence</h4>
-            <ul className="text-xs text-zinc-600 dark:text-zinc-400 space-y-1.5">
-                {data.evidence.map((e, i) => (
-                    <li key={i} className="flex gap-2 items-start">
-                        <span className="text-emerald-500 mt-0.5">▹</span> {e}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-white/5">
+        <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h4 className="text-[10px] font-bold text-[#8A93A3] uppercase tracking-[0.2em]">Evidence Bundle</h4>
+              {data.evidence.length > 2 && (
+                <button onClick={() => setExpanded(!expanded)} className="text-[9px] font-bold text-[#00A3FF] hover:underline uppercase tracking-widest">
+                  {expanded ? '[ - ] Collapse' : '[ + ] View All'}
+                </button>
+              )}
+            </div>
+            <ul className="space-y-3">
+                {data.evidence.slice(0, expanded ? undefined : 2).map((e, i) => (
+                    <li key={i} className="flex gap-3 items-start group">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#00D98F]/40 mt-1.5 group-hover:bg-[#00D98F] transition-colors" />
+                        <span className="text-[11px] text-white/80 leading-relaxed font-medium">{e}</span>
                     </li>
                 ))}
             </ul>
         </div>
         
-        <div className="space-y-3">
-            <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Audit Hash (Arc)</h4>
-            <div className="p-3 bg-zinc-950 rounded-lg font-mono text-[10px] text-zinc-300 break-all border border-zinc-800 shadow-sm">
-                {data.reason_hash}
+        <div className="space-y-4">
+            <h4 className="text-[10px] font-bold text-[#8A93A3] uppercase tracking-[0.2em]">On-Chain Verification</h4>
+            <div className="p-4 bg-white/[0.02] rounded-xl border border-white/5 group hover:border-[#00D98F]/30 transition-colors">
+                <div className="text-[9px] text-[#484848] font-bold uppercase mb-2">Arc Network Hash</div>
+                <div className="font-mono text-[10px] text-[#00D98F] break-all leading-relaxed">
+                    {data.reason_hash}
+                </div>
             </div>
+            <a 
+              href={`https://testnet.arcscan.io/hash/${data.reason_hash}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-[10px] font-bold text-[#00A3FF] hover:text-[#00A3FF]/80 transition-colors uppercase tracking-widest"
+            >
+              Verify on Explorer <ExternalLink className="w-3 h-3" />
+            </a>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -10,41 +10,49 @@ import {
   Zap,
   TrendingUp,
   Clock,
+  BarChart3,
+  Play,
 } from 'lucide-react';
-
-export type EventType = 'PositionUpdate' | 'RiskVerdict' | 'ReasoningTrace' | 'RescueComplete' | 'Unknown';
+import { EventType } from '@/types/agent';
 
 export interface Event {
   type: EventType;
+  event_type?: string;
   timestamp: number;
   data: Record<string, any>;
+  payload?: any;
 }
 
-const EVENT_ICONS: Record<EventType, React.ReactNode> = {
+const EVENT_ICONS: Record<string, React.ReactNode> = {
   PositionUpdate: <Activity className="w-4 h-4" />,
   RiskVerdict: <AlertCircle className="w-4 h-4" />,
   ReasoningTrace: <Shield className="w-4 h-4" />,
+  RescueInitiated: <Play className="w-4 h-4" />,
   RescueComplete: <Zap className="w-4 h-4" />,
+  ANALYTICS_UPDATE: <BarChart3 className="w-4 h-4" />,
   Unknown: <Clock className="w-4 h-4" />,
 };
 
-const EVENT_COLORS: Record<EventType, { bg: string; text: string; border: string }> = {
+const EVENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   PositionUpdate: { bg: 'bg-[#00A3FF]/10', text: 'text-[#00A3FF]', border: 'border-[#00A3FF]/20' },
   RiskVerdict: { bg: 'bg-[#F5A623]/10', text: 'text-[#F5A623]', border: 'border-[#F5A623]/20' },
   ReasoningTrace: { bg: 'bg-[#d4ff3e]/10', text: 'text-[#d4ff3e]', border: 'border-[#d4ff3e]/20' },
+  RescueInitiated: { bg: 'bg-[#00A3FF]/10', text: 'text-[#00A3FF]', border: 'border-[#00A3FF]/20' },
   RescueComplete: { bg: 'bg-[#00D98F]/10', text: 'text-[#00D98F]', border: 'border-[#00D98F]/20' },
+  ANALYTICS_UPDATE: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20' },
   Unknown: { bg: 'bg-[#787878]/10', text: 'text-[#787878]', border: 'border-[#787878]/20' },
 };
 
 interface EventTypeIconProps {
-  type: EventType;
+  type: string;
 }
 
 export const EventTypeIcon = memo<EventTypeIconProps>(({ type }) => {
-  const colors = EVENT_COLORS[type];
+  const colors = EVENT_COLORS[type] || EVENT_COLORS.Unknown;
+  const icon = EVENT_ICONS[type] || EVENT_ICONS.Unknown;
   return (
     <div className={`p-2 rounded border ${colors.bg} ${colors.text} ${colors.border}`}>
-      {EVENT_ICONS[type]}
+      {icon}
     </div>
   );
 });
@@ -52,7 +60,7 @@ export const EventTypeIcon = memo<EventTypeIconProps>(({ type }) => {
 EventTypeIcon.displayName = 'EventTypeIcon';
 
 interface EventFeedProps {
-  events: Event[];
+  events: any[]; // Accept AgentSignal or Event
   maxItems?: number;
 }
 
@@ -63,20 +71,35 @@ export const EventFeed = memo<EventFeedProps>(({ events, maxItems = 10 }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="agora-card p-6"
+      className="agora-card h-full flex flex-col min-h-[500px]"
     >
-      <h3 className="text-md font-medium tracking-wide text-white mb-6">Event Timeline</h3>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h3 className="text-lg font-bold text-white mb-1">System Intelligence</h3>
+          <p className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Real-time Sentinel Signals</p>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/10">
+          <div className="w-1.5 h-1.5 bg-[#00D98F] rounded-full animate-pulse" />
+          <span className="text-[9px] text-white font-mono uppercase">Streaming</span>
+        </div>
+      </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4 overflow-y-auto flex-1 custom-scrollbar pr-2 -mr-2">
         {displayEvents.length === 0 ? (
-          <p className="text-[10px] text-[#787878] text-center py-8">No events yet. Waiting for agent signals...</p>
+          <div className="flex flex-col items-center justify-center py-20 text-[#484848] space-y-4">
+            <Activity className="w-8 h-8 opacity-20" />
+            <p className="text-[10px] uppercase tracking-[0.2em] font-bold">Awaiting initialization...</p>
+          </div>
         ) : (
           displayEvents.map((event, idx) => {
-            const colors = EVENT_COLORS[event.type];
+            const type = event.event_type || event.type;
+            const colors = EVENT_COLORS[type] || EVENT_COLORS.Unknown;
+            const data = event.payload || event.data;
             const time = new Date(event.timestamp * 1000).toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
               second: '2-digit',
+              hour12: false
             });
 
             return (
@@ -85,38 +108,76 @@ export const EventFeed = memo<EventFeedProps>(({ events, maxItems = 10 }) => {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className={`flex gap-4 p-3 rounded border ${colors.bg} ${colors.border} hover:bg-opacity-20 transition-colors`}
+                className={`group flex gap-4 p-4 rounded-xl border ${colors.bg} ${colors.border} hover:bg-white/[0.04] transition-all duration-300 relative overflow-hidden`}
               >
-                <div className="flex-shrink-0 mt-1">
-                  <EventTypeIcon type={event.type} />
+                {/* Visual Accent */}
+                <div className={`absolute left-0 top-0 bottom-0 w-0.5 opacity-40 ${colors.text.replace('text-', 'bg-')}`} />
+                
+                <div className="flex-shrink-0 mt-0.5">
+                  <div className={`p-2 rounded-lg bg-white/5 border border-white/5 group-hover:scale-110 transition-transform ${colors.text}`}>
+                    {EVENT_ICONS[type] || EVENT_ICONS.Unknown}
+                  </div>
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start gap-2">
-                    <span className={`text-[10px] font-mono font-semibold ${colors.text} uppercase tracking-widest`}>
-                      {event.type}
+                  <div className="flex justify-between items-start gap-2 mb-2">
+                    <span className={`text-[10px] font-bold ${colors.text} uppercase tracking-widest`}>
+                      {type}
                     </span>
-                    <span className="text-[10px] text-[#787878] whitespace-nowrap">{time}</span>
+                    <span className="text-[10px] text-[#484848] font-mono group-hover:text-[#8A93A3] transition-colors">{time}</span>
                   </div>
 
-                  <div className="text-[10px] text-[#F2F2F2] mt-2 space-y-1">
-                    {event.type === 'RiskVerdict' && (
-                      <>
-                        <p>Status: <span className="font-mono font-semibold">{event.data?.status || 'UNKNOWN'}</span></p>
-                        {event.data?.leverage && <p>Leverage: <span className="font-mono">{event.data.leverage.toFixed(1)}x</span></p>}
-                      </>
+                  <div className="text-[11px] text-white/70 leading-relaxed font-mono">
+                    {type === 'ReasoningTrace' && (
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between">
+                          <span className="text-[#484848]">HASH</span>
+                          <span className="text-[#00D98F] text-[10px] truncate max-w-[200px]">{data?.reason_hash}</span>
+                        </div>
+                        <div className="flex justify-between border-t border-white/5 pt-1">
+                          <span className="text-[#484848]">ACTION</span>
+                          <span className="text-[#00A3FF] text-[10px]">{data?.action}</span>
+                        </div>
+                      </div>
                     )}
-                    {event.type === 'RescueComplete' && (
-                      <>
-                        <p>Result: <span className="font-mono font-semibold text-[#00D98F]">{event.data?.status || 'UNKNOWN'}</span></p>
-                        {event.data?.amount && <p>Amount: <span className="font-mono">${event.data.amount.toLocaleString()}</span></p>}
-                      </>
+                    {type === 'RiskVerdict' && (
+                      <div className="flex items-center justify-between">
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${data?.status === 'CRITICAL' ? 'bg-[#FF3B3B]/20 text-[#FF3B3B]' : 'bg-[#F5A623]/20 text-[#F5A623]'}`}>
+                          {data?.status}
+                        </span>
+                        <span className="text-white font-bold">{data?.leverage?.toFixed(2)}x LEVERAGE</span>
+                      </div>
                     )}
-                    {event.type === 'PositionUpdate' && (
-                      <>
-                        {event.data?.symbol && <p>Symbol: <span className="font-mono">{event.data.symbol}</span></p>}
-                        {event.data?.margin_ratio && <p>Margin: <span className="font-mono">{(event.data.margin_ratio * 100).toFixed(1)}%</span></p>}
-                      </>
+                    {type === 'RescueComplete' && (
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between">
+                          <span className="text-[#484848]">RESCUED</span>
+                          <span className="text-[#00D98F] font-bold">${data?.amount?.toLocaleString()} USDC</span>
+                        </div>
+                        <div className="flex justify-between border-t border-white/5 pt-1">
+                          <span className="text-[#484848]">LATENCY</span>
+                          <span className="text-[#00A3FF]">{data?.latency_ms?.toFixed(0)}ms</span>
+                        </div>
+                      </div>
+                    )}
+                    {type === 'PositionUpdate' && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-white font-bold">{data?.symbol}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#484848]">MARGIN</span>
+                          <span className={`font-bold ${data?.margin_ratio < 0.12 ? 'text-[#FF3B3B]' : 'text-[#00D98F]'}`}>
+                            {(data?.margin_ratio * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {type === 'ANALYTICS_UPDATE' && (
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+                        <span className="text-[#484848]">TOTAL VOL</span>
+                        <span className="text-[#00D98F] text-right">${data?.total_rescued_usdc?.toLocaleString()}</span>
+                        <span className="text-[#484848]">AVG LATENCY</span>
+                        <span className="text-[#00A3FF] text-right">{data?.avg_latency_ms}ms</span>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -127,9 +188,9 @@ export const EventFeed = memo<EventFeedProps>(({ events, maxItems = 10 }) => {
       </div>
 
       {events.length > maxItems && (
-        <div className="mt-4 pt-4 border-t border-[#1e1e1e]">
-          <p className="text-[10px] text-[#787878] text-center">
-            +{events.length - maxItems} more {events.length - maxItems === 1 ? 'event' : 'events'}
+        <div className="mt-6 pt-4 border-t border-white/5">
+          <p className="text-[10px] text-[#484848] font-mono text-center uppercase tracking-widest">
+            +{events.length - maxItems} deeper signals in buffer
           </p>
         </div>
       )}

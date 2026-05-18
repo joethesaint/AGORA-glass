@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Shield, Zap } from 'lucide-react';
+import { TrendingUp, Shield, Zap, Info } from 'lucide-react';
 
 interface RescueMetricsCardProps {
   totalRescued: number;
@@ -17,67 +17,85 @@ export const RescueMetricsCard = memo<RescueMetricsCardProps>(
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="agora-card p-6 grid grid-cols-1 md:grid-cols-4 gap-4"
+        className="agora-card grid grid-cols-2 lg:grid-cols-4 gap-8"
       >
         {/* Total Rescued */}
-        <div className="space-y-2">
+        <div className="space-y-3 relative group">
           <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-[#00D98F]" />
-            <span className="text-[10px] text-[#787878] uppercase tracking-widest">Total Rescued</span>
+            <div className="p-1.5 rounded-lg bg-[#00D98F]/10 border border-[#00D98F]/20">
+              <Shield className="w-3.5 h-3.5 text-[#00D98F]" />
+            </div>
+            <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Total Rescued</span>
           </div>
-          <motion.p
-            key={totalRescued}
-            initial={{ opacity: 0.5 }}
-            animate={{ opacity: 1 }}
-            className="text-2xl font-bold text-[#00D98F]"
-          >
-            ${totalRescued.toLocaleString()}
-          </motion.p>
-          <p className="text-[10px] text-[#787878]">{totalRescues} rescues</p>
+          <div>
+            <motion.p
+              key={totalRescued}
+              initial={{ opacity: 0.5 }}
+              animate={{ opacity: 1 }}
+              className="text-2xl font-bold text-[#00D98F] text-glow"
+            >
+              ${totalRescued.toLocaleString()}
+            </motion.p>
+            <p className="text-[10px] text-[#484848] font-mono mt-1">{totalRescues} automated rescues</p>
+          </div>
         </div>
 
         {/* Avg Latency */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-[#00A3FF]" />
-            <span className="text-[10px] text-[#787878] uppercase tracking-widest">Avg Latency</span>
+            <div className="p-1.5 rounded-lg bg-[#00A3FF]/10 border border-[#00A3FF]/20">
+              <Zap className="w-3.5 h-3.5 text-[#00A3FF]" />
+            </div>
+            <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Avg Latency</span>
           </div>
-          <motion.p
-            key={avgLatency}
-            initial={{ opacity: 0.5 }}
-            animate={{ opacity: 1 }}
-            className="text-2xl font-bold text-[#00A3FF]"
-          >
-            {avgLatency}ms
-          </motion.p>
-          <p className="text-[10px] text-[#787878]">Sub-500ms target</p>
+          <div>
+            <motion.p
+              key={avgLatency}
+              initial={{ opacity: 0.5 }}
+              animate={{ opacity: 1 }}
+              className="text-2xl font-bold text-[#00A3FF]"
+            >
+              {avgLatency.toFixed(0)}ms
+            </motion.p>
+            <p className="text-[10px] text-[#484848] font-mono mt-1">Sub-500ms target</p>
+          </div>
         </div>
 
         {/* Success Rate */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-[#d4ff3e]" />
-            <span className="text-[10px] text-[#787878] uppercase tracking-widest">Success Rate</span>
+            <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+              <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+            </div>
+            <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Efficiency</span>
           </div>
-          <motion.p
-            key={successRate}
-            initial={{ opacity: 0.5 }}
-            animate={{ opacity: 1 }}
-            className="text-2xl font-bold text-[#d4ff3e]"
-          >
-            {successRate.toFixed(1)}%
-          </motion.p>
-          <p className="text-[10px] text-[#787878]">Operational reliability</p>
+          <div>
+            <motion.p
+              key={successRate}
+              initial={{ opacity: 0.5 }}
+              animate={{ opacity: 1 }}
+              className="text-2xl font-bold text-white"
+            >
+              {successRate.toFixed(1)}%
+            </motion.p>
+            <p className="text-[10px] text-[#484848] font-mono mt-1">Operational uptime</p>
+          </div>
         </div>
 
-        {/* Active Agents */}
-        <div className="space-y-2">
+        {/* Health */}
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-[#00D98F] rounded-full animate-pulse" />
-            <span className="text-[10px] text-[#787878] uppercase tracking-widest">Status</span>
+            <div className="p-1.5 rounded-lg bg-[#00D98F]/10 border border-[#00D98F]/20">
+              <div className="w-3.5 h-3.5 flex items-center justify-center">
+                <div className="w-2 h-2 bg-[#00D98F] rounded-full animate-pulse" />
+              </div>
+            </div>
+            <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Sentinel</span>
           </div>
-          <motion.p className="text-2xl font-bold text-[#00D98F]">LIVE</motion.p>
-          <p className="text-[10px] text-[#787878]">Sentinel active</p>
+          <div>
+            <motion.p className="text-2xl font-bold text-[#00D98F]">ACTIVE</motion.p>
+            <p className="text-[10px] text-[#484848] font-mono mt-1">Monitoring live risk</p>
+          </div>
         </div>
       </motion.div>
     );

@@ -51,135 +51,131 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="agora-card p-5 space-y-4"
+        className="agora-card p-5 space-y-6"
       >
         {/* Header */}
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h4 className="text-lg font-bold text-white">{position.symbol}</h4>
+              <h4 className="text-lg font-bold text-white tracking-tight">{position.symbol}</h4>
               <StatusBadge status={status} text={status} />
             </div>
-            <p className="text-[10px] text-[#787878]">ID: {position.id.slice(0, 8)}</p>
+            <p className="text-[10px] text-[#484848] font-mono tracking-widest uppercase">ID: {position.id.slice(0, 8)}</p>
           </div>
           <button
             onClick={() => onClose?.(position.id)}
-            className="p-2 hover:bg-[#1e1e1e] rounded transition-colors"
+            className="p-1.5 hover:bg-white/5 rounded-lg transition-colors border border-transparent hover:border-white/10"
           >
-            <MoreVertical className="w-4 h-4 text-[#787878]" />
+            <MoreVertical className="w-4 h-4 text-[#8A93A3]" />
           </button>
         </div>
 
-        {/* Price Info */}
-        <div className="grid grid-cols-3 gap-3 py-3 border-t border-b border-[#1e1e1e]">
+        {/* Price Info Grid */}
+        <div className="grid grid-cols-3 gap-4 py-4 border-y border-white/5">
           <div>
-            <p className="text-[10px] text-[#787878] uppercase tracking-widest">Entry</p>
-            <p className="text-sm font-mono">${position.entryPrice.toLocaleString()}</p>
+            <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest mb-1.5">Entry Price</p>
+            <p className="text-xs font-mono text-white">${position.entryPrice.toLocaleString()}</p>
           </div>
           <div>
-            <p className="text-[10px] text-[#787878] uppercase tracking-widest">Current</p>
+            <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest mb-1.5">Current</p>
             <motion.p
               key={position.currentPrice}
               initial={{ opacity: 0.5 }}
               animate={{ opacity: 1 }}
-              className={`text-sm font-mono ${priceChange >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}
+              className={`text-xs font-mono font-bold ${priceChange >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}
             >
               ${position.currentPrice.toLocaleString()}
             </motion.p>
           </div>
           <div>
-            <p className="text-[10px] text-[#787878] uppercase tracking-widest">Change</p>
+            <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest mb-1.5">PnL %</p>
             <p
-              className={`text-sm font-mono font-semibold ${priceChange >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}
+              className={`text-xs font-mono font-bold ${priceChange >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}
             >
               {priceChange >= 0 ? '+' : ''}{priceChangePercent.toFixed(2)}%
             </p>
           </div>
         </div>
 
-        {/* Risk Metrics */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <p className="text-[10px] text-[#787878] uppercase tracking-widest">Margin Ratio</p>
+        {/* Core Risk Metrics */}
+        <div className="grid grid-cols-2 gap-6 bg-white/5 p-4 rounded-xl border border-white/5">
+          <div className="space-y-1">
+            <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest">Margin Ratio</p>
             <motion.p
               key={position.marginRatio}
               initial={{ opacity: 0.5 }}
               animate={{ opacity: 1 }}
-              className={`text-lg font-bold ${position.marginRatio >= 0.12 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}
+              className={`text-2xl font-bold font-mono ${position.marginRatio >= 0.12 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}
             >
               {(position.marginRatio * 100).toFixed(1)}%
             </motion.p>
-            {position.marginRatio < 0.12 && (
-              <p className="text-[9px] text-[#FF3B3B] mt-1">⚠️ Below 12%</p>
-            )}
           </div>
-          <div>
-            <p className="text-[10px] text-[#787878] uppercase tracking-widest">Leverage</p>
+          <div className="space-y-1">
+            <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest">Leverage</p>
             <motion.p
               key={position.leverage}
               initial={{ opacity: 0.5 }}
               animate={{ opacity: 1 }}
-              className={`text-lg font-bold ${position.leverage <= 5 ? 'text-[#00A3FF]' : 'text-[#FF3B3B]'}`}
+              className={`text-2xl font-bold font-mono ${position.leverage <= 5 ? 'text-[#00A3FF]' : 'text-[#FF3B3B]'}`}
             >
               {position.leverage.toFixed(1)}x
             </motion.p>
           </div>
         </div>
 
-        {/* PnL */}
-        <div className="p-3 rounded bg-[#0B0E14] border border-[#1e1e1e]">
-          <div className="flex justify-between items-center">
-            <span className="text-[10px] text-[#787878] uppercase tracking-widest">Unrealized PnL</span>
+        {/* PnL and Liquidation Section */}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center px-1">
+            <span className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest">Unrealized PnL</span>
             <motion.p
               key={position.unrealizedPnL}
               initial={{ opacity: 0.5 }}
               animate={{ opacity: 1 }}
-              className={`text-sm font-mono font-semibold ${isUnderwater ? 'text-[#FF3B3B]' : 'text-[#00D98F]'}`}
+              className={`text-sm font-mono font-bold ${isUnderwater ? 'text-[#FF3B3B]' : 'text-[#00D98F]'}`}
             >
-              {isUnderwater ? '' : '+'}${position.unrealizedPnL.toFixed(2)}
+              {isUnderwater ? '' : '+'}${position.unrealizedPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </motion.p>
           </div>
+          
+          {position.marginRatio < 0.15 && (
+            <div className="p-3 rounded-lg bg-[#FF3B3B]/10 border border-[#FF3B3B]/20 flex gap-3 items-center">
+              <AlertTriangle className="w-4 h-4 text-[#FF3B3B] flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-[9px] text-[#FF3B3B] font-bold uppercase tracking-widest">Critical Liquidation Risk</p>
+                <p className="text-[10px] text-[#FF3B3B]/80 font-mono">Price Target: ${liquidationPrice.toLocaleString()}</p>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Liquidation Warning */}
-        {position.marginRatio < 0.15 && (
-          <div className="p-3 rounded bg-[#FF3B3B]/10 border border-[#FF3B3B]/20 flex gap-2">
-            <AlertTriangle className="w-4 h-4 text-[#FF3B3B] flex-shrink-0 mt-0.5" />
-            <div className="text-[10px] text-[#FF3B3B]">
-              <p className="font-semibold mb-1">Liquidation Risk</p>
-              <p>Price: ${liquidationPrice.toLocaleString()}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
+        {/* Quick Actions */}
         <div className="grid grid-cols-3 gap-2 pt-2">
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => onAddMargin?.(position.id)}
-            className="p-2 rounded border border-[#1e1e1e] hover:bg-[#1e1e1e] transition-colors flex items-center justify-center gap-2 text-[10px] font-mono uppercase tracking-widest"
+            className="py-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col items-center justify-center gap-1.5 transition-colors"
           >
-            <Plus className="w-3 h-3" />
-            Margin
+            <Plus className="w-3 h-3 text-[#8A93A3]" />
+            <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Add Margin</span>
           </motion.button>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => onDeleverage?.(position.id)}
-            className="p-2 rounded border border-[#1e1e1e] hover:bg-[#1e1e1e] transition-colors flex items-center justify-center gap-2 text-[10px] font-mono uppercase tracking-widest"
+            className="py-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col items-center justify-center gap-1.5 transition-colors"
           >
-            <Minus className="w-3 h-3" />
-            Reduce
+            <Minus className="w-3 h-3 text-[#8A93A3]" />
+            <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Deleverage</span>
           </motion.button>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 59, 59, 0.15)' }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => onClose?.(position.id)}
-            className="p-2 rounded border border-[#FF3B3B]/20 hover:bg-[#FF3B3B]/10 transition-colors flex items-center justify-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[#FF3B3B]"
+            className="py-2.5 rounded-lg bg-[#FF3B3B]/10 border border-[#FF3B3B]/10 flex flex-col items-center justify-center gap-1.5 transition-colors"
           >
-            <X className="w-3 h-3" />
-            Close
+            <X className="w-3 h-3 text-[#FF3B3B]" />
+            <span className="text-[8px] font-bold text-[#FF3B3B] uppercase tracking-tighter">Close Pos</span>
           </motion.button>
         </div>
       </motion.div>

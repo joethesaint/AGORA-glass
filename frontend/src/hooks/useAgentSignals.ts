@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { GlassBoxTerminal, AgentSignal } from './GlassBoxTerminal';
+import { AgentSignal, EventType } from '@/types/agent';
 
 export function useAgentSignals(url: string = 'ws://localhost:8765') {
   const [signals, setSignals] = useState<AgentSignal[]>([]);
@@ -22,7 +22,27 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
 
       ws.onmessage = (event) => {
         try {
-          const signal: AgentSignal = JSON.parse(event.data);
+          const raw = JSON.parse(event.data);
+          
+          let type = raw.type as EventType;
+          let payload = raw.data;
+          let event_type = raw.type;
+
+          // Special handling for WSSignal wrapper to flatten it
+          if (raw.type === 'WSSignal' && raw.data) {
+            type = raw.data.event_type as EventType;
+            event_type = raw.data.event_type;
+            payload = raw.data.payload;
+          }
+
+          const signal: AgentSignal = {
+            type,
+            event_type,
+            timestamp: raw.timestamp || Date.now() / 1000,
+            data: payload, // Use flattened payload as data for components
+            payload,
+          };
+
           setSignals((prev) => [signal, ...prev].slice(0, 50)); // Keep last 50
         } catch (err) {
           console.error('🛡️ GLASS: Failed to parse signal', err);
@@ -38,7 +58,7 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
     connect();
 
     return () => {
-      ws.close();
+      if (ws) ws.close();
       clearTimeout(reconnectTimeout);
     };
   }, [url]);
