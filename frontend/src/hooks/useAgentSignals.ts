@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { AgentSignal, EventType } from '@/types/agent';
 import { triggerAlert } from '@/components/AlertSystem';
 
-export function useAgentSignals(url: string = 'ws://localhost:8766') {
+export function useAgentSignals(url: string = 'ws://localhost:8765') {
   const [signals, setSignals] = useState<AgentSignal[]>([]);
   const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
 

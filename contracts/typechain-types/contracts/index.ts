@@ -2,4 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { AttributionRegistry } from "./AttributionRegistry";
+export type { BondEscrow } from "./BondEscrow";
 export type { Vault } from "./Vault";

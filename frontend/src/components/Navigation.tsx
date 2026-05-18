@@ -13,8 +13,9 @@ export const Navigation = () => {
   const links = [
     { name: 'Dashboard', href: '/' },
     { name: 'Transparency', href: '/transparency' },
-    { name: 'Performance', href: '/performance' },
     { name: 'Analytics', href: '/analytics' },
+    { name: 'Performance', href: '/performance' },
+    { name: 'About', href: '/about' },
     { name: 'Settings', href: '/settings' },
   ];
 

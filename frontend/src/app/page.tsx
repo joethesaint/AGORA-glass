@@ -235,9 +235,17 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Testing & Simulation */}
+      {/* Testing & Simulation (Judge Mode) */}
       <div className="pt-8 border-t border-[#1e1e1e]">
-        <h2 className="text-xl font-semibold text-white mb-6">Control Panel (Simulation)</h2>
+        <div className="flex items-center gap-2 mb-6">
+          <h2 className="text-xl font-semibold text-white">System Verification</h2>
+          <span className="px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[8px] font-bold uppercase tracking-widest">
+            Judge Mode
+          </span>
+        </div>
+        <p className="text-xs text-[#8A93A3] mb-8 max-w-xl">
+          Use the simulator to verify the sentinel's responsiveness during extreme market conditions. Note: These controls are for auditing purposes and require authentication.
+        </p>
         <MockCrashSimulator
           price={btcPrice}
           onPriceChange={setBtcPrice}

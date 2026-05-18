@@ -78,6 +78,8 @@ class VaultService:
             dest_chain = os.getenv("CIRCLE_BLOCKCHAIN", "POLY-AMOY")
 
             # Build transaction
+            gas_price = await self.w3.eth.gas_price
+
             tx = await self.contract.functions.releaseForRescue(
                 amount_raw,
                 dest_chain,
@@ -86,7 +88,7 @@ class VaultService:
             ).build_transaction({
                 "chainId": 5042002,
                 "gas": 300000,
-                "gasPrice": self.w3.to_wei("0.01", "mwei"),
+                "gasPrice": gas_price,
                 "nonce": self._nonce,
             })
 

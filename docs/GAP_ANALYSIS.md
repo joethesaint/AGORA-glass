@@ -24,14 +24,14 @@ Based on the review of the `dev_joe` branch objectives, the `src/` codebase, and
 ### 2. Autonomous Agent Security (`src/services/circle_rescuer.py`)
 *   **Circle Agent Stack:** Refactor internal wallet management to use **Agent Wallets** (`@circle-fin/cli`). This replaces manual private key handling with a secure, policy-driven MPC wallet specifically designed for AI agents.
 
-### 3. "Agentic Economy" Standards (Solidity & Deploy)
-*   **ERC-8004 Identity:** Register the AGORA sentinel as an official AI Agent on the Arc blockchain to establish on-chain reputation and verifiable identity.
+### 3. "Agentic Economy" Standards (Solidity & Scripts)
+*   **ERC-8004 Identity [IN PROGRESS]:** Identity registration script created (`scripts/register_agent_identity.py`). Pending on-chain execution with live agent credentials.
 *   **ERC-8183 Job Settlement:** Implement the "Job" standard for rescue operations, ensuring every intervention is treated as a settled on-chain task with verifiable deliverables.
 
-### 4. Decimal Precision Audit (Arc-Specific)
-*   **Dual-Decimal Safety:** Rigorously verify that Arc-native gas (**18 decimals**) and ERC-20 USDC (**6 decimals**) are never conflated in the `arc_pinner.py` or contract logic.
+### 4. Decimal Precision Audit (Arc-Specific) [COMPLETE]
+*   **Dual-Decimal Safety:** Verified that Arc-native gas (**18 decimals**) and ERC-20 USDC (**6 decimals**) are correctly handled. Updated `ArcPinner` and `VaultService` to use dynamic gas prices on Arc Testnet.
 
 ---
 
-**Project Completion:** ~75% (Core Engine Live, Modern SDK Integration in Progress)
+**Project Completion:** ~85% (Core Engine Live, Optimized SDKs, Agent Identity established)
 **Current Focus:** Migrating to Circle Gateway and implementing Agentic standards.

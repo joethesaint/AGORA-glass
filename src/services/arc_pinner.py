@@ -72,11 +72,13 @@ class ArcPinner:
             hash_bytes = bytes.fromhex(reason_hash[2:]) if reason_hash.startswith("0x") else bytes.fromhex(reason_hash)
 
             # Build transaction
+            gas_price = await self.w3.eth.gas_price
+            
             tx = await self.contract.functions.storeReason(hash_bytes).build_transaction(
                 {
                     "chainId": 5042002,
                     "gas": 200000,
-                    "gasPrice": self.w3.to_wei("0.01", "mwei"),
+                    "gasPrice": gas_price,
                     "nonce": self._nonce,
                 }
             )

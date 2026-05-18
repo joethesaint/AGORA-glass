@@ -12,5 +12,7 @@ export type { IERC20 } from "./@openzeppelin/contracts/token/ERC20/IERC20";
 export { IERC20__factory } from "./factories/@openzeppelin/contracts/token/ERC20/IERC20__factory";
 export type { AttributionRegistry } from "./contracts/AttributionRegistry";
 export { AttributionRegistry__factory } from "./factories/contracts/AttributionRegistry__factory";
+export type { BondEscrow } from "./contracts/BondEscrow";
+export { BondEscrow__factory } from "./factories/contracts/BondEscrow__factory";
 export type { Vault } from "./contracts/Vault";
 export { Vault__factory } from "./factories/contracts/Vault__factory";

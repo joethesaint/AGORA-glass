@@ -2,4 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export { AttributionRegistry__factory } from "./AttributionRegistry__factory";
+export { BondEscrow__factory } from "./BondEscrow__factory";
 export { Vault__factory } from "./Vault__factory";
