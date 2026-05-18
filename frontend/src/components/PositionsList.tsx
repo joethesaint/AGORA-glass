@@ -3,6 +3,7 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { StatusBadge } from './StatusBadge';
+import { Position } from '@/types/position';
 import {
   Plus,
   Minus,
@@ -11,19 +12,9 @@ import {
   AlertTriangle,
   Eye,
   MoreVertical,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
-
-export interface Position {
-  id: string;
-  symbol: string;
-  entryPrice: number;
-  currentPrice: number;
-  size: number;
-  marginRatio: number;
-  leverage: number;
-  collateral: number;
-  unrealizedPnL: number;
-}
 
 interface PositionCardEnhancedProps {
   position: Position;
@@ -45,7 +36,8 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
     const priceChange = position.currentPrice - position.entryPrice;
     const priceChangePercent = (priceChange / position.entryPrice) * 100;
     const isUnderwater = position.unrealizedPnL < 0;
-    const liquidationPrice = position.entryPrice - (position.collateral / position.size);
+    const side = position.side || 'LONG';
+    const liquidationPrice = position.liquidationPrice || (position.entryPrice - (position.collateral / position.size));
 
     return (
       <motion.div
@@ -53,19 +45,27 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         onClick={() => onClick?.(position.id)}
-        className="agora-card p-5 space-y-6 cursor-pointer hover:border-[#00A3FF]/50 transition-colors"
+        className="agora-card p-5 space-y-6 cursor-pointer hover:border-[#00A3FF]/50 transition-colors group"
       >
         {/* Header */}
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h4 className="text-lg font-bold text-white tracking-tight">{position.symbol}</h4>
+              <div className="flex items-center gap-2">
+                <h4 className="text-lg font-bold text-white tracking-tight">{position.symbol}</h4>
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${side === 'LONG' ? 'bg-[#00D98F]/10 text-[#00D98F]' : 'bg-[#FF3B3B]/10 text-[#FF3B3B]'}`}>
+                  {side}
+                </span>
+              </div>
               <StatusBadge status={status} text={status} />
             </div>
             <p className="text-[10px] text-[#484848] font-mono tracking-widest uppercase">ID: {position.id.slice(0, 8)}</p>
           </div>
           <button
-            onClick={() => onClose?.(position.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose?.(position.id);
+            }}
             className="p-1.5 hover:bg-white/5 rounded-lg transition-colors border border-transparent hover:border-white/10"
           >
             <MoreVertical className="w-4 h-4 text-[#8A93A3]" />
@@ -91,11 +91,16 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
           </div>
           <div>
             <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest mb-1.5">PnL %</p>
-            <p
-              className={`text-xs font-mono font-bold ${priceChange >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}
-            >
-              {priceChange >= 0 ? '+' : ''}{priceChangePercent.toFixed(2)}%
-            </p>
+            <div className="flex items-center gap-1">
+              <p className={`text-xs font-mono font-bold ${priceChange >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}>
+                {priceChange >= 0 ? '+' : ''}{priceChangePercent.toFixed(2)}%
+              </p>
+              {priceChange >= 0 ? (
+                <ArrowUpRight className="w-3 h-3 text-[#00D98F]" />
+              ) : (
+                <ArrowDownRight className="w-3 h-3 text-[#FF3B3B]" />
+              )}
+            </div>
           </div>
         </div>
 

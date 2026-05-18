@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { X, TrendingUp, TrendingDown, Clock, AlertTriangle, Plus, Minus, RefreshCw, BarChart3, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Position } from '@/types/position';
 import {
   LineChart,
   Line,
@@ -14,24 +15,6 @@ import {
   Area,
   AreaChart,
 } from 'recharts';
-
-export interface Position {
-  id: string;
-  symbol: string;
-  entryPrice: number;
-  currentPrice: number;
-  size: number;
-  marginRatio: number;
-  leverage: number;
-  collateral: number;
-  unrealizedPnL: number;
-  // Additional fields for detail view
-  entryTimestamp?: number;
-  fees?: number;
-  fundingPayments?: number[];
-  liquidationPrice?: number;
-  history?: { timestamp: number; price: number; margin: number; leverage: number }[];
-}
 
 interface PositionDetailModalProps {
   position: Position | null;
@@ -169,7 +152,12 @@ export const PositionDetailModal = ({
                     </span>
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">{position.symbol}</h2>
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-xl font-bold text-white">{position.symbol}</h2>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${position.side === 'LONG' ? 'bg-[#00D98F]/10 text-[#00D98F]' : 'bg-[#FF3B3B]/10 text-[#FF3B3B]'}`}>
+                        {position.side || 'LONG'}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-2 mt-1">
                       <span
                         className={`text-xs px-2 py-0.5 rounded font-mono`}

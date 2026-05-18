@@ -30,9 +30,15 @@ export const PortfolioOverviewCard = memo<PortfolioOverviewCardProps>(
       >
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h3 className="text-lg font-bold text-white mb-2">Portfolio Overview</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-lg font-bold text-white">Portfolio Overview</h3>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00D98F] animate-pulse" />
+                <span className="text-[8px] font-bold text-[#00D98F] uppercase tracking-tighter">Live</span>
+              </div>
+            </div>
             <p className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">
-              Live Monitoring: {positionCount} active {positionCount === 1 ? 'position' : 'positions'}
+              Monitoring: {positionCount} active {positionCount === 1 ? 'position' : 'positions'}
             </p>
           </div>
           <div

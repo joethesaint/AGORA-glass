@@ -8,7 +8,8 @@ import { LeverageChart } from '@/components/LeverageChart';
 import { PortfolioOverviewCard } from '@/components/PortfolioOverviewCard';
 import { EventFeed } from '@/components/EventFeed';
 import { EventStatsCard } from '@/components/EventStatsCard';
-import { PositionsList, Position } from '@/components/PositionsList';
+import { PositionsList } from '@/components/PositionsList';
+import { Position } from '@/types/position';
 import { MockCrashSimulator } from '@/components/MockCrashSimulator';
 import { useAgentSignals } from '@/hooks/useAgentSignals';
 import { LiveMetricsHeader } from '@/components/LiveMetricsHeader';
@@ -88,6 +89,7 @@ export default function Dashboard() {
         leverage,
         collateral: 50000,
         unrealizedPnL: (btcPrice - entryPrice) * 1.5,
+        side: 'LONG',
       },
       {
         id: 'pos_002',
@@ -99,6 +101,7 @@ export default function Dashboard() {
         leverage: 4.1,
         collateral: 65000,
         unrealizedPnL: 1500,
+        side: 'LONG',
       },
       {
         id: 'pos_003',
@@ -110,6 +113,7 @@ export default function Dashboard() {
         leverage: 5.2,
         collateral: 35000,
         unrealizedPnL: -1400,
+        side: 'LONG',
       },
     ],
     [btcPrice, marginRatio, leverage]
