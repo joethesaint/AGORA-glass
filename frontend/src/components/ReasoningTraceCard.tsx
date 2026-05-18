@@ -43,9 +43,11 @@ export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
         </div>
       </div>
       
-      <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-6 leading-relaxed bg-zinc-100/50 dark:bg-zinc-950/50 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
-        {data.reasoning_text}
-      </p>
+      <div className="bg-zinc-950 dark:bg-black p-4 rounded-xl border border-zinc-800 mb-6 overflow-x-auto">
+        <pre className="text-xs font-mono text-zinc-300 whitespace-pre-wrap">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
