@@ -1,0 +1,1659 @@
+﻿
+
+
+
+
+Agora Agents Hackathon â€” Canteen Ã— Circle
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black: #000;
+  --white: #fff;
+  --g50:  #f0f0f0;
+  --g100: #d8d8d8;
+  --g200: #b0b0b0;
+  --g400: #787878;
+  --g600: #484848;
+  --g700: #303030;
+  --g800: #1e1e1e;
+  --g900: #111;
+  --accent: #d4ff3e;
+  --accent-dim: rgba(212,255,62,0.08);
+  --accent-border: rgba(212,255,62,0.22);
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --serif: 'Instrument Serif', ui-serif, Georgia, serif;
+  --pad: 32px;
+  --max: 920px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: #0a0907;
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  position: relative;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(212,255,62,0.045), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(190,150,90,0.05), transparent 50%),
+    radial-gradient(ellipse at 15% 100%, rgba(120,90,60,0.035), transparent 45%);
+  z-index: 0;
+}
+
+/* Greek key (meander) â€” used as decorative band */
+.meander {
+  width: 100%;
+  height: 14px;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      var(--g700) 0 2px,
+      transparent 2px 6px,
+      var(--g700) 6px 8px,
+      transparent 8px 12px,
+      var(--g700) 12px 22px,
+      transparent 22px 26px
+    );
+  opacity: 0.5;
+  margin: 18px 0 0;
+}
+.meander.tight { height: 8px; opacity: 0.35; margin: 12px 0 0; }
+.sec-label .meander { margin-top: 16px; max-width: 90px; }
+
+a { color: inherit; text-decoration: none; }
+
+/* ============ NAV ============ */
+.nav {
+  position: relative;
+  z-index: 200;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--pad);
+  background: rgba(0,0,0,0.85);
+  border-bottom: 1px solid var(--g800);
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; }
+.nav-x { color: var(--g700); }
+.nav-circle { color: var(--g400); display: inline-flex; align-items: center; }
+.nav-brand .brand-canteen { height: 18px; width: 18px; border-radius: 3px; display: block; }
+.nav-brand .brand-circle,
+.nav-brand .brand-arc { height: 14px; width: auto; display: block; opacity: 0.85; transition: opacity 0.15s; }
+.nav-brand .brand-circle:hover,
+.nav-brand .brand-arc:hover { opacity: 1; }
+.nav-right { display: flex; align-items: center; gap: 20px; }
+.nav-links { display: flex; gap: 20px; }
+.nav-links a { font-size: 11px; letter-spacing: 0.06em; color: var(--g600); transition: color 0.1s; }
+.nav-links a:hover { color: var(--white); }
+.nav-apply {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  color: var(--black); background: var(--accent);
+  padding: 6px 14px; border-radius: 2px; transition: opacity 0.1s;
+}
+.nav-apply:hover { opacity: 0.85; }
+
+/* ============ HERO ============ */
+.hero {
+  min-height: calc(100vh - 48px);
+  position: relative;
+  z-index: 1;
+}
+
+.hero-body {
+  position: relative; z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  align-items: start;
+  max-width: var(--max);
+  width: 100%;
+  margin: 0 auto;
+  padding: 56px var(--pad) 56px;
+  gap: 0;
+  box-sizing: border-box;
+}
+.hero-divider-v { background: var(--g800); width: 1px; align-self: stretch; margin: 0 32px; }
+
+.hero-left { display: flex; flex-direction: column; gap: 18px; padding-bottom: 8px; }
+.hero-access {
+  font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--accent);
+  display: flex; align-items: center; gap: 8px;
+}
+.hero-access-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); box-shadow: 0 0 0 0 rgba(212,255,62,0.4); }
+  50% { opacity:0.6; transform:scale(0.8); box-shadow: 0 0 0 6px rgba(212,255,62,0); }
+}
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.hero-title {
+  font-family: var(--serif);
+  font-size: clamp(56px, 9vw, 104px);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 0.95;
+  color: var(--white);
+  position: relative;
+  display: block;
+}
+.hero-partner {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--g400);
+  margin-top: -8px;
+}
+.hero-partner img.wm { height: 14px; width: auto; display: block; opacity: 0.9; transition: opacity 0.15s; }
+.hero-partner a:hover img.wm { opacity: 1; }
+.hero-partner .amp { color: var(--g700); }
+.hero-tagline {
+  font-size: 14px; color: var(--g100); line-height: 1.75;
+  max-width: 400px;
+}
+.hero-tagline strong { color: var(--white); font-weight: 600; }
+.hero-subtag { font-size: 13px; color: var(--g200); line-height: 1.75; max-width: 420px; font-family: var(--mono); }
+.hero-subtag em { color: var(--accent); font-style: italic; font-family: var(--serif); font-size: 1.05em; }
+.hero-ctas { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+.btn-primary {
+  font-family: var(--mono); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; padding: 10px 20px;
+  background: var(--accent); color: var(--black);
+  border-radius: 2px; border: none; cursor: pointer;
+  text-decoration: none; transition: opacity 0.1s;
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-outline {
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: 0.06em; padding: 10px 20px;
+  background: transparent; color: var(--g200);
+  border: 1px solid var(--g700); border-radius: 2px;
+  cursor: pointer; text-decoration: none;
+  transition: color 0.1s, border-color 0.1s;
+}
+.btn-outline:hover { color: var(--accent); border-color: var(--accent); }
+
+.hero-right { display: flex; flex-direction: column; gap: 12px; min-height: 0; height: 100%; }
+
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--g800); border-radius: 2px; }
+.meta-cell { padding: 12px 14px; border-right: 1px solid var(--g800); border-bottom: 1px solid var(--g800); }
+.meta-cell:nth-child(2) { border-right: none; }
+.meta-cell:nth-child(3) { border-bottom: none; }
+.meta-cell:nth-child(4) { border-right: none; border-bottom: none; }
+.meta-key { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--g600); margin-bottom: 4px; }
+.meta-val { font-size: 13px; font-weight: 500; color: var(--white); }
+.meta-val.green { color: var(--accent); }
+
+.hosts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
+.hosts-card { border: 1px solid var(--g800); border-radius: 2px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.hosts-header { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--g800); min-height: 44px; }
+.hosts-mark { flex-shrink: 0; display: flex; align-items: center; justify-content: flex-start; }
+.hosts-mark img.square { width: 28px; height: 28px; border-radius: 4px; display: block; }
+.hosts-mark img.wm { height: 16px; width: auto; display: block; }
+.hosts-meta { display: flex; flex-direction: column; gap: 2px; }
+.hosts-name { font-size: 12px; font-weight: 600; color: var(--white); letter-spacing: 0.02em; }
+.hosts-sub { font-size: 9px; color: var(--g600); letter-spacing: 0.14em; text-transform: uppercase; }
+.hosts-desc { font-size: 12px; color: var(--g100); line-height: 1.65; }
+.hosts-desc strong { color: var(--white); font-weight: 500; }
+
+/* Hero image panel */
+.hero-image {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--g800);
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--g900);
+}
+.hero-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.95) contrast(1.02);
+}
+.hero-image.primary { aspect-ratio: 1 / 1; }
+.hero-image.primary img { object-position: 50% 38%; }
+.hero-image-cap {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 10px 14px 10px;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 70%);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--g200);
+  display: flex; justify-content: space-between; align-items: end; gap: 12px;
+}
+.hero-image-cap em { font-family: var(--serif); font-style: italic; text-transform: none; letter-spacing: 0; color: var(--g100); font-size: 12px; }
+.hero-image-cap .ref { color: var(--accent); opacity: 0.8; }
+
+/* Fresco bands â€” full-width image dividers between sections */
+.fresco {
+  position: relative;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--pad);
+  z-index: 1;
+}
+.fresco-frame {
+  position: relative;
+  border: 1px solid var(--g800);
+  border-radius: 2px;
+  overflow: hidden;
+  aspect-ratio: 16 / 7;
+  background: var(--g900);
+}
+.fresco-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.92) contrast(1.04);
+}
+.fresco-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.55) 100%),
+    linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.7) 100%);
+  pointer-events: none;
+}
+.fresco-cap {
+  position: absolute;
+  bottom: 16px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 16px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--g200);
+}
+.fresco-cap em {
+  font-family: var(--serif); font-style: italic;
+  text-transform: none; letter-spacing: 0;
+  color: var(--white); font-size: 16px;
+  display: block; margin-bottom: 2px;
+}
+.fresco-cap span {
+  display: block; font-size: 9px; color: var(--g400);
+  letter-spacing: 0.1em;
+}
+.fresco { padding-top: 32px; padding-bottom: 32px; }
+.fresco-cap .ref { color: var(--accent); opacity: 0.8; }
+.fresco-quote {
+  position: absolute;
+  top: 24px; left: 32px; right: 32px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(18px, 2.6vw, 28px);
+  line-height: 1.3;
+  color: var(--g50);
+  max-width: 540px;
+  letter-spacing: -0.005em;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+}
+
+/* Voices â€” typographic quote triptych */
+.voices {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--g800);
+  border-bottom: 1px solid var(--g800);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(190,150,90,0.06), transparent 70%),
+    #0c0a08;
+}
+.voices-inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 56px var(--pad) 48px;
+}
+.voices-head {
+  margin-bottom: 32px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.voices-head .sec-label-text {
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--g600); line-height: 1.5;
+}
+.voices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+}
+.voice {
+  padding: 4px 28px;
+  border-left: 1px solid var(--g800);
+  display: flex; flex-direction: column; gap: 18px;
+}
+.voice:first-child { padding-left: 0; border-left: none; }
+.voice blockquote {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(20px, 2.1vw, 26px);
+  line-height: 1.35;
+  color: var(--g50);
+  letter-spacing: -0.005em;
+}
+.voice figcaption { display: flex; flex-direction: column; gap: 3px; }
+.voice-who {
+  font-family: var(--mono);
+  font-size: 12px; font-weight: 600;
+  color: var(--white);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.voice-where {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--g400);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.voice-on {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+/* ============ SECTIONS ============ */
+.section {
+  scroll-margin-top: 80px;
+  border-top: 1px solid var(--g800);
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--pad);
+  display: grid;
+  grid-template-columns: 160px 1fr;
+}
+.sec-label { padding: 28px 0; border-right: 1px solid var(--g800); padding-right: 24px; }
+.sec-label-text { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--g600); line-height: 1.5; }
+.sec-label-num { font-size: 11px; color: var(--g800); margin-top: 4px; }
+.sec-body { padding: 28px 0 28px 28px; }
+
+/* Get Started â€” perk list */
+.perk-list { display: flex; flex-direction: column; }
+.perk-row { display: flex; gap: 14px; padding: 10px 0; border-top: 1px solid var(--g800); }
+.perk-row:first-child { border-top: none; padding-top: 0; }
+.perk-n { font-size: 10px; color: var(--g700); min-width: 18px; padding-top: 1px; }
+.perk-title { font-size: 13px; font-weight: 500; color: var(--white); margin-bottom: 2px; }
+.perk-desc-t { font-size: 12px; color: var(--g400); line-height: 1.6; }
+
+/* Overview / lead text */
+.lead {
+  font-size: 14px; color: var(--g100); line-height: 1.75;
+  max-width: 540px; margin-bottom: 18px;
+}
+.lead strong { color: var(--white); font-weight: 500; }
+.lead-sm { font-size: 13px; color: var(--g200); line-height: 1.7; max-width: 520px; margin-bottom: 18px; }
+.lead-sm strong { color: var(--white); font-weight: 500; }
+
+.callout-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--g800); border-radius: 2px; margin-top: 8px; }
+.callout-cell { padding: 14px 16px; border-right: 1px solid var(--g800); }
+.callout-cell:last-child { border-right: none; }
+.callout-key { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--g600); margin-bottom: 6px; }
+.callout-val { font-size: 14px; font-weight: 500; color: var(--white); line-height: 1.5; }
+.callout-val .accent { color: var(--accent); }
+
+/* Awards */
+.award-total {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 8px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--g800);
+  flex-wrap: wrap;
+}
+.award-total-num {
+  font-family: var(--serif);
+  font-size: clamp(48px, 7vw, 80px);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+  line-height: 1;
+}
+.award-total-lbl {
+  font-size: 13px;
+  color: var(--g400);
+  line-height: 1.5;
+  max-width: 220px;
+}
+.award-tier {
+  border-bottom: 1px solid var(--g800);
+  padding: 18px 0;
+}
+.award-tier:last-of-type { border-bottom: none; padding-bottom: 12px; }
+.award-tier-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.award-tier-name {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--white);
+  letter-spacing: -0.005em;
+}
+.award-tier-amount {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.award-desc { font-size: 13px; color: var(--g400); line-height: 1.7; max-width: 560px; }
+.award-desc strong { color: var(--g100); font-weight: 500; }
+.award-foot {
+  font-size: 11px;
+  color: var(--g600);
+  margin-top: 16px;
+  font-style: italic;
+  font-family: var(--serif);
+}
+
+/* Stack (Circle tools) */
+.stack-list { display: flex; flex-direction: column; }
+.stack-row { display: flex; gap: 14px; padding: 12px 0; border-top: 1px solid var(--g800); }
+.stack-row:first-child { border-top: none; padding-top: 0; }
+.stack-n { font-size: 10px; color: var(--g700); min-width: 28px; padding-top: 1px; letter-spacing: 0.04em; }
+.stack-name { font-size: 13px; font-weight: 600; color: var(--white); margin-bottom: 3px; letter-spacing: 0.01em; }
+.stack-name a { color: inherit; text-decoration: none; transition: color 0.15s; }
+.stack-name a:hover { color: var(--accent); }
+.stack-desc { font-size: 12px; color: var(--g400); line-height: 1.65; max-width: 480px; }
+.stack-desc strong { color: var(--g200); font-weight: 500; }
+.stack-desc a { color: inherit; text-decoration: none; transition: color 0.15s; }
+.stack-desc a strong { transition: color 0.15s; }
+.stack-desc a:hover strong { color: var(--accent); }
+
+/* RFBs */
+.rfb-intro { font-size: 13px; color: var(--g200); line-height: 1.75; max-width: 520px; margin-bottom: 16px; }
+.rfb-intro strong { color: var(--white); font-weight: 500; }
+.rfb-intro a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
+.rfb-list { display: flex; flex-direction: column; }
+.rfb-item { border-top: 1px solid var(--g800); }
+.rfb-item:first-child { border-top: none; }
+
+.rfb-trigger {
+  width: 100%; background: none; border: none; cursor: pointer;
+  text-align: left; padding: 12px 0;
+  display: flex; align-items: flex-start; gap: 12px;
+  font-family: var(--mono);
+}
+.rfb-trigger:hover .rfb-t-title { color: var(--accent); }
+.rfb-n { font-size: 10px; color: var(--accent); min-width: 42px; padding-top: 2px; letter-spacing: 0.04em; }
+.rfb-trigger-main { flex: 1; }
+.rfb-t-title { font-size: 13px; font-weight: 500; color: var(--white); margin-bottom: 3px; transition: color 0.15s; }
+.rfb-t-sub { font-size: 11px; color: var(--g600); font-style: italic; line-height: 1.5; }
+.rfb-icon { font-size: 22px; color: var(--accent); line-height: 1; padding-top: 1px; transition: transform 0.2s; user-select: none; }
+.rfb-item.open .rfb-icon { transform: rotate(45deg); }
+
+.rfb-body { display: none; padding: 4px 0 22px 54px; }
+.rfb-item.open .rfb-body { display: block; }
+
+.problem {
+  font-size: 12px; color: var(--g200); line-height: 1.75;
+  margin-bottom: 14px; max-width: 540px;
+  padding: 10px 12px;
+  background: var(--g900);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+.problem strong { color: var(--white); font-weight: 500; }
+
+.sub-lbl { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--g600); margin-bottom: 6px; margin-top: 14px; }
+.sub-lbl:first-of-type { margin-top: 4px; }
+
+.bl { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.bl li { font-size: 12px; color: var(--g400); display: flex; gap: 8px; line-height: 1.55; }
+.bl li::before { content: 'â€”'; color: var(--g700); flex-shrink: 0; }
+.bl li strong { color: var(--white); font-weight: 500; }
+
+.ql { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.ql li { font-size: 12px; color: var(--g600); font-style: italic; display: flex; gap: 8px; line-height: 1.5; }
+.ql li::before { content: 'â€”'; color: var(--g700); font-style: normal; flex-shrink: 0; }
+
+.rfb-ex { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--g800); border-radius: 2px; }
+.rfb-ex-lbl { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; opacity: 0.7; }
+.rfb-ex p { font-size: 12px; color: var(--g400); line-height: 1.65; }
+.rfb-ex p strong { color: var(--white); font-weight: 500; }
+
+/* Developer docs â€” two-column entry-point cards */
+.dev-docs { margin-bottom: 24px; }
+.dev-docs-lbl { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); opacity: 0.7; margin-bottom: 10px; }
+.dev-docs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dev-docs-card {
+  display: block;
+  padding: 16px 18px;
+  border: 1px solid var(--g800);
+  border-radius: 2px;
+  background: var(--g900);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+  position: relative;
+}
+.dev-docs-card:hover { border-color: var(--accent-border); background: var(--accent-dim); }
+.dev-docs-card-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; gap: 12px; }
+.dev-docs-card-title { font-size: 13px; font-weight: 600; color: var(--white); letter-spacing: 0.01em; }
+.dev-docs-card-arrow { font-size: 14px; color: var(--g600); transition: color 0.15s, transform 0.15s; }
+.dev-docs-card:hover .dev-docs-card-arrow { color: var(--accent); transform: translateX(2px); }
+.dev-docs-card-host { font-size: 10px; color: var(--g600); letter-spacing: 0.04em; margin-bottom: 6px; }
+.dev-docs-card-desc { font-size: 12px; color: var(--g400); line-height: 1.6; }
+.dev-docs-card-desc strong { color: var(--g100); font-weight: 500; }
+@media (max-width: 600px) {
+  .dev-docs-grid { grid-template-columns: 1fr; }
+}
+
+/* Research */
+.example-list { display: flex; flex-direction: column; }
+.example-item { border-top: 1px solid var(--g800); padding: 16px 0; }
+.example-item:first-child { border-top: none; padding-top: 0; }
+.example-header { display: flex; gap: 12px; margin-bottom: 8px; align-items: flex-start; }
+.example-n { font-size: 10px; color: var(--accent); min-width: 36px; padding-top: 2px; letter-spacing: 0.04em; flex-shrink: 0; }
+.example-title { font-size: 13px; font-weight: 500; color: var(--white); margin-bottom: 3px; line-height: 1.45; }
+.example-title a { color: inherit; text-decoration: none; transition: color 0.15s; }
+.example-title a:hover { color: var(--accent); }
+.example-attr { font-size: 11px; color: var(--g600); letter-spacing: 0.03em; }
+.example-body { padding-left: 48px; }
+.example-desc { font-size: 12px; color: var(--g400); line-height: 1.75; margin-bottom: 10px; }
+.example-desc strong { color: var(--g100); font-weight: 500; }
+.example-desc a { color: var(--g100); border-bottom: 1px dashed var(--g700); transition: color 0.15s, border-color 0.15s; }
+.example-desc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.example-desc a strong { color: inherit; }
+.example-link {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--g600);
+  text-decoration: none;
+  word-break: break-all;
+  transition: color 0.15s;
+}
+.example-link::before { content: 'â†’ '; color: var(--g700); }
+.example-link:hover { color: var(--accent); }
+.example-link:hover::before { color: var(--accent); }
+.example-tie { font-size: 11px; color: var(--g600); line-height: 1.6; font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--g800); }
+.example-tie strong { color: var(--accent); font-style: normal; font-weight: 500; }
+.example-tie a.rfb-link { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(212,255,62,0.4); transition: text-decoration-color 0.15s; font-style: normal; }
+.example-tie a.rfb-link:hover { text-decoration-color: var(--accent); }
+
+/* Judging */
+.j-row { display: flex; gap: 16px; padding: 14px 0; border-top: 1px solid var(--g800); align-items: flex-start; }
+.j-row:first-child { border-top: none; padding-top: 4px; }
+.j-pct { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; color: var(--white); min-width: 56px; line-height: 1; padding-top: 2px; }
+.j-row:nth-child(1) .j-pct, .j-row:nth-child(2) .j-pct { color: var(--accent); }
+.j-name { font-size: 13px; font-weight: 500; color: var(--white); margin-bottom: 4px; }
+.j-desc { font-size: 12px; color: var(--g400); line-height: 1.65; max-width: 440px; }
+
+/* Apply CTA section */
+.apply-section { padding-top: 56px; padding-bottom: 56px; text-align: left; }
+.apply-title { font-family: var(--serif); font-size: clamp(48px, 7vw, 84px); font-weight: 400; line-height: 0.95; letter-spacing: -0.025em; color: var(--white); margin-bottom: 18px; }
+.apply-title .accent { color: var(--accent); }
+.apply-sub { font-size: 13px; color: var(--g200); line-height: 1.7; max-width: 480px; margin-bottom: 22px; }
+.apply-sub strong { color: var(--white); font-weight: 500; }
+
+/* Footer */
+.footer {
+  border-top: 1px solid var(--g800);
+  max-width: var(--max); margin: 0 auto;
+  padding: 16px var(--pad);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--g700); gap: 12px; flex-wrap: wrap;
+}
+.footer a { color: var(--g600); transition: color 0.1s; }
+.footer a:hover { color: var(--accent); }
+.footer-marks { display: flex; align-items: center; gap: 10px; }
+.footer-marks .x { color: var(--g800); }
+.footer-marks .mark-canteen { height: 16px; width: 16px; border-radius: 3px; display: block; opacity: 0.7; transition: opacity 0.15s; }
+.footer-marks .mark-wordmark { height: 12px; width: auto; display: block; opacity: 0.55; transition: opacity 0.15s; }
+.footer-marks a:hover .mark-canteen,
+.footer-marks a:hover .mark-wordmark { opacity: 1; }
+
+/* Responsive */
+@media (max-width: 800px) {
+  :root { --pad: 18px; }
+  .hero-body { grid-template-columns: 1fr; padding-top: 32px; }
+  .hero-divider-v { display: none; }
+  .hero-right { margin-top: 24px; }
+  .hero-title { font-size: 72px; }
+  .hide-mobile { display: none; }
+  .section { grid-template-columns: 1fr; }
+  .sec-label { border-right: none; border-bottom: 1px solid var(--g800); padding: 16px 0 8px; }
+  .sec-body { padding: 16px 0; }
+  .rfb-body { padding-left: 18px; }
+  .callout-grid { grid-template-columns: 1fr; }
+  .callout-cell { border-right: none; border-bottom: 1px solid var(--g800); }
+  .callout-cell:last-child { border-bottom: none; }
+  .hosts-grid { grid-template-columns: 1fr; }
+  .fresco-quote { top: 16px; left: 20px; right: 20px; font-size: 16px; }
+  .fresco-cap { left: 16px; right: 16px; bottom: 12px; }
+  .fresco-frame { aspect-ratio: 16 / 9; }
+  .voices-grid { grid-template-columns: 1fr; gap: 28px; }
+  .voice { padding: 0 0 24px; border-left: none; border-bottom: 1px solid var(--g800); }
+  .voice:last-child { border-bottom: none; padding-bottom: 0; }
+}
+
+/* Apply Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0,0,0,0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad);
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--g900);
+  border: 1px solid var(--g700);
+  border-radius: 2px;
+  padding: 32px;
+  max-width: 380px;
+  width: 100%;
+  position: relative;
+}
+.modal-close {
+  position: absolute; top: 14px; right: 16px;
+  background: none; border: none; cursor: pointer;
+  font-size: 20px; color: var(--g600);
+  font-family: var(--mono); line-height: 1;
+  transition: color 0.1s; padding: 0;
+}
+.modal-close:hover { color: var(--white); }
+.modal-lbl { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+.modal-title { font-size: 18px; font-weight: 600; color: var(--white); letter-spacing: -0.02em; margin-bottom: 8px; }
+.modal-desc { font-size: 12px; color: var(--g400); line-height: 1.7; margin-bottom: 20px; }
+.modal-pass {
+  border: 1px solid var(--g800); border-radius: 2px;
+  padding: 12px 16px; margin-bottom: 20px;
+  background: var(--black);
+}
+.modal-pass-lbl { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--g600); margin-bottom: 5px; }
+.modal-pass-val { font-size: 22px; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; }
+.modal-cta { display: block; text-align: center; }
+
+
+
+
+
+
+  
+    
+    Ã—
+    
+    Ã—
+    
+  
+  
+    
+      Get Started
+      Overview
+      Awards
+      RFBs
+      Research
+      Judging
+    
+    Apply
+  
+
+
+
+
+  
+    
+      Agora Agents Hackathon
+      
+        In partnership with
+        
+        &amp;
+        
+      
+      
+        Where AI agents make markets.
+        A builder series for agents that trade, invest, create, and interface with markets â€” settled instantly on Arc with USDC.
+      
+      
+        In classical Athens, the agora was the heart of the city â€” where citizens traded grain and oil, money-changers leaned on their tables, oracles were consulted, and news was made by the speaking of it. The original information-processing machine. 
+      
+      
+        Apply to build â†’
+        See the RFBs â†“
+      
+
+      
+        
+          Format
+          Online Â· 2 weeks
+        
+        
+          Dates
+          May 11 â†’ May 25
+        
+        
+          Settlement
+          Arc Â· USDC
+        
+        
+          Access
+          Apply to join
+        
+      
+    
+
+    
+
+    
+      
+        
+        
+          Plato's Academy
+          Pompeii Â· 1st c. BCE
+        
+      
+
+    
+  
+
+
+
+
+  
+    Hosts
+    00
+    
+  
+  
+    
+      The Agora Agents Hackathon is hosted by Canteen â€” a builder series for AI agents that trade, invest, create, and interface with markets, mediated by Arc, the stablecoin-native L1 from Circle.
+    
+    
+      
+        
+          
+          
+            Canteen
+            Host
+          
+        
+        A research and technology firm operating at the intersection of crypto, AI, and payments. Hosts and curates the Agora Agents Hackathon.
+      
+
+      
+        
+          
+          
+            Circle (NYSE: CRCL)
+            Platform
+          
+        
+        A global financial technology firm building the world's largest, most-widely used stablecoin network. Issuer of USDC and EURC.
+      
+
+      
+        
+          
+          
+            Arc
+            Settlement
+          
+        
+        The purpose-built L1 blockchain from Circle. Serves as the Economic OS for the internet â€” where capital, humans, and machines coordinate.
+      
+    
+  
+
+
+
+
+  
+    GetStarted
+    01
+    
+  
+  
+    
+      
+        01
+        
+          Join the Canteen Discord
+          
+            https://discord.gg/TGnyfKh23V
+          
+          Drop in and say hello â€” tell us who you are and what you're building. The Canteen team is around, and so are the other Arc builders.
+        
+      
+      
+        02
+        
+          Join the Arc builder Discord
+          
+            https://discord.com/invite/buildonarc
+          
+          Mention Canteen + Agora in the onboarding flow. If you get rejected or have trouble joining, ping @anuxhya in the Canteen Discord.
+        
+      
+      
+        03
+        
+          Install the ARC CLI
+          
+            
+              uv tool install git+https://github.com/the-canteen-dev/ARC-cli
+              â§‰
+            
+          
+          Includes RPC access to a Canteen-hosted Arc testnet, plus Arc repos and docs pre-bundled as agent context â€” so your coding agent can build against Arc out of the box.
+          Check out the docs for more detail: https://arc-node.thecanteenapp.com/
+        
+      
+      
+        04
+        
+          Submit your project (link coming soon)
+          You will need: a product demo (live working product), a founder pitch video (who you are, what you built and why), and a public link to your GitHub repo. You will also be asked traction questions â€” e.g. how many users you have onboarded and what user problems are you building for.
+        
+      
+    
+  
+
+
+
+
+  
+    Overview
+    02
+    
+  
+  
+    
+      The agora was where Athens did its thinking out loud. Prices, opinions, and news converged in one square because that's where the people were. Markets are still doing the same job today; they are the social technology by which a civilization aggregates knowledge and decides what things are worth.
+    
+    
+      AI agents are the new citizens. They can monitor the agora around the clock, deliberate over thousands of signals, and act on the marginal one. This is the kind of continuous, comparative reasoning Aristotle described and that humans are too slow to perform across every market simultaneously. Treat the agora as substrate, treat your agent as a participant in it, and the right products start to suggest themselves.
+    
+    
+      Arc gives this substrate the right physics. Sub-second deterministic finality means trades settle instantly and irreversibly â€” no waiting, no reorgs. ~$0.01 transaction fees paid in USDC (not volatile gas tokens) make high-frequency, low-margin strategies economical onchain for the first time. Money-changers had their tables; agents have Arc.
+    
+    
+      
+        Settlement
+        Sub-second deterministic finality on Arc
+      
+      
+        Cost per tx
+        ~$0.01 in USDC, not volatile gas
+      
+    
+  
+
+
+
+
+  
+    Awards
+    03
+    
+  
+  
+    
+      $50k
+      across four tiers, paid in cash or equivalent
+    
+
+    
+      
+        Grand Prizes
+        $40k TOTAL
+      
+      
+        1st place â€” $10k Â· 1 team
+        2nd place â€” $7.5k Ã— 2 teams Â· $15k total
+        3rd place â€” $5k Ã— 3 teams Â· $15k total
+      
+    
+
+    
+      
+        Standout Teams
+        $7.5k TOTAL
+      
+      10â€“12 teams demonstrating exceptional work, awarded in roughly equal shares (~$650â€“$750 per team). Not ranked within the cohort.
+    
+
+    
+      
+        Feedback Incentives
+        $500 TOTAL
+      
+      For developers who provide the most useful product feedback on Circle's developer tooling â€” friction points, product improvements, and insights into developer experience.
+    
+
+    
+      
+        Easter Eggs
+        $2k TOTAL
+      
+      Code-golf challenges, Discord puzzles, content creation challenges and assorted side quests scattered throughout! Designed for explorers.
+    
+  
+
+
+
+
+  
+    
+    
+    "All things are an exchange for fire, and fire for all things â€” even as wares for gold and gold for wares."
+    
+      
+        The School of Athens
+        Raffaello Sanzio Â· 1509â€“1511
+      
+      // Heraclitus, Fragment 90 Â· c. 500 BCE
+    
+  
+
+
+
+
+  
+    TheStack
+    04
+    
+  
+  
+    Circle's developer platform on Arc. Use what you need â€” these are the primitives best suited for agents that touch markets. Each entry pairs Circle's product description with a hackathon-shaped use case.
+
+    
+    
+      Developer docs Â· start here
+      
+        
+          
+            Arc Developer Docs
+            â†’
+          
+          docs.arc.network
+          Chain-level reference: network config, App Kit, sample apps, deployment.
+        
+        
+          
+            Circle Developer Docs
+            â†’
+          
+          developers.circle.com
+          Product docs for CCTP, Gateway, Wallets, Contracts, Paymaster, and the stablecoins.
+        
+      
+    
+
+    
+      
+        
+          CCTP (Cross-Chain Transfer Protocol)
+          Move USDC between supported blockchains.Use case: cross-chain arbitrage execution and multi-venue collateral rebalancing.
+        
+      
+      
+        
+          Gateway
+          Enable a unified USDC balance across chains, with sub-500ms cross-chain transfers.Use case: single-balance agents that act on any chain instantly â€” critical for arbitrage speed and multi-venue trading.Includes Nanopayments â€” gas-free USDC payments as small as $0.000001 via batched transactions, built for high-frequency agentic commerce.
+        
+      
+      
+        
+          Wallets
+          Embed secure wallets in any app.Use case: trading and betting accounts with automated key management for autonomous agents.
+        
+      
+      
+        
+          Contracts
+          Build and manage smart contracts.Use case: position management, liquidation protection, and hedging logic for onchain strategies.
+        
+      
+      
+        
+          Paymaster
+          Allow transaction fees in USDC.Use case: user-facing agent UX where every cost is denominated in USDC â€” no volatile gas tokens to source or budget around.
+        
+      
+      
+        
+          USYC
+          A tokenized money market fund.Use case: park idle capital in yield between trades, or use as risk-off allocation during high-volatility regimes.
+        
+      
+      
+        
+          USDC &amp; EURC
+          The leading digital dollar and digital euro.Use case: native settlement on Arc, multi-currency markets, and FX-aware strategies that price events in the buyer's home currency.
+        
+      
+      
+        
+          App Kit
+          Drop-in components for common flows.
+            Bridge â€” move USDC across blockchains in a few lines of code.
+            Swap â€” exchange tokens on the same chain via a simple API.
+            Send â€” transfer tokens between wallets in a single call.
+            Unified Balance â€” combine USDC across chains into one balance.
+          
+        
+      
+    
+
+    
+    
+      Reference implementations Â· Arc sample apps
+      Open-source starting points for building on Arc with Circle developer tools â€” fork them, remix them, or use as scaffolding for your submission. Full index â†’
+      
+        Arc commerce â€” USDC payments for credit purchases.
+        Arc multi-chain wallet â€” unified USDC balance and crosschain transfers.
+        Arc escrow â€” AI-powered work validation and USDC settlement.
+        Arc fintech â€” multichain treasury with crosschain capital movement.
+        Arc p2p payments â€” seamless, gasless peer-to-peer payments on Arc.
+      
+    
+  
+
+
+
+
+  
+    Requestsfor Builders
+    05
+    
+  
+  
+    
+      RFBs â€” Requests for Builders â€” are our version of YC's Requests for Startups. Six open problems we think are worth solving in the spirit of the agora. These aren't tracks. If one excites you, treat it as extra validation to dive in â€” but you don't need to work on any of these to participate. Build something adjacent, or surprise us. The best submissions are always what you care most about.
+    
+
+    
+
+      
+      
+        
+          RFB 01
+          
+            Perpetual Futures Trading Agent
+            24/7 monitoring, split-second leverage decisions, autonomous liquidation protection.
+          
+          +
+        
+        
+          The problem. Perpetual futures trading requires 24/7 monitoring, split-second decisions on leverage and liquidation risk, and constant optimization across multiple platforms. How does an AI manage leveraged positions autonomously while protecting against catastrophic losses? Can Arc serve as a settlement / trading chain across existing perp markets?
+          What the AI decides
+          
+            When to open/close leveraged positions based on market conditions
+            Optimal leverage level (2x vs 10x) based on volatility and conviction
+            Dynamic stop-loss and take-profit levels that adapt to market regime
+            Cross-platform execution (Hyperliquid, dYdX, GMX, Vertex) â€” Arc as a settlement chain across protocols
+            Funding rate arbitrage opportunities
+            Automated liquidation protection (deleverage or add collateral)
+          
+          What builders create
+          
+            Multi-platform position management dashboards
+            Liquidation protection bots with cross-chain collateral movement
+            Funding rate monitoring and arbitrage execution systems
+            Risk management frameworks with dynamic leverage adjustment
+          
+          Example builds
+          
+            PerpAI â€” manages positions across multiple perp DEXs, auto-migrates to best funding rates
+            SafeLeverage â€” conservative AI at 2-3x leverage with tight risk management
+            FundingFarmer â€” captures funding rate arbitrage across venues
+          
+          Traction metrics
+          
+            Number of active traders
+            Total trading volume
+            Demonstrated PnL and Sharpe ratio
+            Assets under management
+          
+        
+      
+
+      
+      
+        
+          RFB 02
+          
+            Prediction Market Trader Intelligence
+            Find +EV bets across noisy news, data, and sentiment. Size positions properly.
+          
+          +
+        
+        
+          The problem. Prediction markets offer alpha through information asymmetry, but finding mispriced contracts requires synthesizing news, data, and sentiment at speed. How does an AI identify +EV bets and size positions optimally?
+          What the AI decides
+          
+            Which prediction markets have mispriced probabilities based on data analysis
+            Optimal bet sizing using Kelly Criterion or alternatives
+            When to hedge positions or close early for profit
+            Portfolio construction across correlated markets
+            Information source credibility weighting
+          
+          What builders create
+          
+            Prediction market analytics with AI-driven probability estimates
+            Automated betting agents with Kelly Criterion position sizing
+            Cross-market arbitrage detection and execution tools
+            Information aggregation systems that weight source credibility
+          
+          Example builds
+          
+            InsightAgent â€” analyzes news, polls, social sentiment; suggests +EV bets with confidence intervals
+            PredictPortfolio â€” builds diversified prediction portfolio across sports, politics, crypto events
+            ArbitrageOracle â€” finds mispricings between prediction markets
+          
+          Traction metrics
+          
+            Number of active users
+            Prediction accuracy rate
+            Total volume wagered
+            Documented returns
+          
+        
+      
+
+      
+      
+        
+          RFB 03
+          
+            Prediction Market Verticals
+            Geopolitics, macro, institutional, private. The markets that should exist but don't.
+          
+          +
+        
+        
+          The problem. Most prediction markets either suffer from thin liquidity or don't exist for the events people actually want to bet on. Can you leverage specific insights on the market landscape, the communities you're part of, and domain-specific knowledge to launch new prediction market verticals?
+          What builders create
+          
+            Macroeconomic â€” CPI releases, Fed decisions, jobs data, GDP figures (short-duration, high-frequency)
+            Geopolitical â€” elections, conflicts, trade policy, energy shocks
+            Institutional hedging â€” onchain tools for hedging macro + geopolitical risk, simpler than traditional derivatives
+            Multi-currency settlement â€” EU inflation in EURC, US events in USDC
+            Internal corporate prediction markets for forecasting and planning
+            Market creation tools with automated liquidity provisioning
+            Oracle integrations for reliable resolution
+            Forex prediction markets, specifically the USDC â†” EURC pairing
+          
+          Example builds
+          
+            MacroOracle â€” markets around upcoming Fed meetings, auto-resolves on official data feeds
+            EventHedge â€” institutional tool for hedging geopolitical risk with prediction market positions
+            CorpForecast â€” internal markets for sales forecasts, project timelines, hiring decisions
+          
+          Traction metrics
+          
+            Number of markets created
+            Total liquidity provided
+            Market resolution accuracy
+            Trading volume per market
+          
+        
+      
+
+      
+      
+        
+          RFB 04
+          
+            Adaptive Portfolio Manager
+            Constant rebalancing, regime detection, tax optimization. Tedious for humans; cross-chain.
+          
+          +
+        
+        
+          The problem. Portfolio management requires constant rebalancing, regime detection, and tax optimization â€” tasks that are tedious for humans and require cross-chain coordination. How does an AI manage a portfolio that adapts to changing market conditions?
+          What the AI decides
+          
+            Asset allocation based on market regime (risk-on vs risk-off)
+            When to rebalance vs let winners run
+            Yield allocation â€” park capital in USYC during risk-off periods
+            Tax-loss harvesting opportunities and execution timing
+            Correlation-based diversification across DeFi and TradFi
+            Risk management â€” reduce exposure during high volatility
+          
+          What builders create
+          
+            Goal-based portfolio management interfaces
+            Cross-chain rebalancing infrastructure with CCTP / Gateway
+            Tax-loss harvesting automation tools
+            Regime detection models with automatic allocation adjustment
+          
+          Example builds
+          
+            AdaptiveFolio â€” set goals (â€œretire in 10 years, moderate riskâ€), AI manages everything underneath
+            TaxOptimizer â€” maximizes after-tax returns through intelligent harvesting
+            RegimeShift â€” detects market regime changes, adjusts allocation automatically
+          
+          Traction metrics
+          
+            Number of users
+            Assets under management
+            Returns vs benchmark (Bitcoin, S&amp;P 500)
+            Portfolio turnover and rebalancing frequency
+          
+        
+      
+
+      
+      
+        
+          RFB 05
+          
+            Cross-Platform Arbitrage Agent
+            Discrepancies vanish in seconds. Detect, route, execute â€” survive slippage.
+          
+          +
+        
+        
+          The problem. Price discrepancies across exchanges and chains exist but disappear in seconds. Capturing arbitrage requires instant detection, cross-chain execution, and precise cost accounting. How does an AI find and execute profitable arbitrage before opportunities vanish?
+          What the AI decides
+          
+            When real arbitrage opportunities exist (price differences across platforms)
+            Optimal trade sizing accounting for slippage and fees
+            Which bridge / route to use (CCTP vs alternatives)
+            Whether opportunity is profitable after all costs
+            Risk management â€” what if price moves during execution?
+          
+          What builders create
+          
+            Real-time price monitoring across CEXs and DEXs
+            Cross-chain execution engines optimized for speed
+            Profitability calculators accounting for all fees and slippage
+            Risk-adjusted opportunity scoring systems
+          
+          Example builds
+          
+            ArbAgent â€” finds CEX/DEX discrepancies, executes via CCTP
+            TriangularArb â€” multi-hop arbitrage (USDC â†’ ETH â†’ BTC â†’ USDC) across chains
+            FundingArb â€” arbitrage between spot and perps funding rates
+          
+          Traction metrics
+          
+            Number of arbitrage opportunities captured
+            Total profit generated
+            Average execution time
+            Success rate (profitable executions / attempts)
+          
+        
+      
+
+      
+      
+        
+          RFB 06
+          
+            Social Trading Intelligence
+            Most copy-traders mirror leaders blindly. AI selects, weights, and monitors.
+          
+          +
+        
+        
+          The problem. Copy trading is popular but most followers blindly mirror leaders without understanding risk or detecting when strategies degrade. How does an AI intelligently select, weight, and monitor traders to copy?
+          What the AI decides
+          
+            Which traders to follow based on risk-adjusted returns
+            How much capital to allocate to each trader
+            When to stop following (detecting strategy degradation)
+            Portfolio construction across multiple signal sources
+            Signal quality filtering â€” ignore noise, follow alpha
+          
+          What builders create
+          
+            Trader performance analytics and ranking systems
+            Copy trading infrastructure with AI-driven allocation
+            Strategy degradation detection algorithms
+            Multi-signal aggregation platforms
+          
+          Example builds
+          
+            SmartMirror â€” picks best 5 traders for your risk profile, adjusts allocations
+            SignalAggregator â€” combines signals from 20+ traders using ensemble methods
+            CopyProtect â€” copies winning strategies but adds AI risk limits
+          
+          Traction metrics
+          
+            Number of leaders and followers
+            Total assets being copy-traded
+            Performance vs leader performance
+            Follower retention
+          
+        
+      
+
+    
+  
+
+
+
+
+  
+    
+      Voicesfrom the Agora
+      
+    
+    
+      
+        â€œAll things that are exchanged must be somehow comparable.â€
+        
+          Aristotle
+          Nicomachean Ethics Â· Book V
+          // on price discovery
+        
+      
+      
+        â€œIs not he a benefactor who reduces the inequalities and disproportions of goods to equality and proportion?â€
+        
+          Plato
+          Laws Â· Book XI
+          // on arbitrage as public good
+        
+      
+      
+        â€œThe agora is, as it were, the heart of the city.â€
+        
+          Aristotle
+          Politics Â· Book VII
+          // on the marketplace as substrate
+        
+      
+    
+  
+
+
+
+
+  
+    Research
+    06
+    
+  
+  
+    Research that points directly to buildable products. Hacks, hooks, and angles where Arc's ~$0.01 fees and sub-second finality unlock something that wasn't economical before. Read more about our take on the prediction market stack here.
+
+    
+
+      
+        
+          01
+          
+            Trading-R1 â€” Reasoning traces as the product
+            Wang et al., 2025 Â· Tauric Research
+          
+        
+        
+          Trading-R1 is a large-scale financial reasoning model mirroring the DeepSeek-R1 design â€” its value is the reasoning trace, not the trade, which makes the trace itself the product. With Arc's ~$0.01 fees, the full reasoning trace can be hashed and pinned (trace to IPFS / Irys, hash on Arc) without eroding PnL. That unlocks a new market type: bets on which reasoning patterns converge to profit, with TradingAgents v0.2.4's structured outputs (Trader / Research Manager / Portfolio Manager all emit JSON-schema'd reasoning) as the machine-readable substrate.
+          arxiv.org/abs/2509.11420
+          Ties to RFB 06 â€” Social Trading Intelligence. Copy-trading has always been a proxy for intelligence and access. What people actually want to copy is how someone thinks â€” which traces finally make legible and Arc finally makes affordable to publish.
+        
+      
+
+      
+        
+          02
+          
+            Builder codes as every LLM agent's monetization layer
+            Polymarket V2 Â· Builder spec
+          
+        
+        
+          Builder codes let an agent that recommends a bet take a cut of every fill that originates from its recommendation â€” no custody, no token, just on-chain attribution. Every trading agent today is unmonetized: the framework gives picks, the user trades them somewhere else. The hack: a thin "agent-as-builder" wrapper that registers any agent framework as a Polymarket V2 builder, exposes its structured outputs as a signed feed, and earns USDC builder fees per fill â€” Arc's ~$0.01 fees make per-pick economics work at retail size.
+          docs.polymarket.com/trading/clients/builder
+          Ties to RFB 02 â€” Prediction Market Trader Intelligence. This is the actual answer to "how does InsightAgent make money?" â€” not subscription, builder fees.
+        
+      
+
+      
+        
+          03
+          
+            Freqtrade's bot blacklist as a tradable oracle
+            iterativv / NostalgiaForInfinity
+          
+        
+        
+          Buried in the metadata of NostalgiaForInfinity â€” a strategy for Freqtrade â€” is a finding most people miss: many commits are iterativv adding meme-coins to the blacklist â€” BLUM, MONPRO, UXLINK, IZI, YZY, BSY, WAT, RAIN. This is (likely) a single human doing real-time, high-frequency rugpull detection with a public commit log, currently free. The hack: parse the NFI commit feed, mint each blacklist addition as a signed Arc event ("iterativv-blacklisted-X at block N"), and seed a prediction market vertical of "will [coin] lose &gt;50% in 7 days". Sub-second finality matters because the blacklist signal front-runs the rug â€” the market needs to open in the same block iterativv pushes.
+          github.com/iterativv/NostalgiaForInfinity
+          Ties to RFB 03 â€” Prediction Market Verticals. A vertical of rugpull markets where the resolution signal is a maintainer with provable track record, not an oracle committee.
+        
+      
+
+      
+        
+          04
+          
+            Translation as a source of alpha
+            Wang et al., 2025 Â· TradingAgents
+          
+        
+        
+          TradingAgents-CN, AlpacaTradingAgent, and the original TauricResearch/TradingAgents library are all reskins of the same architecture; what differs is which data sources their locale's investors trust. The framework is interchangeable; the translation layer is the moat. Polymarket only operates in English-language US events because translating Mandarin macro news into a well-formed prediction market question is the bottleneck. The hack: a market where agents bid in USDC for the right to translate a non-English news event into a Polymarket-shaped question, with builder fees flowing back to the translator on every fill that originates from their question.
+          arxiv.org/pdf/2412.20138
+          Ties to RFB 03 â€” Prediction Market Verticals. The actual mechanism for emerging-markets prediction verticals â€” pay translators per-fill, not per-translation.
+        
+      
+
+      
+        
+          05
+          
+            Hyperliquid whale cross-migration index token
+            Hyperliquid Â· historical data
+          
+        
+        
+          Top HL whales migrate across forks (Aster, Polynomial, etc.). The hack: an Arc-native ERC-20 holding USDC that auto-rebalances exposure across HL forks based on top-trader migration. Each rebalance is a Gateway cross-chain move; weekly rebalances cost cents on Arc rather than dollars elsewhere. The rebalance signal is the research â€” "where smart money is currently trading." Buyers hold one token; the underlying is a live migration-tracking index.
+          hyperliquid.gitbook.io/hyperliquid-docs/historical-data
+          Ties to RFB 04 â€” Adaptive Portfolio Manager and RFB 06 â€” Social Trading Intelligence. A portfolio product whose allocation rule is itself a copy-trading insight.
+        
+      
+
+      
+        
+          06
+          
+            Slash-bonded leaderboard copy-trading
+            Nansen Â· HL leaderboard API
+          
+        
+        
+          HL leaderboard rank may not persist out-of-sample. The hack: a USDC performance bond on Arc for a given whale that users can stake alongside. A smart contract reads leaderboard rank via oracle; if the leader falls below a defined threshold, the bond slashes proportionally and the slash settles in under a second. The research output (the empirical decay function) becomes the smart-contract slash schedule directly. Arc's cheap fees mean this works at retail follower size, whereas on other chains the gas would erode the bond.
+          docs.nansen.ai/api/hyperliquid/hyperliquid-leaderboard
+          Ties to RFB 06 â€” Social Trading Intelligence. Copy-trading with skin in the game on the leader, not just the follower.
+        
+      
+
+    
+  
+
+
+
+
+  
+    How wejudge
+    07
+    
+  
+  
+    We weigh agency and traction equally. Real users matter, real decisions matter, and we want to see both. These weightings are recommendations â€” judges have the final say, and the best projects tend to break the rules.
+    
+      30%
+      
+        Agentic Sophistication
+        How much does the AI actually decide vs just automate? Full autonomy beats meaningful agency beats AI-flavored automation.
+      
+    
+    
+      30%
+      
+        Traction
+        Real users, real transactions, real volume during the event window. Great founders ship and get users in two weeks.
+      
+    
+    
+      20%
+      
+        Circle tool usage
+        Creative and effective use of the Circle developer platform. Wallets, CCTP, Gateway, App Kit, Contracts, USYC, USDC.
+      
+    
+    
+      20%
+      
+        Innovation
+        Novel approaches, emergent behavior, research insight. New territory beats polished re-runs.
+      
+    
+  
+
+
+
+
+  
+    Apply
+    08
+    
+  
+  
+    Build agentsthat move markets.
+    
+      Two weeks, six RFBs, real users. Real settlement on Arc. If you're building an agent that trades, join us!
+    
+    
+      Apply to build â†’
+      Read the RFBs â†“
+    
+  
+
+
+
+
+  Agora Agents Hackathon Â· Canteen Ã— Circle Â· 2026
+  
+    
+    Ã—
+    
+    Ã—
+    
+  
+  thecanteenapp.com
+
+
+
+/* Apply modal */
+function openApplyModal(e) {
+  if (e) e.preventDefault();
+  document.getElementById('apply-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeApplyModal() {
+  document.getElementById('apply-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeApplyModal();
+});
+
+/* RFB toggle */
+function toggleRfb(btn) {
+  const item = btn.closest('.rfb-item');
+  item.classList.toggle('open');
+}
+/* Open the RFB referenced in the URL hash, otherwise leave all collapsed */
+document.addEventListener('DOMContentLoaded', () => {
+  if (location.hash && location.hash.startsWith('#rfb-')) {
+    const target = document.querySelector(location.hash);
+    if (target) target.classList.add('open');
+  }
+});
+
+/* Open the target RFB when an in-page RFB link is clicked */
+document.addEventListener('click', e => {
+  const a = e.target.closest('a.rfb-link');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  if (!href || !href.startsWith('#rfb-')) return;
+  const target = document.querySelector(href);
+  if (target) target.classList.add('open');
+});
+
+
+
+
+  
+    Ã—
+    Priority Access
+    Register for Agora
+    Enter the passphrase below when registering on Luma to unlock your Agora priority access.
+    
+      Passphrase
+      SITEx1313
+    
+    Register on Luma â†’
+  
+
+
+
+
+

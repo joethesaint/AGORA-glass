@@ -1,61 +1,57 @@
 'use client';
 
-import { useAgentSignals } from '../hooks/useAgentSignals';
-import { PositionCard } from '../components/PositionCard';
-import { ReasoningTraceCard } from '../components/ReasoningTraceCard';
+import { useState } from 'react';
+import { useAgentSignals } from '@/hooks/useAgentSignals';
+import { ActivePositionsWidget } from '@/components/ActivePositionsWidget';
+import { MockCrashSimulator } from '@/components/MockCrashSimulator';
+import { GlassBoxTerminal } from '@/components/GlassBoxTerminal';
 
-export default function Home() {
+export default function Dashboard() {
+  const [btcPrice, setBtcPrice] = useState(63200);
   const { signals, status } = useAgentSignals();
+  
+  const entryPrice = 60000;
+  const marginRatio = Math.max(0.05, 0.35 - (63200 - btcPrice) / 100000);
+  const leverage = 50000 / (btcPrice * marginRatio);
 
-  // Helper to find the latest of a certain type
-  const getLatestSignal = (type: string) => signals.find(s => s.event_type === type);
-
-  const latestPosition = getLatestSignal('PositionUpdate')?.payload;
-  const latestVerdict = getLatestSignal('RiskVerdict')?.payload;
-  const latestTrace = getLatestSignal('ReasoningTrace')?.payload;
+  const data = {
+    entryPrice,
+    currentPrice: btcPrice,
+    size: 1.5,
+    marginRatio,
+    leverage,
+  };
 
   return (
-    <main className="min-h-screen p-8 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50">
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold tracking-tighter">AGORA-glass Sentinel</h1>
-        <div className={`px-4 py-1 rounded-full text-sm font-medium ${status === 'connected' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'}`}>
-          {status.toUpperCase()}
+    <main className="min-h-screen p-8 max-w-7xl mx-auto bg-[#0B0E14] text-[#F2F2F2]">
+      <header className="flex justify-between items-center mb-10 border-b border-[#1E2532] pb-6">
+        <div className='flex items-center gap-4'>
+            <h1 className="text-2xl font-bold tracking-tight">AGORA-glass</h1>
+            <div className={`px-2 py-1 rounded text-[10px] ${status === 'connected' ? 'bg-[#00D98F]/10 text-[#00D98F]' : 'bg-[#FF3B3B]/10 text-[#FF3B3B]'}`}>
+                {status.toUpperCase()}
+            </div>
+        </div>
+        <div className="text-right">
+          <p className="text-[11px] text-[#8A93A3] uppercase">Unified Balance</p>
+          <p className="text-3xl font-bold text-[#00A3FF]">$12,450.00</p>
+          <p className="text-[10px] text-[#8A93A3]">Gas-Free · Powered by Circle</p>
         </div>
       </header>
-      
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Status & Position */}
-        <div className="lg:col-span-1 space-y-6">
-          {latestPosition && <PositionCard data={latestPosition} />}
-          
-          {latestVerdict && (
-            <div className={`p-6 rounded-2xl shadow-lg glass ${latestVerdict.status === 'CRITICAL' ? 'border-red-500/50' : ''}`}>
-              <h2 className="text-sm font-semibold text-zinc-500 mb-2">Risk Status</h2>
-              <p className={`text-4xl font-black ${latestVerdict.status === 'CRITICAL' ? 'text-red-600 dark:text-red-400' : 'text-green-600'}`}>
-                {latestVerdict.status}
-              </p>
-            </div>
-          )}
-        </div>
 
-        {/* Right Column: Reasoning & History */}
-        <div className="lg:col-span-2">
-          {latestTrace && <ReasoningTraceCard data={latestTrace} />}
-          
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">Event Log</h2>
-            <div className="h-[400px] overflow-y-auto space-y-2 glass rounded-2xl p-4">
-                {signals.map((s, i) => (
-                    <div key={i} className="text-xs font-mono p-2 border-b border-zinc-200/20 dark:border-zinc-800 last:border-0">
-                        <span className="text-zinc-500 mr-2">[{new Date(s.timestamp).toLocaleTimeString()}]</span>
-                        <span className="font-semibold text-blue-600 dark:text-blue-400 mr-2">{s.event_type}</span>
-                        <span className="text-zinc-700 dark:text-zinc-300">{JSON.stringify(s.payload || {}).substring(0, 80)}...</span>
-                    </div>
-                ))}
-            </div>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-7 space-y-8">
+          <ActivePositionsWidget data={data} />
+          <MockCrashSimulator 
+            price={btcPrice} 
+            onPriceChange={setBtcPrice} 
+            onReset={() => setBtcPrice(63200)} 
+          />
         </div>
-      </section>
+        <div className="lg:col-span-5">
+            <h3 className="font-semibold text-md mb-3 text-[#F2F2F2]">Glass-Box Transparency</h3>
+          <GlassBoxTerminal signals={signals} />
+        </div>
+      </div>
     </main>
   );
 }

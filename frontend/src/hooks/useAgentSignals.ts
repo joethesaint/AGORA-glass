@@ -1,12 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-export interface AgentSignal {
-  event_type: 'PositionUpdate' | 'RiskVerdict' | 'ReasoningTrace' | 'RescueComplete' | 'RescueInitiated' | 'SystemError';
-  payload: any;
-  timestamp: number;
-}
+import { GlassBoxTerminal, AgentSignal } from './GlassBoxTerminal';
 
 export function useAgentSignals(url: string = 'ws://localhost:8765') {
   const [signals, setSignals] = useState<AgentSignal[]>([]);
@@ -27,14 +22,8 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
 
       ws.onmessage = (event) => {
         try {
-          const rawMessage = JSON.parse(event.data);
-          // Bridge sends { type, data, timestamp }, we map to { event_type, payload, timestamp }
-          const signal: AgentSignal = {
-            event_type: rawMessage.type,
-            payload: rawMessage.data,
-            timestamp: rawMessage.timestamp * 1000 // Ensure ms
-          };
-          setSignals((prev) => [signal, ...prev].slice(0, 100));
+          const signal: AgentSignal = JSON.parse(event.data);
+          setSignals((prev) => [signal, ...prev].slice(0, 50)); // Keep last 50
         } catch (err) {
           console.error('🛡️ GLASS: Failed to parse signal', err);
         }
@@ -42,7 +31,7 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
 
       ws.onclose = () => {
         setStatus('disconnected');
-        reconnectTimeout = setTimeout(connect, 3000); // Exponential backoff would be better for production
+        reconnectTimeout = setTimeout(connect, 3000);
       };
     };
 

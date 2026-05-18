@@ -1,0 +1,360 @@
+﻿
+
+
+  
+  
+  
+Unbundling the Prediction Market Stack | Canteen
+
+
+
+
+
+
+
+
+
+
+
+
+
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2026-05-01T00:00:00-04:00","datePublished":"2026-05-01T00:00:00-04:00","description":"Three days ago, on April 28, 2026, two unrelated venues shipped breaking protocol upgrades within hours of each other. Polymarket migrated its CLOB to a new contract suite â€” the Polymarket V2 framework â€” and Pump.fun pushed a BREAKING_FEE_RECIPIENT program upgrade that re-routed creator fees through a new mechanism. The synchrony is a coincidence. Whatâ€™s not a coincidence is that both upgrades pointed in the same direction: on-chain CLOB-style trading venues are unbundling into distinct architectural layers, and prediction markets are where itâ€™s most legible right now.","headline":"Unbundling the Prediction Market Stack","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/analysis/2026/05/01/unbundling-the-prediction-market-stack.html"},"url":"http://localhost:4000/analysis/2026/05/01/unbundling-the-prediction-market-stack.html"}
+
+
+  
+
+
+  
+
+    
+      
+      Canteen
+    
+      
+        
+        
+          
+        
+
+        About
+      
+  
+
+
+      
+        
+
+  
+    Unbundling the Prediction Market Stack
+    
+      May 1, 2026
+      
+  
+
+  
+    Three days ago, on April 28, 2026, two unrelated venues shipped breaking protocol upgrades within hours of each other. Polymarket migrated its CLOB to a new contract suite â€” the Polymarket V2 framework â€” and Pump.fun pushed a BREAKING_FEE_RECIPIENT program upgrade that re-routed creator fees through a new mechanism. The synchrony is a coincidence. Whatâ€™s not a coincidence is that both upgrades pointed in the same direction: on-chain CLOB-style trading venues are unbundling into distinct architectural layers, and prediction markets are where itâ€™s most legible right now.
+
+The Three Layers Â· Agent Layer Â· Identity Layer Â· Venue Layer Â· Missing Pieces Â· What Iâ€™d Bet On
+
+
+  
+    
+      Venue
+      Category
+      Identity Primitive
+      Venue Architecture
+    
+  
+  
+    
+      Polymarket V2
+      Prediction market
+      builder bytes32 in signed EIP-712 Order
+      onlyOperator matching, delayed self-pause
+    
+    
+      Hyperliquid (HIP-3)
+      Perp DEX
+      dex parameter + per-fill builder fees
+      Operator-mediated by design
+    
+    
+      dYdX V4
+      Perp DEX
+      Affiliate address tracked on the dYdX chain
+      Operator-managed sequencer
+    
+    
+      Lighter
+      Perp DEX (zk-rollup)
+      Referral / affiliate code per order
+      Operator-mediated matching
+    
+    
+      Ostium
+      Perp DEX (RWA)
+      BuilderFee struct with builder address per trade
+      Oracle-priced, LP-vault architecture
+    
+    
+      Avantis
+      Perp DEX (Base, RWA + crypto)
+      bytes32 referral code per trader account, tiered rebates
+      Oracle-priced, LP-vault architecture
+    
+    
+      Pump.fun
+      Memecoin launchpad
+      BREAKING_FEE_RECIPIENT field on the program
+      Closed-source program, operator-controlled
+    
+    
+      Kalshi
+      Prediction market (regulated)
+      None â€” KYC-mediated identity
+      CFTC-regulated CEX, REST API
+    
+  
+
+
+The agent layer above all of these is the same â€” TradingAgents-class multi-agent LLM frameworks that emit structured-output trade decisions and are largely venue-agnostic. The convergence at the lower layers is what makes a single agent codebase deployable across all of them. Kalshi is the exception: identity there lives at the account level (KYC, REST API), so thereâ€™s no per-order cryptographic primitive for the unbundling to anchor on. (Polymarket also runs a CFTC-regulated US arm, Polymarket US, as a Designated Contract Market. Whatâ€™s being unbundled here is the on-chain V2 framework â€” the international-facing CLOB. The regulated US side answers a different design question.)
+
+A note on scope before going further. This post uses prediction markets as the lens, but the identity-layer and venue-layer arguments apply across the broader category of on-chain CLOB-style trading venues â€” perp DEXes (Hyperliquid, dYdX V4, Lighter, Ostium, Avantis) and memecoin launchpads (Pump.fun) all converged on operator-mediated matching with bytes32 attribution. Prediction markets are the lens because the agent layer fits there first; the perp side has a different latency budget and a different alpha source, both of which Iâ€™ll come back to. Spot AMMs (Uniswap, Curve) are outside the scope: their liquidity model is fundamentally different and the operator-mediated convergence isnâ€™t visible there in the same way.
+
+Â¶The Three Layers
+
+A prediction market two years ago was effectively monolithic. Polymarketâ€™s V1 architecture was a CLOB with bilateral signed orders directly on Polygon. The traderâ€™s signed EIP-712 payload contained the entire economic agreement â€” price, size, fees, expiration, nonce, who could fill it. Order matching was as decentralized as the contract permitted. Liquidity providers were mostly humans pasting orders through a UI. Resolution was binary, oracle-mediated, and largely an afterthought from a builderâ€™s perspective.
+
+The architecture thatâ€™s emerging this year looks structurally different. The signed order has transformed into a quote â€” price, size, side, plus a bytes32 field that attributes the order to a specific submitter. Fees are decided by the venue operator at match time, not embedded in the signature. Liquidity is increasingly being supplied by AI trader frameworks that emit structured-output trade decisions backed by persistent decision logs. The trader, the attribution primitive, and the venue have separated into three layers that can be developed, deployed, and replaced independently.
+
+This isnâ€™t a Polymarket-specific story. The same unbundling is visible across Hyperliquidâ€™s HIP-3 multi-DEX rollout, Pump.funâ€™s iterating creator-rewards mechanism, and the broader Solana-native bot ecosystem. Three independent venues invented variants of the same bytes32-attribution-slot primitive within months of each other. (Two of them shipped breaking protocol upgrades on the same day.)
+
+Reading the layers from top to bottom:
+
+
+  The Agent Layer â€” software that decides what to trade. Multi-agent LLM frameworks like TradingAgents, AI Hedge Fund, and AlpacaTradingAgent that emit structured-output trade decisions backed by persistent decision logs.
+  The Identity / Attribution Layer â€” the cryptographic primitive that lets a trade be permanently associated with the agent that produced it. Polymarket V2 builder codes, Hyperliquid HIP-3 builder fees, Pump.funâ€™s BREAKING_FEE_RECIPIENT field.
+  The Operator-Mediated Venue Layer â€” the on-chain matching surface itself. The Polymarket V2 framework, Hyperliquidâ€™s perp DEX, dYdX V4. All have converged on an operator-mediated model where the venue operator submits fills and decides per-fill fees, replacing the bilateral signed-order model that earlier on-chain CLOBs aspired to.
+
+
+A year ago, none of these layers were stable enough to talk about as a stack. The agent layer was research artifacts (FinMem, TradeMaster, AlphaGen â€” all dead now), the venue layer was bilateral signed-order books, and â€œbuilder codeâ€ wasnâ€™t a recognized primitive. In the last six months each layer crossed a maturity threshold, mostly in parallel: multi-LLM routing went from research surface to baseline across the active frameworks, three independent venues shipped variants of the same identity primitive, and on April 28 two venue protocol upgrades broke their V1 reference implementations within hours of each other. The unbundling was visible in fragments for a while. This week is when it became hard to argue with.
+
+Â¶The Agent Layer
+
+Two facts about LLM-driven trading agents are worth establishing up front. First, the natural latency budget of an LLM agent is seconds to minutes, not microseconds. Even with streaming inference and parallel tool calls, the round trip from â€œobserve market stateâ€ to â€œsubmit decisionâ€ is bounded by token decode time and tool-call latency. Second, the natural input modality is text. LLMs are good at reading news, summarizing analyst reports, and synthesizing sentiment; theyâ€™re worse at consuming high-frequency numerical time series.
+
+These two constraints map to prediction markets well. A â€œWill the Fed cut rates in May?â€ market resolves on a publicly observable event with a multi-day forecast horizon. An â€œElection outcomeâ€ market trades on news flow and sentiment, both of which are LLM-friendly. The tick-by-tick alpha that drives perpetual-futures trading isnâ€™t where the LLM advantage shows up. The slow, language-rich, event-driven alpha of prediction markets is where it does.
+
+This is why TradingAgents â€” the Tauric Research multi-agent LLM trading framework (arXiv 2412.20138) â€” has spawned a large number of derivative ports. A few examples: TradingAgents has Chinese-enhanced (hsliuping/TradingAgents-CN), Alpaca-brokerage (huygiatrng/AlpacaTradingAgent), Go-based crypto (oakshen/crypto-trading-bot), TypeScript crypto (0x0funky/tradingagents-crypto), and direct-port crypto (tomortec/cryptotradingagents) variants. Compare against pipiku915/FinMem-LLM-StockTrading (ICAIF 2024 paper, zero forks, dead since August 2024) or TradeMaster-NTU/TradeMaster (NeurIPS 2023 D&amp;B paper, near-dead since June 2025): the same eraâ€™s RL-based papers had the right experimental setup but the wrong approach.
+
+The Architecture Thatâ€™s Converging
+
+TradingAgents made two architectural changes recently that are worth dwelling on, because both appear independently in the Alpaca port and in the Polymarket-side agents framework.
+
+The first is structured-output enforcement: the Trader, Research Manager, and Portfolio Manager agents emit typed objects with a five-tier rating consistency, replacing freeform text output. From an integration standpoint, this is what makes downstream contracts simple. A trade decision becomes a tuple you can hash, sign, and index â€” not prose you have to parse and trust.
+
+The second is a persistent append-only decision log, replacing per-agent vector memory with a single shared log across the agent graph, with LangGraph-style checkpoint resume so the log survives crashes. The mental model: each emitted decision becomes a content-addressable artifact that can be verified after the fact, replayed, or sealed and committed off-chain.
+
+Together these two changes turn the agentâ€™s output from â€œa series of LLM tokens you trustâ€ into â€œa series of typed objects you can verify.â€ That distinction matters for the next layer.
+
+The Agent Layer Is Venue-Agnostic
+
+huygiatrng/AlpacaTradingAgent is worth singling out because it ports the crypto LLM-agent pattern into a traditional US equity broker. Earlier this year the framework was reshaped from generic multi-agent debate into a swing-trading-specific stack: fewer agent rounds for faster reports, market-hours-aware scheduling, paper-or-live execution toggles. The trajectory says it works on Alpaca for the same reason it works on Polymarket â€” the agentâ€™s design constraints donâ€™t depend on whether the venue settles in pUSD or US dollars.
+
+The pattern: HFT-LLM doesnâ€™t yet exist; daily-cadence swing trading is the natural fit. Multi-agent debates take time to run; the trade horizon is multiple days; market-hour scheduling and paper trading are the two operational primitives. This is the cadence prediction markets operate on. Whether the venue is Polymarket or Alpaca, the agentâ€™s design constraints are the same.
+
+Whatâ€™s changed in the last six months is that the architecture has stabilized enough to plug into venues. Structured outputs, persistent decision logs, and multi-LLM routing (DeepSeek, Qwen, GLM, Kimi, MiniMax are all baseline now across the active frameworks) are no longer the hard part. The agent layer is solved for Python. The bottleneck has moved one layer down.
+
+One development here worth flagging: Rig is the first credible Rust LLM agent framework, and its contributor pool overlaps notably with Hyperliquidâ€™s Rust SDK. Thatâ€™s the early signal of what an agent layer outside the Python ecosystem might look like â€” and which trader population it would reach first. Too soon to tell whether it scales beyond a niche.
+
+Â¶The Identity Layer
+
+Once AI agents are submitting orders, you need a cryptographic primitive that travels with each order and lets a venue (or any third party) attribute that order to a specific entity. Off-chain attribution doesnâ€™t work â€” the moment trades hit the chain, the metadata gets stripped or spoofed. Three independent venues solved this problem in the last six months and arrived at the same architectural answer: a bytes32 slot embedded in the signed transaction itself.
+
+Polymarket V2: Builder Codes
+
+The Polymarket V2 framework moved attribution from off-chain HMAC headers into the EIP-712 signed Order struct itself. The V1 architecture relied on a separate @polymarket/builder-signing-sdk and POLY_BUILDER_* HMAC headers to identify which builder/integrator originated an order. That mechanism is gone in V2. Instead, the Order struct now contains a builder field of type bytes32, signed alongside salt, maker, tokenId, makerAmount, takerAmount, side, signatureType, timestamp, and metadata. The signed payload includes the attribution; the attribution canâ€™t be stripped without invalidating the signature.
+
+In the Polymarket/clob-client-v2 SDK at v1.0.0, builder codes are a constructor option:
+
+const client = new ClobClient({
+  host,
+  chain: chainId,
+  signer,
+  creds,
+  builderConfig: { builderCode: process.env.POLY_BUILDER_CODE },
+});
+
+// Every order posted by this client now carries the builder code.
+await client.createAndPostOrder(
+  { tokenID, price, size, side: Side.BUY },
+  { tickSize: "0.01", negRisk: false },
+);
+
+
+Builder codes are public identifiers, visible on-chain in the builder field of every attributed order, and they sit at the center of a programmable revenue-share mechanic: any order routed through a builderâ€™s code sends a portion of fees to that builder when the operator settles the fill. The data flow is symmetric â€” Polymarket runs a public Builder Profile leaderboard that reads attribution directly off-chain, so the same primitive that pays builders also ranks them.
+
+Hyperliquid: HIP-3 Builder Fees
+
+Hyperliquidâ€™s HIP-3 multi-DEX upgrade arrives at the same primitive from a different angle. HIP-3 lets third-party operators deploy markets on Hyperliquid; each market carries a dex parameter that travels with every fill, and the matching engine routes a builder fee to whoever deployed that market on each trade. Fee attribution becomes a native protocol mechanic rather than metadata bolted on top. The implementation surface spans the SDKs (where the dex parameter exposes per-fill attribution), the HyperEVM developer library (where on-chain precompiles route the fee), and the node repo (the spec-level reference for how the fee field appears in fills).
+
+The mechanical shape differs from Polymarket â€” Hyperliquid uses precompile-based fee routing rather than a signed order field â€” but the economic role is identical. Each fill carries an attribution that identifies the operator who deployed the market, and that operator gets a programmatic cut of the tradeâ€™s fees.
+
+Pump.fun: Creator Rewards
+
+Pump.funâ€™s contracts are closed-source, but their public docs repo is a chronological record of the fee mechanism iterating in the open. Across early 2026, the mechanic moved through creator rewards sharing, cashback, github fees, and permanent fee distribution, culminating in the BREAKING_FEE_RECIPIENT field that ships with the April 28 program upgrade. Each iteration sharpens the same primitive: who gets attributed for surfacing a trade, and how that attribution travels with the on-chain transaction.
+
+The fee recipient field decides where the tradeâ€™s fee flow goes â€” to the tokenâ€™s original creator, to a referring developer, or to a third-party app that surfaced the token to the trader. The community-side SDKs and bots (pump-fun-sdk, pumpfun-bonkfun-bot) shipped fee-recipient compatibility on the day of the program upgrade. The reaction time of community implementations to a venueâ€™s identity-layer upgrade is now measured in hours, not weeks.
+
+The Convergence
+
+Three venues, three teams, three chains, three different mechanical implementations â€” and the same architectural commitment in each case. A bytes32 (or bytes32-equivalent) attribution slot is in the signed transaction, traveling with the order through matching and settlement, visible to anyone reading the chain. Once you commit to this primitive, the rest of the design follows: revenue share is enforceable at settlement, leaderboards are derivable from on-chain data, and AI agents acquire a persistent on-chain identity that canâ€™t be spoofed off-chain.
+
+The three above are the cleanest-documented examples; Ostium (literal BuilderFee struct), Avantis (account-level setTraderReferralCode), dYdX V4, and Lighter all implement variants of the same primitive in shapes already named in the table at the top of this post â€” different mechanics, same architectural goal.
+
+Â¶The Venue Layer
+
+The third layer is the on-chain matching surface itself. Reading the Polymarket V2 frameworkâ€™s contracts side-by-side with the abandoned V1 reference implementations makes the architectural shift legible: prediction-market venues have given up on the bilateral signed-order book and committed to an operator-mediated model.
+
+Order to Quote
+
+In V1, an order was a self-contained bilateral agreement. The signed EIP-712 payload encoded the entire economic contract â€” fee, expiration, nonce, counterparty â€” and anyone matching your signature was filling that exact deal. Cancellation was an on-chain transaction.
+
+In V2, the signed payload shrinks. Fees, expiration, nonce, and the counterparty field are gone. Whatâ€™s left describes a signed quote, not a signed transaction: the trader names what they want â€” token, size, side, builder attribution â€” and the venue operator decides everything else at match time.
+
+The smoking-gun contract is ctf-exchange-v2/src/exchange/CTFExchange.sol#L48:
+
+function matchOrders(
+    bytes32 conditionId,
+    Order memory takerOrder,
+    Order[] memory makerOrders,
+    uint256 takerFillAmount,
+    uint256[] memory makerFillAmounts,
+    uint256 takerFeeAmount,           // â† operator decides at match time
+    uint256[] memory makerFeeAmounts  // â† operator decides at match time
+) external onlyOperator notPaused { ... }
+
+
+Two things to note. First, fees are arguments to matchOrders rather than fields in the signed Order â€” the operator chooses fees per fill, and previously-signed orders inherit whatever the operator picks. Second, the function is onlyOperator-gated. A makerâ€™s signed order does not become a fill until an operator submits it. Thatâ€™s the architectural commitment.
+
+Operators Are an Address Whitelist
+
+The â€œoperatorâ€ role is a writable mapping in ctf-exchange-v2/src/exchange/mixins/Auth.sol#L16:
+
+mapping(address =&gt; bool) internal admins;
+mapping(address =&gt; bool) internal operators;
+
+modifier onlyAdmin() { require(admins[msg.sender], NotAdmin()); _; }
+modifier onlyOperator() { require(operators[msg.sender], NotOperator()); _; }
+
+function addOperator(address _operator) external onlyAdmin { ... }
+function removeOperator(address _operator) external onlyAdmin { ... }
+function renounceOperatorRole() external onlyOperator { ... }
+
+
+Thereâ€™s no validator requirement, no economic stake, no signature scheme that ties operator status to identity. Operators are whatever addresses an admin chooses to whitelist. In practice today the admin set is presumably Polymarket-controlled multisigs and the operator set is Polymarketâ€™s matching engine address. Architecturally, an admin could whitelist a third-party operator tomorrow â€” the contracts admit that without a contract upgrade.
+
+This is the structural unbundling that makes the three-layer model work. The matching engine (operator) is decoupled from governance (admin) and from order origination (signed Orders). Each can be replaced independently.
+
+Cancellation Becomes Self-Pause
+
+In V1, the trader had unilateral cancellation: sign a cancel transaction, broadcast, done. The Polymarket V2 framework replaces this with a delayed self-pause in ctf-exchange-v2/src/exchange/mixins/UserPausable.sol#L27:
+
+uint256 public userPauseBlockInterval = 100;  // ~3.5 min on Polygon
+
+function pauseUser() external override {
+    require(userPausedBlockAt[msg.sender] == 0, UserAlreadyPaused());
+    uint256 blockPausedAt = block.number + userPauseBlockInterval;
+    userPausedBlockAt[msg.sender] = blockPausedAt;
+}
+
+
+Two important properties. The pause is delayed by 100 blocks (~3.5 minutes on Polygon, capped at ~7 days). And itâ€™s account-wide, not per-order. You canâ€™t selectively cancel one resting order; you freeze the whole account. Between calling pauseUser() and the pause becoming effective, an operator can still match against your resting orders.
+
+Think CME, not Uniswap. Market makers canâ€™t quote and then instantly cancel when toxic flow appears. The price youâ€™re showing is a real commitment for a meaningful window. From a traderâ€™s perspective, itâ€™s a constraint. From the venue operatorâ€™s perspective, itâ€™s what makes the maker-rebate fee model viable â€” you canâ€™t offer maker rebates if makers can pull quotes faster than the round-trip latency.
+
+USDC.e to pUSD
+
+V1 settled in USDC.e â€” Circleâ€™s bridged USDC on Polygon. Traders held it directly, approved the Exchange contract, and matched orders denominated in USDC.e. Polymarket sat outside the asset trust path: the venue used Circleâ€™s asset and that was the end of it.
+
+V2 introduces pUSD: an ERC-20 issued by Polymarket that wraps two backing assets â€” native USDC and bridged USDC.e. The user path becomes: deposit either asset into a public onramp contract, mint pUSD, trade in pUSD, redeem back when done. The matching engine never sees the underlying â€” only pUSD moves on the order book.
+
+Three architectural shifts follow from that:
+
+
+  Native USDC becomes first-class collateral. CCTP delivers native USDC; previously a cross-chain user had to swap into USDC.e before they could trade. Now wrap goes straight into pUSD without an intermediate hop.
+  Polymarket joins the asset-issuance path. pUSD is upgradeable, with Polymarket-controlled mint/burn and per-asset pause primitives â€” if Circle ever has a problem with USDC.e, Polymarket can shut off the USDC.e onramp without affecting native-USDC users. The venue now sits between the user and Circle, not alongside them.
+  Custody separates from the token contract. Underlying assets pool in a separate vault address; the pUSD contract itself doesnâ€™t hold the float. That makes pUSDâ€™s behavior upgradeable without re-custodying user collateral.
+
+
+For the rest of the venue, this is a quiet architectural promotion. The same operator-mediated logic that decides fees, matching, and pauses now also gates how the unit of account is minted and how collateral exits the system.
+
+Who Adopted V2 First
+
+The signal of which architecture is winning came from how production execution frameworks responded. nautilus_trader, a Rust-native trading engine, shipped its V2 adapter migration on cutover day and refined it the next. hummingbot has a Polymarket connector branch in flight. QuantConnectâ€™s Lean engine has open work to handle V2 instrument lifecycle. Three production-grade open-source execution frameworks committed to V2 within days of cutover â€” the kind of serious engineering surface where adapter rewrites cost weeks. They picked operator-mediated.
+
+Beyond Polymarket
+
+The Polymarket V2 framework isnâ€™t an isolated decision. Hyperliquid was operator-mediated by design from the start. dYdX V3 â†’ V4 made the same transition (Ethereum L2 with on-chain order books â†’ Cosmos chain with operator-managed sequencer). Aevo, Lighter, and the newer perp DEX wave all run operator-mediated matching with off-chain order books. The â€œreal CLOB on Ethereumâ€ approach that 0x Protocol pioneered keeps losing to operator-mediated venues because the things bilateral signing made hard â€” maker rebates, dynamic per-market fees, builder revenue share, MEV protection, fast cancellation and pause behavior â€” are all exactly the things institutional flow demands.
+
+The convergence point is uncomfortable to articulate but itâ€™s hard to argue against once youâ€™ve read the contracts: prediction markets are becoming CEXes that happen to settle on chain. The chain is now a settlement layer, the operator is the matching engine, and the on-chain identity primitives (builder codes, HIP-3 attribution, BREAKING_FEE_RECIPIENT) exist specifically because the matching layer has otherwise become an off-chain operator concern.
+
+Â¶Missing Pieces
+
+The Reference Market Maker Vacuum
+
+poly-market-maker was the V1 reference market-making keeper. Polymarket maintainers stopped touching it years before V2 shipped, and community PRs trying to keep its V1 SDK current went unmerged through the entire V2 development cycle. The cutover rendered the keeper non-functional outright â€” its V1 SDK pins donâ€™t work against V2, and its order signing is bound to the old EIP-712 domain.
+
+The same dynamic just played out on the Pump.fun side. The most popular community Pump.fun SDK (pumpdotfun-sdk) has been untouched for a year. The April 28 program upgrade broke it, and the community PRs trying to track the new program have been sitting open for months.
+
+Two venues, same pattern, same week: the high-visibility community reference implementation gets abandoned right before the venue ships a breaking upgrade, and the venue operator has no incentive to fill the hole. Anyone shipping a V2-aware reference market maker in the next quarter walks into a known-empty lane on both venues.
+
+What â€œV2-aware market makingâ€ actually means is more interesting than an SDK port. Three V2 design choices reshape what the keeper has to think about:
+
+
+  The 3.5-minute delayed self-pause is a real adverse-selection cost. V1 quoted and cancelled in the same block. V2 commits the quote for roughly 3.5 minutes after the cancel signal lands. A market maker that doesnâ€™t price that latency window is giving up edge to anyone who can read its quote and react before the cancel takes effect.
+  Collateral routing replaces a single approval. V1 was approve(USDC.e, Exchange) and you were done. V2 splits the path â€” source USDC or USDC.e, wrap into pUSD through the onramp, then approve pUSD to the exchange. The market maker now chooses which underlying asset backs its inventory, pays gas to wrap and unwrap, and inherits per-asset pause risk if admins ever throttle one of the underlying assets. The keeperâ€™s idle-inventory model becomes a routing model.
+  Operator-set fees mean fee schedules arenâ€™t a constant. V1 fees were embedded in the signed order, so the keeper always knew what every fill would cost. V2 lets the operator decide fees per fill. The keeper has to query the venue for the current schedule and re-check often enough to detect changes â€” and accept that quotes signed under one fee policy may settle under another.
+
+
+None of this maps onto V1â€™s â€œfetch midpoint, diff orders, cancel deltas, replaceâ€ loop. A V2-aware market-making keeper is a different inventory model, not a different SDK call.
+
+A Chain-Agnostic Identity Primitive
+
+Polymarket V2 builder codes, Hyperliquid HIP-3 builder fees, and Pump.fun BREAKING_FEE_RECIPIENT all do the same thing in different ways. The portability story is bad. An AI agent operating across all three needs three different attribution mechanisms in three different signing flows. Thereâ€™s no canonical registry that issues a single identity and bridges it onto each venueâ€™s local primitive.
+
+This is a real gap because the AI agent layer is converging on cross-venue trading. AlpacaTradingAgent already trades both equities and crypto in the same framework. TradingAgents-CN supports HK + mainland Chinese + US markets. Hummingbotâ€™s feat/polymarket-event-connector branch adds a Polymarket connector to a framework that already speaks dozens of venues. The agent layer is venue-agnostic; the identity layer isnâ€™t yet.
+
+A registry contract on a settlement-grade chain (Arc, Solana, Ethereum) that issues bytes32 agent codes and signs receipts that other venues can adopt would close this. The Polymarket V2 builder code becomes the canonical instance; HIP-3 attribution and Pump.fun BREAKING_FEE_RECIPIENT become bridge surfaces.
+
+Operator Behavior as Public Information
+
+The Polymarket V2 framework makes operator policy a continuous public observable. Every matchOrders call emits the per-fill fee the operator chose. The fee curve C Ã— feeRate Ã— p Ã— (1 - p) is queryable per market via getClobMarketInfo(). Operator addresses are public. Pause windows are on-chain. None of this existed in V1, where fees were embedded in signed orders and never varied.
+
+This is a new class of public time series that wasnâ€™t tradable before. Markets like â€œwill the average maker rebate on market X exceed Y bps over the next 30 days?â€ are mechanically resolvable from on-chain data. Institutional flow has to model operator policy to size their integration. A public market for that uncertainty would turn operator behavior into pricing input â€” the kind of recursive structure that prediction markets have always done well at.
+
+Â¶What I'd Bet On
+
+A V2-aware reference market maker fills the gap. Polymarket isnâ€™t going to ship one â€” two years of silence on poly-market-maker while V2 was being built makes that clear enough. The first credible open-source reference market maker that explicitly prices the 3.5-minute exit delay as a real cost, handles dual-asset collateral routing, and queries operator-controlled fees gets adopted as the default by trading firms running Polymarket V2 alongside Kalshi and Hyperliquid. The architectural bar is â€œbuild a market maker that thinks about quote commitment as a constraintâ€ rather than â€œport the V1 keeper to V2 endpoints.â€
+
+The operator role expands beyond Polymarket itself. The contracts are MIT-licensed and the operator whitelist is a writable mapping. Someone will fork V2 and run a third-party operator on a different chain â€” Arc, Solana, or a Cosmos appchain â€” well before Polymarket gets around to whitelisting external operators on Polygon. The economic argument is compelling enough that the only question is who ships first: you set fees, you decide order admission, you collect a share of revenue from every order matched.
+
+Builder codes (or an analog) become the canonical AI-agent identity primitive. Three venues independently invented variants of this in months. The missing piece is a chain-agnostic registry that lets a single agent identity travel across all of them â€” a bytes32 issued on a settlement chain with bridge adapters into each venueâ€™s local attribution slot. Whoever ships that registry first defines the standard, and persistent on-chain identity becomes a primitive other products build on (copy trading, AI fund LP attribution, model-eval leaderboards).
+
+The connective thread: the agent layer is now mature enough to drive the design of the layers below it. Both venue and attribution layers responded with breaking protocol upgrades on the same day. The next bottleneck is somewhere further down â€” probably cross-venue settlement and portfolio-risk modeling â€” but the unbundling means itâ€™ll be visible from a long way off.
+
+  
+
+
+      
+    
+  
+    
+      A research and technology firm based out of ðŸ—½
+    
+  
+
+
+
+
+
