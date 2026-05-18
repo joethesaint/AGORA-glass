@@ -112,12 +112,14 @@ class RescueComplete(BaseEvent):
         tx_hash (str): The transaction hash of the rescue action.
         amount (float): The final amount moved.
         reason_hash (str): The hash of the reasoning trace that triggered this rescue.
+        latency_ms (float): The time taken for the rescue cycle in milliseconds.
     """
 
     status: str
     tx_hash: str
     amount: float
     reason_hash: str
+    latency_ms: float
 
 
 @dataclass(frozen=True)
