@@ -4,34 +4,50 @@ import { useWalletStore } from '@/stores/walletStore';
 import { Wallet, LogOut, Loader2, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { UnifiedWalletModal } from './UnifiedWalletModal';
 
 export const WalletConnect = () => {
   const { address, isConnected, isConnecting, connect, disconnect, chain } = useWalletStore();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const formatAddress = (addr: string) => {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
   };
 
+  const handleConnect = (type: 'web2' | 'web3') => {
+    connect(type);
+    setIsModalOpen(false);
+  };
+
   if (!isConnected) {
     return (
-      <button
-        onClick={() => connect()}
-        disabled={isConnecting}
-        className="flex items-center gap-2 px-4 py-2 bg-[#00A3FF] hover:bg-[#008BDB] disabled:bg-[#00A3FF]/50 text-white rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,163,255,0.3)] active:scale-95"
-      >
-        {isConnecting ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Connecting...</span>
-          </>
-        ) : (
-          <>
-            <Wallet className="w-4 h-4" />
-            <span>Connect Wallet</span>
-          </>
-        )}
-      </button>
+      <>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          disabled={isConnecting}
+          className="flex items-center gap-2 px-4 py-2 bg-[#00A3FF] hover:bg-[#008BDB] disabled:bg-[#00A3FF]/50 text-white rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,163,255,0.3)] active:scale-95"
+        >
+          {isConnecting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Connecting...</span>
+            </>
+          ) : (
+            <>
+              <Wallet className="w-4 h-4" />
+              <span>Connect Wallet</span>
+            </>
+          )}
+        </button>
+
+        <UnifiedWalletModal 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSelectWeb2={() => handleConnect('web2')}
+          onSelectWeb3={() => handleConnect('web3')}
+        />
+      </>
     );
   }
 
