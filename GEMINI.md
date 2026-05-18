@@ -34,6 +34,7 @@ This project uses a structured control system located in `.rules/`, `.workflows/
 ## 📚 Knowledge Base
 Refer to the `docs/` directory for deep-dive technical specifications and architectural guides.
 
+- **Knowledge Graph:** [docs/MAP.md](docs/MAP.md) (Linked view of all documentation)
 - **System Architecture:** [docs/BUILD_FRAMEWORK.md](docs/BUILD_FRAMEWORK.md) & [docs/DIAGRAMS.md](docs/DIAGRAMS.md)
 - **Controls Reference:** [docs/CONTROLS_IMPROVED.md](docs/CONTROLS_IMPROVED.md)
 - **Integration Guides:** [docs/SDK_INTEGRATION.md](docs/SDK_INTEGRATION.md) & [docs/ARC_CLI_GUIDE.md](docs/ARC_CLI_GUIDE.md)

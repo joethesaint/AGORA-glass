@@ -17,6 +17,7 @@ dependencies = [
     "pyyaml>=6.0.3",
     "structlog>=24.1.0",
     "numpy>=2.4.5",
+    "ujson>=5.10.0",
 ]
 
 [dependency-groups]

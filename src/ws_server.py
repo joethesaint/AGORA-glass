@@ -1,5 +1,5 @@
 import asyncio
-import json
+import ujson as json
 import websockets
 from typing import Set
 from src.base import BaseComponent
@@ -12,7 +12,7 @@ class WebSocketServer(BaseComponent):
     Acts as a bridge between the internal MessageBus and external clients.
     """
 
-    def __init__(self, host: str = "0.0.0.0", port: int = 8765):
+    def __init__(self, host: str = "0.0.0.0", port: int = 8766):
         super().__init__("WebSocketServer")
         self.host = host
         self.port = port

@@ -5,10 +5,6 @@ from src.events import PositionUpdate
 from hyperliquid.info import Info
 from hyperliquid.utils import constants
 
-from hyperliquid.utils import constants
-from hyperliquid.info import Info
-from hyperliquid.exchange import Exchange
-
 class PerpMonitor(BaseComponent):
     """
     Monitors perpetual positions on Hyperliquid.
@@ -18,6 +14,8 @@ class PerpMonitor(BaseComponent):
         super().__init__("PerpMonitor")
         self.mode = mode
         self.account_address = account_address or os.getenv("MONITOR_ACCOUNT")
+        self._loop = None
+        self._info = None
         
         if self.mode == "live" and not self.account_address:
             self.logger.error("position_fetch_failure", reason="MONITOR_ACCOUNT_NOT_SET")
@@ -25,6 +23,7 @@ class PerpMonitor(BaseComponent):
 
     async def run(self):
         self.logger.info("monitor_started", mode=self.mode)
+        self._loop = asyncio.get_running_loop()
 
         if self.mode == "mock":
             await self._run_mock_loop()
@@ -85,59 +84,72 @@ class PerpMonitor(BaseComponent):
             await asyncio.sleep(1.0)
 
     async def _run_live_loop(self):
-        """Real-time monitoring via Hyperliquid SDK (Polling + WS)."""
+        """Live position monitoring using high-speed WebSockets and polling."""
         self.logger.info(
-            "position_fetch_start", account=self.account_address, exchange="Hyperliquid"
+            "position_ws_start", account=self.account_address, exchange="Hyperliquid"
         )
-        # Use Testnet by default for the hackathon
-        base_url = constants.TESTNET_API_URL
-        info = Info(base_url, skip_ws=True)
-
+        
+        # Initialize Info with WebSocket enabled
+        self._info = Info(constants.TESTNET_API_URL, skip_ws=False)
+        
+        # 1. Initial Snapshot
+        await self._poll_user_state()
+        
+        # 2. Subscribe to user-specific events (fills, liquidations, etc.)
+        self._info.subscribe({"type": "userEvents", "user": self.account_address}, self._on_ws_msg)
+        
+        # 3. Hybrid approach: Poll occasionally to ensure state is synchronized
         while True:
-            try:
-                # Polling user state (SDK handles signatures/auth if keys provided)
-                user_state = info.user_state(self.account_address)
-                positions = user_state.get("assetPositions", [])
+            await asyncio.sleep(10)  # Less frequent polling when WS is active
+            await self._poll_user_state()
 
-                if not positions:
-                    self.logger.debug("no_open_positions", account=self.account_address)
+    def _on_ws_msg(self, msg: dict):
+        """Threaded callback from Hyperliquid SDK; triggers a state refresh on change."""
+        # Any user event (fill, etc.) suggests a potential margin change
+        if self._loop:
+            asyncio.run_coroutine_threadsafe(self._poll_user_state(), self._loop)
 
-                for pos_wrapper in positions:
-                    pos = pos_wrapper["position"]
-                    symbol = pos["coin"]
-                    
-                    # Calculate margin ratio
-                    # Formula: Margin / Position Value
-                    margin_ratio = (
-                        float(pos["marginUsed"]) / float(pos["positionValue"])
-                        if float(pos["positionValue"]) != 0
-                        else 1.0
-                    )
-                    leverage = float(pos["leverage"])
+    async def _poll_user_state(self):
+        """Fetches and publishes the latest user position state."""
+        try:
+            user_state = self._info.user_state(self.account_address)
+            positions = user_state.get("assetPositions", [])
 
-                    self.logger.info(
-                        "position_fetch_success",
-                        account=self.account_address,
+            if not positions:
+                self.logger.debug("no_open_positions", account=self.account_address)
+
+            for pos_wrapper in positions:
+                pos = pos_wrapper["position"]
+                symbol = pos["coin"]
+                
+                # Calculate margin ratio
+                margin_ratio = (
+                    float(pos["marginUsed"]) / float(pos["positionValue"])
+                    if float(pos["positionValue"]) != 0
+                    else 1.0
+                )
+                leverage = float(pos["leverage"])
+
+                self.logger.info(
+                    "position_fetch_success",
+                    account=self.account_address,
+                    symbol=symbol,
+                    margin_ratio=round(margin_ratio, 4),
+                    leverage=leverage,
+                    current_price=float(pos.get("entryPrice", 0.0)),
+                )
+                await self.publish(
+                    PositionUpdate(
                         symbol=symbol,
                         margin_ratio=margin_ratio,
                         leverage=leverage,
+                        account=self.account_address,
                         current_price=float(pos.get("entryPrice", 0.0)),
                     )
-                    await self.publish(
-                        PositionUpdate(
-                            symbol=symbol,
-                            margin_ratio=margin_ratio,
-                            leverage=leverage,
-                            account=self.account_address,
-                            current_price=float(pos.get("entryPrice", 0.0)),
-                        )
-                    )
+                )
 
-                await asyncio.sleep(2)  # High-frequency polling for PoC
-
-            except Exception as e:
-                self.logger.error("position_fetch_failure", error_message=str(e))
-                await asyncio.sleep(10)
+        except Exception as e:
+            self.logger.error("position_poll_failure", error=str(e))
 
 # Entry point for the monitor
 if __name__ == "__main__":

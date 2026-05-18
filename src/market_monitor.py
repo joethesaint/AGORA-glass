@@ -25,10 +25,12 @@ class MarketDataMonitor(BaseComponent):
         self.window_size = window_size
         # Store price history per symbol: Symbol -> Deque[mid_price]
         self.price_history = {}
-        self._info = Info(constants.TESTNET_API_URL, skip_ws=True)
+        self._info = None
+        self._loop = None
 
     async def run(self):
         self.logger.info("market_monitor_started", mode=self.mode)
+        self._loop = asyncio.get_running_loop()
 
         if self.mode == "mock":
             await self._run_mock()
@@ -81,49 +83,65 @@ class MarketDataMonitor(BaseComponent):
             await asyncio.sleep(0.5)
 
     async def _run_live(self):
-        """Live volatility monitoring loop."""
-        self.logger.info("live_volatility_tracking_start")
+        """Live volatility monitoring using high-speed WebSockets."""
+        self.logger.info("live_volatility_ws_start")
         
+        # Initialize Info with WebSocket enabled
+        self._info = Info(constants.TESTNET_API_URL, skip_ws=False)
+        
+        # Subscribe to real-time mid prices
+        self._info.subscribe({"type": "allMids"}, self._on_ws_msg)
+        
+        # Keep the task alive
         while True:
-            try:
-                # Fetch all mid prices
-                mids = self._info.all_mids()
-                
-                # We only care about major assets for now
-                target_assets = ["BTC", "ETH", "SOL"]
-                
-                for asset in target_assets:
-                    mid_price = float(mids.get(asset, 0))
-                    if mid_price == 0:
-                        continue
-                    
-                    symbol = f"{asset}-PERP"
-                    if symbol not in self.price_history:
-                        self.price_history[symbol] = deque(maxlen=self.window_size)
-                    
-                    self.price_history[symbol].append(mid_price)
-                    
-                    if len(self.price_history[symbol]) >= 5:
-                        vol_factor = self._calculate_volatility_factor(symbol)
-                        self.logger.info(
-                            "live_volatility_update", 
-                            symbol=symbol, 
-                            vol_factor=vol_factor,
-                            price=mid_price
-                        )
-                        await self.publish(
-                            MarketVolatilityUpdate(
-                                symbol=symbol,
-                                volatility_factor=vol_factor,
-                            )
-                        )
+            await asyncio.sleep(1)
 
-                # Poll every 2 seconds for granular volatility
-                await asyncio.sleep(2)
+    def _on_ws_msg(self, msg: dict):
+        """
+        Threaded callback from Hyperliquid SDK.
+        Bridges back to the asyncio event loop.
+        """
+        if msg.get("channel") != "allMids":
+            return
+            
+        data = msg.get("data", {})
+        mids = data.get("mids", {})
+        
+        target_assets = ["BTC", "ETH", "SOL"]
+        for asset in target_assets:
+            mid_price = float(mids.get(asset, 0))
+            if mid_price == 0:
+                continue
                 
-            except Exception as e:
-                self.logger.error("volatility_fetch_failure", error=str(e))
-                await asyncio.sleep(5)
+            symbol = f"{asset}-PERP"
+            
+            # Use thread-safe bridge to update state and publish events
+            asyncio.run_coroutine_threadsafe(
+                self._process_mid_price(symbol, mid_price), 
+                self._loop
+            )
+
+    async def _process_mid_price(self, symbol: str, mid_price: float):
+        """Processes a single price update in the main event loop."""
+        if symbol not in self.price_history:
+            self.price_history[symbol] = deque(maxlen=self.window_size)
+        
+        self.price_history[symbol].append(mid_price)
+        
+        if len(self.price_history[symbol]) >= 5:
+            vol_factor = self._calculate_volatility_factor(symbol)
+            self.logger.debug(
+                "live_volatility_update", 
+                symbol=symbol, 
+                vol_factor=round(vol_factor, 4),
+                price=mid_price
+            )
+            await self.publish(
+                MarketVolatilityUpdate(
+                    symbol=symbol,
+                    volatility_factor=vol_factor,
+                )
+            )
 
     def _calculate_volatility_factor(self, symbol: str) -> float:
         """
