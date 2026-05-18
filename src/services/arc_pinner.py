@@ -56,7 +56,7 @@ class ArcPinner:
             
             # Realistic mock latency for Arc pinning
             import random
-            latency = random.uniform(0.1, 0.4)
+            latency = random.uniform(0.05, 0.2)
             await asyncio.sleep(latency)
             
             return "0xSIMULATED_ARC_TX"

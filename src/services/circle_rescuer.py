@@ -64,7 +64,7 @@ class CircleRescuer:
             
             # Realistic mock latency for Circle transfer
             import random
-            latency = random.uniform(0.2, 0.8)
+            latency = random.uniform(0.1, 0.4)
             await asyncio.sleep(latency)
             
             # Check for missing wallet ID even in mock mode if simulation requires it

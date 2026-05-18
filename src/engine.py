@@ -50,7 +50,11 @@ class RiskEngine(BaseComponent):
         # 3. Deteriorating trend detection (Polars)
         is_trending_down = analytics.is_trend_deteriorating(event.symbol)
 
-        is_critical = margin < dynamic_threshold or leverage > self.config.max_leverage or is_trending_down
+        # In mock mode, we want to see more action for the dashboard demo
+        is_mock = "0xMOCK" in event.account
+        threshold_buffer = 0.05 if is_mock else 0.0
+        
+        is_critical = margin < (dynamic_threshold + threshold_buffer) or leverage > self.config.max_leverage or is_trending_down
 
         if is_critical:
             reason = ""
