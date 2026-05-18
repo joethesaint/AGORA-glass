@@ -25,12 +25,12 @@ export const UnifiedWalletModal = ({ isOpen, onClose, onSelectWeb2, onSelectWeb3
           />
 
           {/* Modal Container */}
-          <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[101]">
+          <div className="fixed inset-0 w-screen h-screen flex items-center justify-center pointer-events-none z-[101]">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="w-full max-w-3xl agora-card p-0 overflow-hidden pointer-events-auto mx-4"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-3xl agora-card p-0 overflow-hidden pointer-events-auto mx-4 shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             >
               {/* Header */}
               <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
