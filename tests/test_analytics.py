@@ -1,19 +1,13 @@
 import pytest
 import asyncio
 from src.analytics import analytics
-from src.events import ReasoningTrace, RescueComplete, WSSignal
+from src.events import ReasoningTrace, RescueComplete, WSSignal, PositionUpdate
 from src.bus import bus
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
-    bus.clear_subscribers()
-    # Re-subscribe the singleton
-    analytics.subscribe(ReasoningTrace, analytics.on_trace)
-    analytics.subscribe(RescueComplete, analytics.on_rescue)
-    
     analytics.metrics_df = analytics.metrics_df.slice(0, 0) # Reset DataFrame
     yield
-    bus.clear_subscribers()
     analytics.metrics_df = analytics.metrics_df.slice(0, 0)
 
 @pytest.mark.asyncio
@@ -40,20 +34,15 @@ async def test_analytics_metrics_tracking():
     )
     await bus.publish(trace)
     
-    # 2. Complete Rescue
-    complete = RescueComplete(
-        status="SUCCESS",
-        tx_hash="0xtx1",
-        amount=100.0,
-        reason_hash="0xhash1"
-    )
-    await bus.publish(complete)
+    # 2. Wait for RescueComplete (published by RescueDispatcher)
+    # The dispatcher will process the ReasoningTrace and publish RescueComplete.
     
-    # Allow async processing
-    await asyncio.sleep(0.1)
+    # Allow async processing for dispatcher to run
+    await asyncio.sleep(0.2)
     
     # Check published analytics
     assert len(signals) > 0
+    # The last signal should be the analytics update
     latest = signals[-1].payload
     assert latest["total_rescued_usdc"] == 100.0
     assert latest["rescue_count"] == 1

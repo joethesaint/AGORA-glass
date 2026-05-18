@@ -27,7 +27,7 @@ async def test_circle_rescuer_mock_mode():
     # Test with no API keys (mock mode)
     with patch('os.getenv', return_value=None):
         rescuer = CircleRescuer()
-        tx_id = await rescuer.rescue(100.0, "0xrecipient")
+        tx_id = await rescuer.rescue(100.0, "0xrecipient", "0xhash1")
         assert tx_id == "0xSIMULATED_CIRCLE_TX"
 
 @pytest.mark.asyncio
@@ -43,5 +43,5 @@ async def test_circle_rescuer_missing_wallet():
         
         with patch('circle.web3.utils.init_developer_controlled_wallets_client'):
             rescuer = CircleRescuer()
-            tx_id = await rescuer.rescue(100.0, "0xrecipient")
+            tx_id = await rescuer.rescue(100.0, "0xrecipient", "0xhash1")
             assert tx_id == "0xMISSING_WALLET_ID"
