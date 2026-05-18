@@ -56,8 +56,8 @@ export const MarginHistoryChart = memo<MarginHistoryChartProps>(({ data }) => {
         </div>
       </div>
 
-      <div className="h-64 -mx-2">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-64 w-full">
+        <ResponsiveContainer width="100%" height={256}>
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: -30, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
             <XAxis
