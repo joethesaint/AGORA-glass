@@ -52,7 +52,12 @@ class CircleRescuer:
         if not self.transfers_api or os.getenv("LIVE_MODE", "false").lower() != "true":
             self.logger.info(f"MOCK RESCUE: Moving {amount} USDC to {destination_address} (Audit Hash: {reason_hash})")
             await asyncio.sleep(0.1)
-            return f"0xSIMULATED_CIRCLE_TX_{uuid.uuid4().hex[:8]}"
+            
+            # Check for missing wallet ID even in mock mode if simulation requires it
+            if self.api_key and not os.getenv("CIRCLE_WALLET_ID"):
+                return "0xMISSING_WALLET_ID"
+
+            return "0xSIMULATED_CIRCLE_TX"
 
         try:
             # Note: This is a placeholder for the actual SDK call which might be synchronous

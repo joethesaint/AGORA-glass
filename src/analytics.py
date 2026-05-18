@@ -30,6 +30,13 @@ class GlassBoxAnalytics(BaseComponent):
         self.subscribe(PositionUpdate, self.on_position)
         self._position_history = {} # symbol -> Deque[float]
 
+    def reset(self):
+        """Resets the analytics state (primarily for testing)."""
+        self.metrics_df = self.metrics_df.slice(0, 0)
+        self._position_history = {}
+        self._pending_traces = {}
+        self.start_time = time.time()
+
     def on_position(self, event: PositionUpdate):
         if event.symbol not in self._position_history:
             self._position_history[event.symbol] = deque(maxlen=20)
@@ -38,10 +45,12 @@ class GlassBoxAnalytics(BaseComponent):
     def is_trend_deteriorating(self, symbol: str) -> bool:
         """Checks if margin ratio is consistently decreasing."""
         history = list(self._position_history.get(symbol, []))
-        if len(history) < 5:
+        if len(history) < 10:
             return False
-        # Simple trend check: is the latest margin lower than the average of the last 5?
-        return history[-1] < sum(history[-5:]) / 5
+        # Simple trend check: is the average of the last 5 points significantly lower than the average of the older points?
+        older_avg = sum(history[:5]) / 5
+        recent_avg = sum(history[-5:]) / 5
+        return (older_avg - recent_avg) > 0.05
 
     def get_rolling_stats(self, symbol: str) -> dict:
         """Returns basic stats for the dashboard."""

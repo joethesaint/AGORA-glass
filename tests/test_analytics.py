@@ -6,9 +6,16 @@ from src.bus import bus
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
-    analytics.metrics_df = analytics.metrics_df.slice(0, 0) # Reset DataFrame
+    bus.clear_subscribers()
+    # Re-subscribe the singleton
+    analytics.subscribe(ReasoningTrace, analytics.on_trace)
+    analytics.subscribe(RescueComplete, analytics.on_rescue)
+    analytics.subscribe(PositionUpdate, analytics.on_position)
+    
+    analytics.reset()
     yield
-    analytics.metrics_df = analytics.metrics_df.slice(0, 0)
+    bus.clear_subscribers()
+    analytics.reset()
 
 @pytest.mark.asyncio
 async def test_analytics_metrics_tracking():
@@ -34,15 +41,21 @@ async def test_analytics_metrics_tracking():
     )
     await bus.publish(trace)
     
-    # 2. Wait for RescueComplete (published by RescueDispatcher)
-    # The dispatcher will process the ReasoningTrace and publish RescueComplete.
+    # 2. Complete Rescue
+    complete = RescueComplete(
+        status="SUCCESS",
+        tx_hash="0xtx1",
+        amount=100.0,
+        reason_hash="0xhash1",
+        latency_ms=50.0
+    )
+    await bus.publish(complete)
     
-    # Allow async processing for dispatcher to run
-    await asyncio.sleep(0.2)
+    # Allow async processing
+    await asyncio.sleep(0.1)
     
     # Check published analytics
     assert len(signals) > 0
-    # The last signal should be the analytics update
     latest = signals[-1].payload
     assert latest["total_rescued_usdc"] == 100.0
     assert latest["rescue_count"] == 1
