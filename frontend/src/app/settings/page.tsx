@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Save, RotateCcw, Bell, Wifi, Palette, Shield, ChevronRight } from 'lucide-react';
+import { Save, RotateCcw, Bell, Wifi, Palette, Shield, ChevronRight, Info } from 'lucide-react';
 
 interface SettingsSection {
   title: string;
@@ -218,6 +218,62 @@ export default function SettingsPage() {
 
       {/* Settings Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* About GLASS Section */}
+        <div className="lg:col-span-2">
+          <SettingsSection
+            title="About AGORA-glass"
+            icon={<Info size={20} />}
+          >
+            <div className="p-4 space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-[#00A3FF] font-bold text-sm uppercase tracking-wider">The Mission</h3>
+                <p className="text-sm text-[#8A93A3] leading-relaxed">
+                  AGORA-glass is an autonomous, ultra-low-latency risk management agent designed to protect perpetual futures traders from liquidations. In high-volatility markets, human reaction times are often too slow. GLASS acts as your automated "financial bodyguard," detecting risk and injecting margin in under 500ms.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <h3 className="text-white font-semibold text-sm">1. Fund the Vault</h3>
+                  <p className="text-xs text-[#8A93A3]">
+                    Deposit USDC into the AGORA smart contract on the Arc blockchain. This reserve is only used for emergency rescues.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-white font-semibold text-sm">2. Configure Risk</h3>
+                  <p className="text-xs text-[#8A93A3]">
+                    Set your desired margin thresholds and max leverage. The sentinel uses these parameters to monitor your health 24/7.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-white font-semibold text-sm">3. Connect & Protect</h3>
+                  <p className="text-xs text-[#8A93A3]">
+                    Once connected to the Sentinel bridge, the agent takes over. If a liquidation is imminent, it executes a rescue in ~250ms.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/5 flex flex-col md:flex-row gap-6">
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+                    <Shield size={14} className="text-[#00A3FF]" />
+                    "Glass-Box" Transparency
+                  </h3>
+                  <p className="text-xs text-[#8A93A3]">
+                    Every decision generates a cryptographic reasoning trace pinned to the Arc blockchain. Unlike "black-box" bots, GLASS proves exactly why it moved funds, ensuring total accountability.
+                  </p>
+                </div>
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-white font-semibold text-sm">Future Roadmap</h3>
+                  <p className="text-xs text-[#8A93A3]">
+                    While starting as a single high-performance sentinel, our architecture is built for a decentralized network. Multi-agent consensus will ensure 100% uptime and eliminate single points of failure.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </SettingsSection>
+        </div>
+
         {/* Connection Settings */}
         <SettingsSection
           title="Connection"
