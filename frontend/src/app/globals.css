@@ -1,34 +1,17 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --background: #060608; /* Deep Obsidian */
-  --foreground: #F2F2F2;
-  --accent: #00D98F;     /* Emerald Accent */
-  --accent-blue: #00A3FF;
-  --muted: #8A93A3;
+@theme {
+  --color-background: #060608;
+  --color-foreground: #F2F2F2;
+  --color-accent: #00D98F;
+  --color-accent-blue: #00A3FF;
+  --color-muted: #8A93A3;
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-shadow: rgba(0, 0, 0, 0.4);
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter), ui-sans-serif, system-ui;
-  -webkit-font-smoothing: antialiased;
-  background-image: 
-    radial-gradient(circle at 0% 0%, rgba(0, 217, 143, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 100% 100%, rgba(0, 163, 255, 0.05) 0%, transparent 50%);
-  background-attachment: fixed;
-}
-
-.font-mono {
-  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
-.glass {
+@utility glass {
   background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -36,16 +19,42 @@ body {
   box-shadow: 0 8px 32px 0 var(--glass-shadow);
 }
 
-.glass-morphism {
+@utility glass-morphism {
   @apply glass rounded-2xl;
 }
 
-.agora-card {
+@utility agora-card {
   @apply glass-morphism p-6;
 }
 
-.agora-accent { color: var(--accent); }
-.agora-border { border: 1px solid var(--glass-border); }
+@utility text-glow {
+  text-shadow: 0 0 10px rgba(0, 217, 143, 0.3);
+}
+
+@utility bg-glow {
+  box-shadow: 0 0 20px rgba(0, 217, 143, 0.1);
+}
+
+@utility agora-accent {
+  color: var(--color-accent);
+}
+
+@utility agora-border {
+  border: 1px solid var(--glass-border);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-inter), ui-sans-serif, system-ui;
+    -webkit-font-smoothing: antialiased;
+    background-image: 
+      radial-gradient(circle at 0% 0%, rgba(0, 217, 143, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(0, 163, 255, 0.05) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+}
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
@@ -62,13 +71,4 @@ body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.15);
-}
-
-@layer utilities {
-  .text-glow {
-    text-shadow: 0 0 10px rgba(0, 217, 143, 0.3);
-  }
-  .bg-glow {
-    box-shadow: 0 0 20px rgba(0, 217, 143, 0.1);
-  }
 }

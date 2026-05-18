@@ -14,20 +14,30 @@ This project uses a structured control system located in `.rules/`, `.workflows/
 
 ### 1. Rules (Always Active)
 - **Governance:** Persist all design choices and seek approval for workflow changes. (See `.rules/governance.md`)
-- **Architecture:** Use the MessageBus pattern and JSON reasoning schemas. (See `.rules/architecture.md`)
-- **Code Style:** Follow the project's linting and commit standards. (See `.rules/code-style.md`)
-- **Security:** Protect keys and use agent-gated vaults. (See `.rules/testing-security.md`)
+- **Architecture:** Use the MessageBus pattern and JSON reasoning schemas. (See `.rules/architecture_improved.md`)
+- **Code Style:** Follow the project's linting and commit standards. (See `.rules/code-style_improved.md`)
+- **Security:** Protect keys and use agent-gated vaults. (See `.rules/testing-security_improved.md`)
 
-### 2. Workflows (Slash Commands)
-- `/setup-env`: Bootstrap the workspace.
-- `/deploy-contracts`: Deploy Solidity files to Arc testnet.
-- `/run-agent`: Start the sentinel (Live/Mock).
-- `/demo-dry-run`: Execute a full system test.
+### 2. Workflows (Standard Procedures)
+- `/setup-env`: Bootstrap the workspace. (See `.workflows/setup-env_improved.md`)
+- `/deploy-contracts`: Deploy Solidity files to Arc testnet. (See `.workflows/deploy-contracts_improved.md`)
+- `/run-agent`: Start the sentinel (Live/Mock). (See `.workflows/run-agent_improved.md`)
+- `/demo-dry-run`: Execute a full system test. (See `.workflows/demo-dry-run_improved.md`)
+- `/update-traction`: Record progress. (See `.workflows/update-traction_improved.md`)
 
 ### 3. Skills (Domain Expertise)
-- **Python Agent:** Expert in asyncio, web3.py, and risk engines.
-- **Solidity:** Expert in Arc testnet deployment and vault logic.
-- **Frontend:** Expert in Next.js and Circle App Kit.
+- **Python Agent:** Expert in asyncio, web3.py, and risk engines. (See `.skills/python-agent_v3.md`)
+- **Solidity:** Expert in Arc testnet deployment and vault logic. (See `.skills/solidity-contracts_improved.md`)
+- **Frontend:** Expert in Next.js and Circle App Kit. (See `.skills/frontend-dashboard_improved.md`)
+- **DevRel:** Traction and product updates. (See `.skills/devrel-traction_improved.md`)
+
+## 📚 Knowledge Base
+Refer to the `docs/` directory for deep-dive technical specifications and architectural guides.
+
+- **System Architecture:** [docs/BUILD_FRAMEWORK.md](docs/BUILD_FRAMEWORK.md) & [docs/DIAGRAMS.md](docs/DIAGRAMS.md)
+- **Controls Reference:** [docs/CONTROLS_IMPROVED.md](docs/CONTROLS_IMPROVED.md)
+- **Integration Guides:** [docs/SDK_INTEGRATION.md](docs/SDK_INTEGRATION.md) & [docs/ARC_CLI_GUIDE.md](docs/ARC_CLI_GUIDE.md)
+- **Protocols:** [docs/STEALTH_SYNC_GUIDE.md](docs/STEALTH_SYNC_GUIDE.md) & [docs/GAP_ANALYSIS.md](docs/GAP_ANALYSIS.md)
 
 ## 🚀 Active Objectives
 - **Joe:** Finalize Python agent loop and polish service documentation. **[COMPLETE]**
