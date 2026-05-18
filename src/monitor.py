@@ -32,32 +32,57 @@ class PerpMonitor(BaseComponent):
             await self._run_live_loop()
 
     async def _run_mock_loop(self):
-        """Simulated data sequence for demonstration."""
-        sequence = [
-            {"symbol": "BTC-PERP", "margin": 0.35, "leverage": 3.0, "price": 63200.0},
-            {"symbol": "BTC-PERP", "margin": 0.18, "leverage": 4.5, "price": 61500.0},
-            {"symbol": "BTC-PERP", "margin": 0.09, "leverage": 5.2, "price": 60200.0},
-        ]
+        """Dynamic mock position simulation with random fluctuations."""
+        import random
+        symbols = ["BTC-PERP", "ETH-PERP", "SOL-PERP"]
+        
+        # Initial states
+        states = {
+            sym: {
+                "margin": random.uniform(0.2, 0.4),
+                "leverage": random.uniform(2.0, 4.0),
+                "price": 60000.0 if "BTC" in sym else (3000.0 if "ETH" in sym else 140.0)
+            } for sym in symbols
+        }
+
+        self.logger.info("mock_positions_running", account="0xMOCK", symbols=symbols)
+
         while True:
-            for data in sequence:
+            for symbol in symbols:
+                state = states[symbol]
+                
+                # Small random changes
+                state["margin"] += random.uniform(-0.02, 0.015) # Tendency to drift down slightly
+                state["margin"] = max(0.05, min(0.6, state["margin"]))
+                
+                state["price"] *= (1 + random.normalvariate(0, 0.001))
+                
+                # Occasionally spike leverage or drop margin to trigger the engine
+                if random.random() < 0.05:
+                    state["margin"] -= 0.05
+                    state["leverage"] += 0.5
+
                 self.logger.info(
                     "position_fetch_success",
                     account="0xMOCK",
-                    symbol=data["symbol"],
-                    margin_ratio=data["margin"],
-                    leverage=data["leverage"],
-                    current_price=data["price"],
+                    symbol=symbol,
+                    margin_ratio=round(state["margin"], 4),
+                    leverage=round(state["leverage"], 2),
+                    current_price=round(state["price"], 2),
                 )
+                
                 await self.publish(
                     PositionUpdate(
-                        symbol=data["symbol"],
-                        margin_ratio=data["margin"],
-                        leverage=data["leverage"],
+                        symbol=symbol,
+                        margin_ratio=state["margin"],
+                        leverage=state["leverage"],
                         account=self.account_address or "0xMOCK",
-                        current_price=data["price"],
+                        current_price=state["price"],
                     )
                 )
-                await asyncio.sleep(5)
+            
+            # High frequency updates for a "fast" feel
+            await asyncio.sleep(1.0)
 
     async def _run_live_loop(self):
         """Real-time monitoring via Hyperliquid SDK (Polling + WS)."""

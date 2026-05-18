@@ -27,30 +27,45 @@ class WebSocketServer(BaseComponent):
         self.subscribe(WSSignal, self.on_event)
 
     async def on_event(self, event):
-        """Callback for all subscribed events; broadcasts them to all connected clients."""
+        """
+        Callback for all subscribed events; broadcasts them to all connected clients.
+        Optimized for speed using concurrent delivery.
+        """
         if not self.clients:
             return
 
-        # Prepare payload
+        # Prepare payload and pre-serialize for efficiency
         payload = {
             "type": event.__class__.__name__,
             "data": self._serialize_event(event),
             "timestamp": getattr(event, "timestamp", None),
         }
         
-        message = json.dumps(payload)
+        try:
+            message = json.dumps(payload)
+        except Exception as e:
+            self.logger.error("serialization_failure", error=str(e))
+            return
         
-        # Broadcast to all clients
-        disconnected = set()
-        for client in self.clients:
-            try:
-                await client.send(message)
-            except websockets.exceptions.ConnectionClosed:
-                disconnected.add(client)
-        
-        # Cleanup disconnected clients
-        for client in disconnected:
-            self.clients.remove(client)
+        # Concurrent broadcast to all clients to avoid blocking on slow ones
+        if self.clients:
+            # Create a copy of the clients set to avoid "Set changed size during iteration"
+            current_clients = list(self.clients)
+            tasks = [self._send_to_client(client, message) for client in current_clients]
+            await asyncio.gather(*tasks)
+
+    async def _send_to_client(self, client, message):
+        """Sends a message to a single client and handles disconnection."""
+        try:
+            # We set a timeout to avoid hanging on a single slow connection
+            await asyncio.wait_for(client.send(message), timeout=1.0)
+        except (websockets.exceptions.ConnectionClosed, asyncio.TimeoutError):
+            if client in self.clients:
+                self.clients.remove(client)
+        except Exception as e:
+            self.logger.error("ws_send_error", error=str(e))
+            if client in self.clients:
+                self.clients.remove(client)
 
     def _serialize_event(self, event):
         """Converts dataclass event to a dictionary, handling nested objects."""

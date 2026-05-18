@@ -14,6 +14,7 @@ export const Navigation = () => {
     { name: 'Dashboard', href: '/' },
     { name: 'Transparency', href: '/transparency' },
     { name: 'Performance', href: '/performance' },
+    { name: 'Analytics', href: '/analytics' },
     { name: 'Settings', href: '/settings' },
   ];
 

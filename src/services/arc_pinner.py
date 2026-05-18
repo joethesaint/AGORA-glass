@@ -53,7 +53,12 @@ class ArcPinner:
         """Pins a reasoning hash to the Arc blockchain asynchronously."""
         if not self.private_key:
             self.logger.warning("No AGENT_PRIVATE_KEY found. Simulating pin.")
-            await asyncio.sleep(0.1)
+            
+            # Realistic mock latency for Arc pinning
+            import random
+            latency = random.uniform(0.1, 0.4)
+            await asyncio.sleep(latency)
+            
             return "0xSIMULATED_ARC_TX"
 
         if self.registry_address == "0x0000000000000000000000000000000000000000":

@@ -2,8 +2,6 @@
 
 import { useMemo, useState } from 'react';
 import {
-  ScatterChart,
-  Scatter,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -15,8 +13,6 @@ import {
   PolarRadiusAxis,
   Radar,
   Legend,
-  Heatmap,
-  Rectangle,
   Cell,
 } from 'recharts';
 import {
@@ -31,14 +27,40 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+interface CorrelationData {
+  asset1: string;
+  asset2: string;
+  correlation: number;
+}
+
+interface RiskHeatmapData {
+  position: string;
+  timeframe: string;
+  risk: number;
+  level: 'low' | 'medium' | 'high' | 'critical';
+}
+
+interface ScenarioData {
+  scenario: string;
+  pnl: number;
+  probability: number;
+  color: string;
+}
+
+interface AllocationData {
+  name: string;
+  value: number;
+  color: string;
+}
+
 // Generate mock correlation data
-const generateCorrelationData = () => {
+const generateCorrelationData = (): { assets: string[]; data: CorrelationData[] } => {
   const assets = ['BTC', 'ETH', 'SOL', 'AVAX', 'MATIC', 'LINK', 'DOT', 'UNI'];
-  const data = [];
+  const data: CorrelationData[] = [];
   
-  assets.forEach((asset1, i) => {
-    assets.forEach((asset2, j) => {
-      const correlation = i === j ? 1 : Math.random() * 2 - 1;
+  assets.forEach((asset1) => {
+    assets.forEach((asset2) => {
+      const correlation = asset1 === asset2 ? 1 : Math.random() * 2 - 1;
       data.push({
         asset1,
         asset2,
@@ -51,10 +73,10 @@ const generateCorrelationData = () => {
 };
 
 // Generate risk heatmap data
-const generateRiskHeatmap = () => {
+const generateRiskHeatmap = (): { positions: string[]; timeframes: string[]; data: RiskHeatmapData[] } => {
   const positions = ['BTC-PERP', 'ETH-PERP', 'SOL-PERP', 'AVAX-PERP', 'MATIC-PERP'];
   const timeframes = ['1H', '4H', '8H', '12H', '24H'];
-  const data = [];
+  const data: RiskHeatmapData[] = [];
   
   positions.forEach((position) => {
     timeframes.forEach((timeframe) => {
@@ -72,7 +94,7 @@ const generateRiskHeatmap = () => {
 };
 
 // Generate scenario analysis data
-const generateScenarioData = () => {
+const generateScenarioData = (): ScenarioData[] => {
   return [
     { scenario: 'Base Case', pnl: 12500, probability: 50, color: '#00D98F' },
     { scenario: 'Bull (+20%)', pnl: 28000, probability: 25, color: '#00A3FF' },
@@ -83,7 +105,7 @@ const generateScenarioData = () => {
 };
 
 // Generate portfolio allocation data
-const generateAllocationData = () => {
+const generateAllocationData = (): AllocationData[] => {
   return [
     { name: 'BTC', value: 35, color: '#FF6B35' },
     { name: 'ETH', value: 30, color: '#627EEA' },
@@ -169,11 +191,11 @@ export default function AnalyticsPage() {
           strokeWidth={1}
           rx={4}
         />
-        <text
+          <text
           x={x + width / 2}
           y={y + height / 2}
           textAnchor="middle"
-          verticalAlign="middle"
+          dominantBaseline="middle"
           dy="0.35em"
           fill="#fff"
           fontSize={10}

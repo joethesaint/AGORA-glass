@@ -36,21 +36,49 @@ class MarketDataMonitor(BaseComponent):
             await self._run_live()
 
     async def _run_mock(self):
-        """Mock volatility updates for testing."""
-        symbols = ["BTC-PERP", "ETH-PERP"]
+        """Realistic mock volatility and price updates using random walks."""
+        symbols = ["BTC-PERP", "ETH-PERP", "SOL-PERP", "ARB-PERP", "TIA-PERP"]
+        # Initial prices
+        prices = {
+            "BTC-PERP": 65000.0,
+            "ETH-PERP": 3500.0,
+            "SOL-PERP": 150.0,
+            "ARB-PERP": 1.10,
+            "TIA-PERP": 10.50,
+        }
         import random
+
+        self.logger.info("mock_market_running", symbols=symbols)
 
         while True:
             for symbol in symbols:
-                vol_factor = random.uniform(0.1, 0.5)
-                self.logger.debug("mock_volatility_update", symbol=symbol, vol=vol_factor)
+                # Random walk for price
+                change_pct = random.normalvariate(0, 0.002)  # 0.2% std dev
+                prices[symbol] *= (1 + change_pct)
+                
+                # Dynamic volatility factor (0.1 to 0.8)
+                # Volatility itself follows a bit of a trend/random walk
+                base_vol = self.price_history.get(f"{symbol}_vol", 0.3)
+                vol_change = random.uniform(-0.05, 0.05)
+                vol_factor = max(0.05, min(0.95, base_vol + vol_change))
+                self.price_history[f"{symbol}_vol"] = vol_factor
+
+                self.logger.debug(
+                    "mock_market_update", 
+                    symbol=symbol, 
+                    price=round(prices[symbol], 4), 
+                    vol=round(vol_factor, 4)
+                )
+                
                 await self.publish(
                     MarketVolatilityUpdate(
                         symbol=symbol,
                         volatility_factor=vol_factor,
                     )
                 )
-            await asyncio.sleep(10)
+            
+            # Update much faster for realism (every 500ms)
+            await asyncio.sleep(0.5)
 
     async def _run_live(self):
         """Live volatility monitoring loop."""
