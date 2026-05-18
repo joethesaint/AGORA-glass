@@ -19,7 +19,9 @@ export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+    // Pretty-print with 2-space indentation
+    const jsonString = JSON.stringify(data, null, 2);
+    navigator.clipboard.writeText(jsonString);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
