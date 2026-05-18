@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { AgentSignal, EventType } from '@/types/agent';
 import { triggerAlert } from '@/components/AlertSystem';
 
 export function useAgentSignals(url: string = 'ws://localhost:8765') {
   const [signals, setSignals] = useState<AgentSignal[]>([]);
   const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  const wsRef = useRef<WebSocket | null>(null);
 
   const processSignal = useCallback((raw: any) => {
     try {
@@ -41,16 +42,23 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
         triggerAlert({
           type: 'success',
           title: 'Rescue Complete',
-          message: `Successfully moved ${payload.rescued_amount || 'funds'} to Circle Vault`,
+          message: `Successfully moved ${payload.amount || 'funds'} to Circle Vault`,
           severity: 'low',
         });
-      } else if (event_type === 'RiskVerdict' && payload.verdict === 'RESCUE') {
+      } else if (event_type === 'RiskVerdict' && payload.status === 'CRITICAL') {
         triggerAlert({
           type: 'system',
           title: 'Emergency Verdict',
           message: `Risk engine determined rescue is necessary: ${payload.reason || 'Critical risk'}`,
           severity: 'critical',
         });
+      } else if (event_type === 'MODE_CHANGED') {
+          triggerAlert({
+              type: 'system',
+              title: 'Agent Mode Swapped',
+              message: `Now operating in ${payload.mode.toUpperCase()} mode`,
+              severity: 'low'
+          });
       }
 
       setSignals((prev) => [signal, ...prev].slice(0, 50));
@@ -59,13 +67,21 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
     }
   }, []);
 
+  const sendSignal = useCallback((type: string, data: any) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type, ...data }));
+    } else {
+      console.warn('🛡️ GLASS: Cannot send signal, WebSocket not connected');
+    }
+  }, []);
+
   useEffect(() => {
-    let ws: WebSocket;
     let reconnectTimeout: NodeJS.Timeout;
 
     const connect = () => {
       setStatus('connecting');
-      ws = new WebSocket(url);
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
 
       ws.onopen = () => {
         setStatus('connected');
@@ -86,10 +102,10 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
     connect();
 
     return () => {
-      if (ws) ws.close();
+      if (wsRef.current) wsRef.current.close();
       clearTimeout(reconnectTimeout);
     };
   }, [url, processSignal]);
 
-  return { signals, status };
+  return { signals, status, sendSignal };
 }

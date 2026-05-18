@@ -1,11 +1,15 @@
 import asyncio
 import signal
 import argparse
+import os
 from src.monitor import PerpMonitor
 from src.market_monitor import market_monitor
 from src.ws_server import ws_server
 from src.analytics import analytics
+from src.sentiment_agent import SentimentAgent
+from src.capital_agent import CapitalAgent
 from src.log_config import configure_logging, get_logger
+from src.config import settings
 
 # Initialize Structured Logging
 configure_logging()
@@ -23,7 +27,7 @@ async def main():
         "--mode", choices=["mock", "live"], default="mock", help="Execution mode"
     )
     parser.add_argument("--account", type=str, help="Hyperliquid account address")
-    parser.add_argument("--port", type=int, default=8765, help="WebSocket server port")
+    parser.add_argument("--port", type=int, default=settings.server.port, help="WebSocket server port")
     args = parser.parse_args()
 
     logger.info("agent_startup", mode=args.mode, monitored_accounts=[args.account])
@@ -31,8 +35,13 @@ async def main():
     perp_monitor = PerpMonitor(mode=args.mode, account_address=args.account)
     # Configure market monitor mode
     market_monitor.mode = args.mode
-    # Configure ws_server port
+    # Configure ws_server settings
     ws_server.port = args.port
+    ws_server.host = settings.server.host
+
+    # Initialize New TradingAgents Roles
+    _sentiment = SentimentAgent()
+    _capital = CapitalAgent()
 
     # Define stop event for graceful shutdown
     stop_event = asyncio.Event()

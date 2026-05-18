@@ -1,8 +1,9 @@
 import aiohttp
 import os
 import logging
+import random
 from src.base import BaseComponent
-from src.events import PositionUpdate, RiskVerdict, MarketVolatilityUpdate
+from src.events import PositionUpdate, RiskVerdict, MarketVolatilityUpdate, MarketRegimeUpdate
 from src.errors import safe_handler
 from src.config import settings
 from src.analytics import analytics
@@ -17,26 +18,66 @@ class RiskEngine(BaseComponent):
         super().__init__("RiskEngine")
         self.config = settings.risk
         self.volatility_state = {}
+        self.regime_state = "RISK_ON"
         self.remote_url = os.getenv("REMOTE_AGENT_URL")
-        
+
         if self.remote_url:
             self.logger.info(f"Initialized in REMOTE mode: {self.remote_url}")
         else:
             self.logger.info("Initialized in LOCAL mode (Cheng et al. 2021)")
-            
+
         self.subscribe(PositionUpdate, self.on_position_update)
         self.subscribe(MarketVolatilityUpdate, self.on_volatility_update)
+        self.subscribe(MarketRegimeUpdate, self.on_regime_update)
 
     @safe_handler("RiskEngine")
     async def on_volatility_update(self, event: MarketVolatilityUpdate):
         self.volatility_state[event.symbol] = event.volatility_factor
 
     @safe_handler("RiskEngine")
+    async def on_regime_update(self, event: MarketRegimeUpdate):
+        self.regime_state = event.regime
+        self.logger.debug(f"RiskEngine regime adjusted to: {self.regime_state}")
+
+
+    @safe_handler("RiskEngine")
     async def on_position_update(self, event: PositionUpdate):
+        # 1. Standard Risk Evaluation (Sentinel Logic)
         if self.remote_url:
             await self._evaluate_remote(event)
         else:
             await self._evaluate_local(event)
+
+        # 2. Proactive Trading Logic (if in trading mode)
+        if settings.agent_mode == "trading":
+            await self._execute_proactive_trading(event)
+
+    async def _execute_proactive_trading(self, event: PositionUpdate):
+        """Proactive autonomous trading logic based on volatility and trend."""
+        vol_factor = self.volatility_state.get(event.symbol, 0.5)
+        is_trending_down = analytics.is_trend_deteriorating(event.symbol)
+        
+        # Proactive De-risking: If volatility is high and trend is down, reduce leverage
+        if vol_factor > 0.7 and is_trending_down:
+            self.logger.info(f"TRADING AGENT: High vol ({vol_factor:.2f}) + Bearish trend. Proactive de-risk for {event.symbol}")
+            await self.publish(TradingSignal(
+                symbol=event.symbol,
+                action="DE_RISK",
+                reason=f"Volatility {vol_factor:.2f} too high for current trend",
+                amount=0.5 * event.leverage, # Half leverage
+                price=event.current_price
+            ))
+            
+        # Proactive Entry: If volatility is very low and trend is stable, enter position
+        elif vol_factor < 0.2 and not is_trending_down and random.random() < 0.05:
+            self.logger.info(f"TRADING AGENT: Low vol ({vol_factor:.2f}) + Stable trend. Proactive entry for {event.symbol}")
+            await self.publish(TradingSignal(
+                symbol=event.symbol,
+                action="BUY",
+                reason=f"Volatility {vol_factor:.2f} suggests low risk for entry",
+                amount=1.0, # 1 unit
+                price=event.current_price
+            ))
 
     async def _evaluate_remote(self, event: PositionUpdate):
         """Delegates risk decision to an external AI Agent."""
@@ -46,7 +87,8 @@ class RiskEngine(BaseComponent):
             "leverage": event.leverage,
             "account": event.account,
             "current_price": event.current_price,
-            "timestamp": event.timestamp
+            "timestamp": event.timestamp,
+            "mode": settings.agent_mode
         }
 
         try:

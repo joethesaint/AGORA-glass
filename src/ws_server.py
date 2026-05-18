@@ -5,6 +5,7 @@ from typing import Set
 from src.base import BaseComponent
 from src.events import PositionUpdate, RiskVerdict, ReasoningTrace, RescueComplete, WSSignal
 from src.log_config import get_logger
+from src.config import settings
 
 class WebSocketServer(BaseComponent):
     """
@@ -72,12 +73,40 @@ class WebSocketServer(BaseComponent):
         import dataclasses
         return dataclasses.asdict(event)
 
+    async def handle_messages(self, websocket):
+        """Handles incoming messages from a client."""
+        async for message in websocket:
+            try:
+                data = json.loads(message)
+                if data.get("type") == "TOGGLE_MODE":
+                    new_mode = data.get("mode")
+                    if new_mode in ["sentinel", "trading"]:
+                        settings.agent_mode = new_mode
+                        self.logger.info("agent_mode_toggled", mode=new_mode)
+                        
+                        # Broadcast the mode change back to all clients
+                        await self.on_event(WSSignal(
+                            event_type="MODE_CHANGED",
+                            payload={"mode": new_mode}
+                        ))
+            except Exception as e:
+                self.logger.error("ws_message_error", error=str(e))
+
     async def register(self, websocket):
         """Registers a new client connection."""
         self.clients.add(websocket)
         self.logger.info("client_connected", total_clients=len(self.clients))
+        
+        # Send current mode to new client
+        await websocket.send(json.dumps({
+            "type": "WSSignal",
+            "data": {"event_type": "MODE_CHANGED", "payload": {"mode": settings.agent_mode}},
+            "timestamp": None
+        }))
+
         try:
-            await websocket.wait_closed()
+            # Handle incoming messages and wait for closure
+            await self.handle_messages(websocket)
         finally:
             if websocket in self.clients:
                 self.clients.remove(websocket)

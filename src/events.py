@@ -41,6 +41,25 @@ class MarketVolatilityUpdate(BaseEvent):
     volatility_factor: float  # Normalized 0.0 to 1.0
 
 @dataclass(frozen=True)
+class MarketRegimeUpdate(BaseEvent):
+    """
+    Event from the Research Manager (SentimentAgent).
+    Classifies the current market atmosphere.
+    """
+    regime: str  # e.g., "RISK_ON", "RISK_OFF", "EXTREME_VOLATILITY"
+    sentiment_score: float  # -1.0 to 1.0
+
+@dataclass(frozen=True)
+class RescueOptimization(BaseEvent):
+    """
+    Event from the Portfolio Manager (PortfolioAgent).
+    Recommends optimized rescue parameters.
+    """
+    account: str
+    optimized_amount_usdc: float
+    allocation_rationale: str
+
+@dataclass(frozen=True)
 class RiskVerdict(BaseEvent):
     """Event representing the result of a risk evaluation.
 
@@ -150,3 +169,23 @@ class WSSignal(BaseEvent):
 
     event_type: str
     payload: Dict[str, Any]
+
+
+@dataclass(frozen=True)
+class TradingSignal(BaseEvent):
+    """Event representing an autonomous trading decision.
+
+    Attributes:
+        symbol (str): The asset symbol.
+        action (str): The trade action (BUY, SELL, DE_RISK).
+        reason (str): The reasoning for the trade.
+        amount (float): The amount of the trade.
+        price (float): The price at which the trade was executed.
+    """
+
+    symbol: str
+    action: str
+    reason: str
+    amount: float
+    price: float
+

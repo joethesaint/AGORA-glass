@@ -16,13 +16,15 @@ import { LiveMetricsHeader } from '@/components/LiveMetricsHeader';
 import { RescuePath } from '@/components/RescuePath';
 import { ReasoningTraceCard } from '@/components/ReasoningTraceCard';
 import { PositionDetailModal } from '@/components/PositionDetailModal';
+import { Shield, TrendingUp, Zap } from 'lucide-react';
 
 export default function Dashboard() {
   const { rescueMetrics, positionMetrics, marginHistory, leverageHistory, updateRescueMetrics, addMarginHistory, addLeverageHistory } = useAnalyticsStore();
-  const { signals, status: connectionStatus } = useAgentSignals();
+  const { signals, status: connectionStatus, sendSignal } = useAgentSignals();
   const [rescueStage, setRescueStage] = useState<'idle' | 'pinning' | 'releasing' | 'bridging' | 'complete'>('idle');
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [agentMode, setAgentMode] = useState<'sentinel' | 'trading'>('sentinel');
 
   // Find latest reasoning trace for display
   const latestTrace = useMemo(() => {
@@ -72,7 +74,17 @@ export default function Dashboard() {
     if (latestSignal.event_type === 'RescueInitiated') setRescueStage('bridging');
     if (latestSignal.event_type === 'RescueComplete') setRescueStage('complete');
     
+    // 4. Handle Mode Changes
+    if (latestSignal.event_type === 'MODE_CHANGED') {
+        setAgentMode(latestSignal.payload.mode);
+    }
+    
   }, [signals, updateRescueMetrics, addMarginHistory, addLeverageHistory]);
+
+  const toggleAgentMode = useCallback(() => {
+    const newMode = agentMode === 'sentinel' ? 'trading' : 'sentinel';
+    sendSignal('TOGGLE_MODE', { mode: newMode });
+  }, [agentMode, sendSignal]);
 
   const [btcPrice, setBtcPrice] = useState(63200);
   const entryPrice = 60000;
@@ -146,14 +158,62 @@ export default function Dashboard() {
 
   return (
     <main className="p-8 max-w-7xl mx-auto space-y-8">
-      {/* Page Title */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-white">Sentinel Dashboard</h1>
-        <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full animate-pulse ${signals.length > 0 ? 'bg-[#00D98F]' : 'bg-[#787878]'}`} />
-          <span className="text-[10px] text-[#787878] uppercase tracking-widest">
-            {signals.length > 0 ? 'Live Sentinel Connected' : 'Waiting for Sentinel...'}
-          </span>
+      {/* Page Title & Mode Switch */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Sentinel Dashboard</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <div className={`w-2 h-2 rounded-full animate-pulse ${signals.length > 0 ? 'bg-[#00D98F]' : 'bg-[#787878]'}`} />
+            <span className="text-[10px] text-[#787878] uppercase tracking-widest">
+              {signals.length > 0 ? 'Live Sentinel Connected' : 'Waiting for Sentinel...'}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center bg-[#1e1e1e] p-1 rounded-xl border border-white/5">
+          <button
+            onClick={() => agentMode !== 'sentinel' && toggleAgentMode()}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              agentMode === 'sentinel' 
+                ? 'bg-[#00A3FF] text-white shadow-lg' 
+                : 'text-[#8A93A3] hover:text-white'
+            }`}
+          >
+            <Shield size={14} />
+            Sentinel
+          </button>
+          <button
+            onClick={() => agentMode !== 'trading' && toggleAgentMode()}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              agentMode === 'trading' 
+                ? 'bg-purple-600 text-white shadow-lg' 
+                : 'text-[#8A93A3] hover:text-white'
+            }`}
+          >
+            <TrendingUp size={14} />
+            Trading Agent
+          </button>
+        </div>
+      </div>
+
+      {/* Mode Description */}
+      <div className={`p-4 rounded-xl border animate-in fade-in slide-in-from-top-2 duration-500 ${
+        agentMode === 'sentinel' 
+          ? 'bg-blue-500/5 border-blue-500/20 text-blue-400' 
+          : 'bg-purple-500/5 border-purple-500/20 text-purple-400'
+      }`}>
+        <div className="flex items-start gap-3">
+          <Zap size={16} className="mt-0.5" />
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1">
+              {agentMode === 'sentinel' ? 'Guardian Mode Active' : 'Autonomous Trading Mode Active'}
+            </p>
+            <p className="text-[11px] opacity-80 leading-relaxed text-white">
+              {agentMode === 'sentinel' 
+                ? 'The sentinel is monitoring your external Hyperliquid account. It will only act to inject USDC if a liquidation event is imminent.' 
+                : 'The agent is proactively managing its own position. It will execute trades and de-risk automatically based on volatility trends.'}
+            </p>
+          </div>
         </div>
       </div>
 
