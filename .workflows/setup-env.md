@@ -26,8 +26,8 @@ This workflow bootstraps the entire project for a new team member.
    ```
 5. **Node Dependencies**
    ```bash
-   cd frontend && npm install
-   cd ../contracts && npm install
+   cd contracts && npm install
+   cd ../agora-dashboard && npm install
    ```
 6. **Secrets Configuration**
    ```bash

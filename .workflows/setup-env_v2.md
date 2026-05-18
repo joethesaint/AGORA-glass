@@ -18,17 +18,24 @@ This workflow bootstraps the entire project for a new team member.
    python -m venv .venv && source .venv/bin/activate
    pip install -r requirements.txt
    ```
-4. **Node dependencies (frontend)**
+4. **Node dependencies (contracts & dashboard)**
    ```bash
-   cd frontend && npm install
+   cd contracts && npm install
+   cd ../agora-dashboard && npm install
    ```
 5. **Configure environment**
    ```bash
+   # Backend
    cp .env.example .env
-   # Fill in required keys: HYPERLIQUID_API_KEY, AGENT_PRIVATE_KEY, etc.
+   # Fill in: HYPERLIQUID_API_KEY, AGENT_PRIVATE_KEY, RPC
+   
+   # Dashboard
+   cd agora-dashboard/apps/web && cp .env.example .env
+   # Fill in: VITE_WS_URL, VITE_CIRCLE_APP_ID, VITE_REGISTRY_ADDRESS, VITE_VAULT_ADDRESS
    ```
 6. **Verify**
    ```bash
    arc-canteen rpc eth_blockNumber
    python -c "from src.bus import MessageBus; print('OK')"
+   cd agora-dashboard && npm run dev
    ```
