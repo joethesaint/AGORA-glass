@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useAgentSignals } from '@/hooks/useAgentSignals';
 import { GlassBoxTerminal } from '@/components/GlassBoxTerminal';
 import { ReasoningTraceCard } from '@/components/ReasoningTraceCard';
+import { StrategyControlPanel } from '@/components/StrategyControlPanel';
 
 export default function Transparency() {
   const { signals, status } = useAgentSignals();
@@ -42,6 +43,7 @@ export default function Transparency() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-8">
+          <StrategyControlPanel />
           <h3 className="text-sm font-semibold text-[#787878] uppercase tracking-widest">Live Reasoning Stream</h3>
           {traces.length > 0 ? (
             traces.map((trace, i) => (

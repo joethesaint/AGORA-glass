@@ -1,7 +1,7 @@
-import os
 from src.bus import bus
 from src.events import BaseEvent
 from src.log_config import get_logger
+from src.config import settings
 
 class BaseComponent:
     """Base class for all agent components.
@@ -10,6 +10,7 @@ class BaseComponent:
 
     Attributes:
         name (str): The name of the component for logging purposes.
+        agent_id (str): The unique identifier for this agent instance.
         logger (structlog.BoundLogger): Structured logger instance.
         bus (MessageBus): The global message bus instance.
     """
@@ -21,7 +22,8 @@ class BaseComponent:
             name: The display name for this component.
         """
         self.name = name
-        self.logger = get_logger(name)
+        self.agent_id = settings.agent_id
+        self.logger = get_logger(name).bind(agent_id=self.agent_id)
         self.bus = bus
         self.logger.debug("component_initialized", component=name)
 

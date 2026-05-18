@@ -8,17 +8,18 @@ interface LiveMetricsHeaderProps {
   latencyMs: number;
   totalRescued: number;
   agentStatus: string;
+  agentName: string;
   connectionStatus?: 'connecting' | 'connected' | 'disconnected';
 }
 
-export const LiveMetricsHeader = ({ latencyMs, totalRescued, agentStatus, connectionStatus = 'connected' }: LiveMetricsHeaderProps) => {
+export const LiveMetricsHeader = ({ latencyMs, totalRescued, agentStatus, agentName = 'SENTINEL', connectionStatus = 'connected' }: LiveMetricsHeaderProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
       <MetricCard 
         label="E2E Engine Latency" 
         value={`${latencyMs.toFixed(0)}ms`} 
         icon={<Clock className="w-4 h-4 text-[#00A3FF]" />} 
-        description="Sub-second reaction time"
+        description="Sub-500ms target"
       />
       <MetricCard 
         label="Total Rescued Equity" 
@@ -27,10 +28,10 @@ export const LiveMetricsHeader = ({ latencyMs, totalRescued, agentStatus, connec
         description="USDC moved to safety"
       />
       <MetricCard 
-        label="Sentinel Status" 
+        label={`${agentName} Status`} 
         value={agentStatus} 
-        icon={<ShieldCheck className={`w-4 h-4 ${agentStatus === 'PROTECTING' ? 'text-[#00D98F]' : 'text-[#8A93A3]'}`} />} 
-        status={agentStatus}
+        icon={<ShieldCheck className={`w-4 h-4 ${agentStatus.toUpperCase() === 'PROTECTING' ? 'text-[#00D98F]' : 'text-[#8A93A3]'}`} />} 
+        status={agentStatus.toUpperCase()}
         description="Live on Arc Testnet"
       />
       <MetricCard 

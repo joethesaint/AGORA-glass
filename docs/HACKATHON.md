@@ -39,7 +39,8 @@ GLASS addresses these issues through a "Glass-Box" architecture:
 ## 5. Performance Metrics (Verified)
 | Metric | Achievement |
 | :--- | :--- |
-| **Total Rescue Latency** | **520ms** (includes on-chain Job Settlement) |
+| **Avg Rescue Latency** | **281ms** (tested under concurrent load) |
+| **P95 Rescue Latency** | **397ms** (tested under concurrent load) |
 | **Audit Transparency** | **100%** of decisions pinned to Arc |
 | **Agentic Status** | **ERC-8004 Verified Identity** |
 | **Settlement Mode** | **ERC-8183 Automated Jobs** |

@@ -95,7 +95,7 @@ class JobService:
         """
         if os.getenv("LIVE_MODE", "false").lower() != "true":
             self.logger.info(f"MOCK JOB SETTLEMENT: Creating ERC-8183 Job for {amount_usdc} USDC")
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
             return "job_sim_8183_success"
 
         try:

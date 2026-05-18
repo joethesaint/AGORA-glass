@@ -13,17 +13,19 @@ git clone https://github.com/joethesaint/AGORA-glass.git
 cd AGORA-glass
 ```
 
-### 2. Implement a New Component
-All modules in AGORA-glass inherit from the `BaseComponent` class in `src/base.py`. To swap a component (e.g., the `RiskEngine`), you simply create a new file and implement your logic.
+### 2. The "Drop-In Plugin" Folder
+We have implemented a dynamic plugin loader. You do **not** need to modify `src/main.py` or any core infrastructure code. 
 
-**Example: Swapping the RiskEngine**
-If you want to use an AI-based risk model instead of our default safety bands:
-1. Create `src/my_ai_engine.py`.
-2. Inherit from `BaseComponent`.
-3. Subscribe to `PositionUpdate` events.
-4. Publish `RiskVerdict` events based on your AI logic.
+To add a new agent:
+1. Write a Python file containing your class (which must inherit from `BaseComponent`).
+2. Drop it into the `plugins/` directory.
 
+The system will automatically discover, instantiate, and wire your agent into the message bus on startup.
+
+**Example: Swapping/Adding a New Risk Engine**
+Create `plugins/my_ai_engine.py`:
 ```python
+import asyncio
 from src.base import BaseComponent
 from src.events import PositionUpdate, RiskVerdict
 
@@ -32,23 +34,12 @@ class MyAIEngine(BaseComponent):
         super().__init__("MyAIEngine")
         self.subscribe(PositionUpdate, self.on_position)
 
-    async def on_position(self, event):
+    async def on_position(self, event: PositionUpdate):
         # Your proprietary AI logic here
-        if my_ai_model.predict(event) == "DANGER":
+        if event.margin_ratio < 0.15:
             await self.publish(RiskVerdict(status="CRITICAL", ...))
 ```
-
-### 3. Update the Entry Point
-In `src/main.py`, replace the import and instantiation of the default component with your new one.
-```python
-# From this:
-# from src.engine import RiskEngine
-# engine = RiskEngine()
-
-# To this:
-from src.my_ai_engine import MyAIEngine
-engine = MyAIEngine()
-```
+That's it. When you start the sentinel, you will see `Loading custom plugin agent: MyAIEngine` in your logs.
 
 ---
 

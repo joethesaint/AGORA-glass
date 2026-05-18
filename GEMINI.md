@@ -36,9 +36,14 @@ Refer to the `docs/` directory for deep-dive technical specifications and archit
 
 - **Knowledge Graph:** [docs/MAP.md](docs/MAP.md) (Linked view of all documentation)
 - **System Architecture:** [docs/BUILD_FRAMEWORK.md](docs/BUILD_FRAMEWORK.md) & [docs/DIAGRAMS.md](docs/DIAGRAMS.md)
+- **Multi-Agent Brain (TradingAgents Spec):** The agent loop incorporates three parallel agents communicating over the `asyncio` message bus:
+    1. `RiskEngine` (Trader)
+    2. `SentimentAgent` (Research Manager)
+    3. `CapitalAgent` (Portfolio Manager)
 - **Controls Reference:** [docs/CONTROLS_IMPROVED.md](docs/CONTROLS_IMPROVED.md)
 - **Integration Guides:** [docs/SDK_INTEGRATION.md](docs/SDK_INTEGRATION.md) & [docs/ARC_CLI_GUIDE.md](docs/ARC_CLI_GUIDE.md)
 - **Protocols:** [docs/STEALTH_SYNC_GUIDE.md](docs/STEALTH_SYNC_GUIDE.md) & [docs/GAP_ANALYSIS.md](docs/GAP_ANALYSIS.md)
+- **Live Deployment:** [TESTNET_GUIDE.md](TESTNET_GUIDE.md) (Roadmap to mainnet transition)
 
 ## 🚀 Active Objectives
 - **Joe:** Finalize Python agent loop, implement `VaultService`, and align ports. **[COMPLETE]**

@@ -16,6 +16,7 @@ import { LiveMetricsHeader } from '@/components/LiveMetricsHeader';
 import { RescuePath } from '@/components/RescuePath';
 import { ReasoningTraceCard } from '@/components/ReasoningTraceCard';
 import { PositionDetailModal } from '@/components/PositionDetailModal';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Shield, TrendingUp, Zap } from 'lucide-react';
 
 export default function Dashboard() {
@@ -222,6 +223,7 @@ export default function Dashboard() {
         latencyMs={rescueMetrics.avgLatency}
         totalRescued={rescueMetrics.totalRescued}
         agentStatus={rescueMetrics.totalRescues > 0 ? "PROTECTING" : "IDLE"}
+        agentName={agentMode.toUpperCase()}
         connectionStatus={connectionStatus}
       />
       
@@ -247,32 +249,34 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Portfolio Overview */}
-      <PortfolioOverviewCard
-        totalValue={positionMetrics.totalValue}
-        avgMarginRatio={positionMetrics.avgMarginRatio}
-        avgLeverage={positionMetrics.avgLeverage}
-        positionCount={positionMetrics.positionCount}
-        criticalPositions={positionMetrics.criticalPositions}
-      />
-
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <MarginHistoryChart data={marginHistory} />
-        <LeverageChart data={leverageHistory} />
-      </div>
-
-      {/* Positions Management */}
-      <div>
-        <h2 className="text-xl font-semibold text-white mb-6">Open Positions</h2>
-        <PositionsList
-          positions={positions}
-          onPositionClose={handlePositionClose}
-          onAddMargin={handleAddMargin}
-          onDeleverage={handleDeleverage}
-          onPositionClick={handlePositionClick}
+      <ProtectedRoute>
+        {/* Portfolio Overview */}
+        <PortfolioOverviewCard
+          totalValue={positionMetrics.totalValue}
+          avgMarginRatio={positionMetrics.avgMarginRatio}
+          avgLeverage={positionMetrics.avgLeverage}
+          positionCount={positionMetrics.positionCount}
+          criticalPositions={positionMetrics.criticalPositions}
         />
-      </div>
+
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <MarginHistoryChart data={marginHistory} />
+          <LeverageChart data={leverageHistory} />
+        </div>
+
+        {/* Positions Management */}
+        <div>
+          <h2 className="text-xl font-semibold text-white mb-6">Open Positions</h2>
+          <PositionsList
+            positions={positions}
+            onPositionClose={handlePositionClose}
+            onAddMargin={handleAddMargin}
+            onDeleverage={handleDeleverage}
+            onPositionClick={handlePositionClick}
+          />
+        </div>
+      </ProtectedRoute>
 
       {/* Position Detail Modal */}
       <PositionDetailModal

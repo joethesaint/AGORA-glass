@@ -1,7 +1,7 @@
 import hashlib
 import json
 from src.base import BaseComponent
-from src.events import RiskVerdict, ReasoningTrace
+from src.events import RiskVerdict, ReasoningTrace, MarketRegimeUpdate, RescueOptimization
 from src.errors import safe_handler
 
 
@@ -12,9 +12,22 @@ class ReasoningTracer(BaseComponent):
     """
 
     def __init__(self):
-        """Initializes the tracer and subscribes to RiskVerdict events."""
+        """Initializes the tracer and subscribes to events."""
         super().__init__("ReasoningTracer")
+        self.latest_regime = "RISK_ON"
+        self.latest_optimization = {} # account -> RescueOptimization
+        
         self.subscribe(RiskVerdict, self.on_risk_verdict)
+        self.subscribe(MarketRegimeUpdate, self.on_regime)
+        self.subscribe(RescueOptimization, self.on_optimization)
+
+    @safe_handler("ReasoningTracer")
+    async def on_regime(self, event: MarketRegimeUpdate):
+        self.latest_regime = event.regime
+
+    @safe_handler("ReasoningTracer")
+    async def on_optimization(self, event: RescueOptimization):
+        self.latest_optimization[event.account] = event
 
     @safe_handler("ReasoningTracer")
     async def on_risk_verdict(self, event: RiskVerdict):
@@ -34,17 +47,14 @@ class ReasoningTracer(BaseComponent):
             await self.publish(trace_event)
 
     def create_trace(self, event: RiskVerdict) -> ReasoningTrace:
-        """Creates a deterministic reasoning trace and hash.
-
-        Args:
-            event: The RiskVerdict event providing the context.
-
-        Returns:
-            ReasoningTrace: The structured trace event with hash and evidence.
-        """
-        agent_id = "antigravity_sentinel_v0.1"
+        """Creates a deterministic reasoning trace and hash."""
+        agent_id = self.agent_id
         action = "RESCUE_INITIATED"
-        rescue_amount = 500.0  # Default mock amount
+        
+        # Pull insights from collaborating agents
+        opt = self.latest_optimization.get(event.account)
+        rescue_amount = opt.optimized_amount_usdc if opt else 500.0
+        allocation_note = opt.allocation_rationale if opt else "Standard rescue amount used."
 
         evidence = [
             (
@@ -52,11 +62,13 @@ class ReasoningTracer(BaseComponent):
                 if event.margin < 0.12
                 else f"Leverage {event.leverage:.1f}x exceeds 5x"
             ),
+            f"Market Regime: {self.latest_regime}",
+            f"Portfolio Logic: {allocation_note}",
             f"Symbol: {event.symbol}",
-            "Autonomous sentinel triggered rescue protocol",
+            "Autonomous multi-agent consensus triggered rescue protocol",
         ]
 
-        # Payload for hashing (standardizing keys for transparency)
+        # Payload for hashing
         payload = {
             "agent_id": agent_id,
             "action": action,
@@ -64,6 +76,8 @@ class ReasoningTracer(BaseComponent):
             "leverage_before": event.leverage,
             "margin_ratio": event.margin,
             "rescue_amount_usdc": rescue_amount,
+            "market_regime": self.latest_regime,
+            "allocation_rationale": allocation_note,
             "evidence": evidence,
             "risk_rating": "CRITICAL",
             "timestamp": event.timestamp,

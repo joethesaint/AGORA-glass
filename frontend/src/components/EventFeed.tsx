@@ -108,7 +108,7 @@ export const EventFeed = memo<EventFeedProps>(({ events, maxItems = 10 }) => {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className={`group flex gap-4 p-4 rounded-xl border ${colors.bg} ${colors.border} hover:bg-white/[0.04] transition-all duration-300 relative overflow-hidden`}
+                className={`group flex gap-4 p-4 min-h-[100px] rounded-xl border ${colors.bg} ${colors.border} hover:bg-white/[0.04] transition-all duration-300 relative overflow-hidden`}
               >
                 {/* Visual Accent */}
                 <div className={`absolute left-0 top-0 bottom-0 w-0.5 opacity-40 ${colors.text.replace('text-', 'bg-')}`} />

@@ -3,3 +3,6 @@ risk:
   rescue_target_margin: 0.25
   base_critical_threshold: 0.12
   volatility_multiplier: 0.05
+server:
+  port: 8765
+  host: "0.0.0.0"

@@ -8,6 +8,7 @@ from src.ws_server import ws_server
 from src.analytics import analytics
 from src.sentiment_agent import SentimentAgent
 from src.capital_agent import CapitalAgent
+from src.plugin_loader import load_plugins
 from src.log_config import configure_logging, get_logger
 from src.config import settings
 
@@ -42,6 +43,9 @@ async def main():
     # Initialize New TradingAgents Roles
     _sentiment = SentimentAgent()
     _capital = CapitalAgent()
+
+    # Load any third-party plugins dropped into the plugins/ directory
+    _plugins = load_plugins()
 
     # Define stop event for graceful shutdown
     stop_event = asyncio.Event()
