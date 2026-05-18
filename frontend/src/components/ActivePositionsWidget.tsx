@@ -19,37 +19,37 @@ export const ActivePositionsWidget: React.FC<{ data: PositionData }> = ({ data }
   const gaugeWidth = Math.min((data.leverage / 5) * 100, 100);
 
   return (
-    <div className="bg-[#111111] border border-[#303030] rounded-none p-5 shadow-sm font-mono">
+    <div className="agora-card p-6 font-mono">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="font-semibold text-lg tracking-wider">BTC-PERP</h2>
-        <div className={`w-3 h-3 rounded-full ${status.dot}`} style={{ backgroundColor: status.color }} />
+        <h2 className="text-md font-medium tracking-wide text-white">BTC-PERP</h2>
+        <div className={`w-2 h-2 rounded-full ${status.dot}`} style={{ backgroundColor: status.color }} />
       </div>
       
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-[11px] text-[#787878] uppercase">Entry</p>
-          <p className="text-md">${data.entryPrice.toLocaleString()}</p>
+          <p className="text-[10px] text-[#787878] uppercase tracking-widest">Entry</p>
+          <p className="text-sm">${data.entryPrice.toLocaleString()}</p>
         </div>
         <div>
-          <p className="text-[11px] text-[#787878] uppercase">Price</p>
-          <p className="text-md">${data.currentPrice.toLocaleString()}</p>
+          <p className="text-[10px] text-[#787878] uppercase tracking-widest">Price</p>
+          <p className="text-sm">${data.currentPrice.toLocaleString()}</p>
         </div>
         <div>
-          <p className="text-[11px] text-[#787878] uppercase">Margin</p>
-          <p className="text-md agora-accent">{(data.marginRatio * 100).toFixed(1)}%</p>
+          <p className="text-[10px] text-[#787878] uppercase tracking-widest">Margin</p>
+          <p className="text-sm agora-accent">{(data.marginRatio * 100).toFixed(1)}%</p>
         </div>
         <div>
-          <p className="text-[11px] text-[#787878] uppercase">Leverage</p>
-          <p className="text-md">{data.leverage.toFixed(1)}x</p>
+          <p className="text-[10px] text-[#787878] uppercase tracking-widest">Leverage</p>
+          <p className="text-sm">{data.leverage.toFixed(1)}x</p>
         </div>
       </div>
 
       <div className="mt-6">
-        <div className="flex justify-between text-[11px] text-[#787878] mb-1">
-          <span className="uppercase">Leverage Gauge</span>
+        <div className="flex justify-between text-[10px] text-[#787878] mb-1 uppercase tracking-widest">
+          <span>Leverage</span>
           <span style={{ color: status.color }}>{status.text}</span>
         </div>
-        <div className="w-full h-1 bg-[#303030] rounded-none overflow-hidden">
+        <div className="w-full h-1 bg-[#1e1e1e] overflow-hidden">
           <div 
             className="h-full transition-all duration-300 ease-out" 
             style={{ width: `${gaugeWidth}%`, backgroundColor: status.color }} 

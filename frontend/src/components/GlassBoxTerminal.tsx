@@ -1,28 +1,26 @@
 import React from 'react';
 
-export interface AgentSignal {
-  event_type: string;
-  payload: any;
-  timestamp: number;
-}
-
-interface TerminalProps {
-  signals: AgentSignal[];
-}
-
-export const GlassBoxTerminal: React.FC<TerminalProps> = ({ signals }) => {
+export const GlassBoxTerminal: React.FC<{ signals: any[] }> = ({ signals }) => {
   return (
-    <div className="bg-[#000000] border border-[#1E2532] rounded-xl p-4 h-[400px] overflow-y-auto font-mono text-[13px]">
-      <div className="flex items-center gap-2 mb-3 text-[#8A93A3] text-[11px] uppercase tracking-wider">
-        <div className="w-2 h-2 bg-[#00D98F] rounded-full" />
+    <div className="bg-black border border-[#1e1e1e] p-6 h-[500px] overflow-y-auto font-mono text-[12px] rounded-none">
+      <div className="flex items-center gap-2 mb-4 text-[#484848] text-[10px] uppercase tracking-widest">
+        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
         Live Sentinel Log
       </div>
-      <div className="space-y-1">
+      
+      {/* Analytics Summary Header */}
+      <div className="mb-4 pb-4 border-b border-[#1e1e1e] text-[#d4ff3e]">
+        <p>Total USDC Rescued: $3,500.00</p>
+        <p>Avg Rescue Latency: 487ms</p>
+        <p>Active Agents: 1</p>
+      </div>
+
+      <div className="space-y-1.5">
         {signals.map((s, i) => (
           <p key={i}>
-            <span className="text-[#8A93A3]">[{new Date(s.timestamp * 1000).toLocaleTimeString()}]</span>{' '}
+            <span className="text-[#484848]">[{new Date(s.timestamp * 1000).toLocaleTimeString()}]</span>{' '}
             <span className="text-[#00A3FF]">{s.event_type}</span>{' '}
-            <span className="text-[#F2F2F2]">{JSON.stringify(s.payload)}</span>
+            <span className="text-[#f0f0f0]">{JSON.stringify(s.payload)}</span>
           </p>
         ))}
       </div>

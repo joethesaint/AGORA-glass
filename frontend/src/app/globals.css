@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --background: #0a0907;
+  --background: #0a0907; /* Agora Dark */
   --foreground: #ffffff;
-  --accent: #d4ff3e;
+  --accent: #d4ff3e;     /* Agora Neon Accent */
+  --muted: #484848;
+  --terminal: #000000;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Courier New', Courier, monospace; /* Placeholder for IBM Plex Mono */
+  font-family: 'IBM Plex Mono', 'Courier New', monospace; /* Target font-family */
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
 }
 
-.agora-accent {
-  color: var(--accent);
-}
-
-.agora-bg-accent {
-  background-color: rgba(212, 255, 62, 0.08);
-}
+.agora-accent { color: var(--accent); }
+.agora-border { border: 1px solid #1e1e1e; }
+.agora-card { background: #111111; border: 1px solid #1e1e1e; border-radius: 2px; }
