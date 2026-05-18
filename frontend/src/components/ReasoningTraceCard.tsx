@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Shield, Copy, Check, ExternalLink } from 'lucide-react';
 
 export interface ReasoningTrace {
   agent_id: string;
