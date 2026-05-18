@@ -77,6 +77,13 @@ flowchart TD
     style Frontend fill:#f9f9f9,stroke:#333,stroke-width:2px
 ```
 
+### 🧠 Multi-Agent Architecture & Plugins
+AGORA-glass features a modular, extensible agent framework inspired by the **TradingAgents** multi-agent specification. 
+*   **Dual-Agent Switch:** Users can hot-swap between **Sentinel Mode** (reactive liquidation protection) and **Trading Agent Mode** (autonomous, proactive trading).
+*   **Remote Plugin Architecture:** The `RiskEngine` can act as a pure execution conduit, outsourcing all logic to an external AI model via a single `.env` URL.
+
+Read the comprehensive guide here: **[Multi-Agent Architecture & TradingAgents Integration](./docs/PLUGINS_AND_AGENTS.md)**
+
 ### Off-Chain Python Sentinel
 The core logic resides in a Python-based sentinel. Crucially, the internal `MessageBus` is built using **Python `asyncio` queues**, not OS-level threads. This ensures non-blocking, lightning-fast I/O coordination that can match the sub-second finality of the Arc Network and the millisecond response times of the Circle Gateway API.
 
