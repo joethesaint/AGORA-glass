@@ -79,7 +79,7 @@ export const MarginHistoryChart = memo<MarginHistoryChartProps>(({ data }) => {
                 borderRadius: 4,
               }}
               labelStyle={{ color: '#787878' }}
-              formatter={(value: string) => `${value}%`}
+              formatter={(value: any) => `${value}%`}
             />
             <Line
               type="monotone"

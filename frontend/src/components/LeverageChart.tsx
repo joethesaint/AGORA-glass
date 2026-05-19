@@ -101,7 +101,7 @@ export const LeverageChart = memo<LeverageChartProps>(({ data }) => {
                 borderRadius: 4,
               }}
               labelStyle={{ color: '#787878' }}
-              formatter={(value: string) => `${value}x`}
+              formatter={(value: any) => `${value}x`}
             />
             <Area
               type="monotone"

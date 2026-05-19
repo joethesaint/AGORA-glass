@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Turbopack configuration for the workspace
+  turbopack: {
+    // Sets the root to the parent directory (workspace root) to resolve multiple lockfiles
+    root: path.join(process.cwd(), ".."),
+  },
   // Optimize bundle size by ensuring heavy libraries are handled correctly
   experimental: {
     optimizePackageImports: [

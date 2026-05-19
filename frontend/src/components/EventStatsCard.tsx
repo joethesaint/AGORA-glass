@@ -2,7 +2,8 @@
 
 import React, { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Event, EventType } from './EventFeed';
+import { Event } from './EventFeed';
+import { EventType } from '@/types/agent';
 import { Activity, AlertCircle, Shield, Zap, Clock } from 'lucide-react';
 
 interface EventStatsCardProps {
