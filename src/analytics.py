@@ -66,7 +66,7 @@ class GlassBoxAnalytics(BaseComponent):
     async def on_rescue(self, event: RescueComplete):
         """Finalize rescue metrics on completion using Polars."""
         self.logger.info("rescue_received", rescue_event=event)
-        latency = None
+        latency = event.latency_ms
         if event.status == "SUCCESS":
             start_ts = self._pending_traces.pop(event.reason_hash, None)
             if start_ts:
@@ -75,8 +75,8 @@ class GlassBoxAnalytics(BaseComponent):
             # Append new record to Polars DataFrame
             new_record = pl.DataFrame({
                 "timestamp": [datetime.fromtimestamp(event.timestamp)],
-                "amount": [event.amount],
-                "latency_ms": [latency]
+                "amount": [float(event.amount)],
+                "latency_ms": [float(latency) if latency is not None else None]
             })
             self.metrics_df = pl.concat([self.metrics_df, new_record])
             
@@ -102,7 +102,7 @@ class GlassBoxAnalytics(BaseComponent):
             metrics = {
                 "total_rescued_usdc": self.metrics_df["amount"].sum(),
                 "rescue_count": self.metrics_df.shape[0],
-                "avg_latency_ms": round(recent_df["latency_ms"].mean(), 2),
+                "avg_latency_ms": round(recent_df["latency_ms"].mean() or 0.0, 2),
                 "protection_uptime_sec": int(time.time() - self.start_time),
                 "agent_status": "ACTIVE"
             }

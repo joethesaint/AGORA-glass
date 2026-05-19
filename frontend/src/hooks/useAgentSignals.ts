@@ -7,6 +7,7 @@ import { triggerAlert } from '@/components/AlertSystem';
 
 export function useAgentSignals(url: string = 'ws://localhost:8765') {
   const [signals, setSignals] = useState<AgentSignal[]>([]);
+  const [lastSignal, setLastSignal] = useState<AgentSignal | null>(null);
   const [lifetimeCount, setLifetimeCount] = useState<number>(0);
   const [lifetimeStats, setLifetimeStats] = useState<Record<string, number>>({});
   const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
@@ -14,9 +15,16 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
 
   const processSignal = useCallback((raw: any) => {
     try {
-      const validation = AgentSignalSchema.safeParse(raw);
+      // Fix for null timestamp coming from backend
+      const sanitized = {
+        ...raw,
+        timestamp: raw.timestamp || Date.now() / 1000,
+      };
+
+      const validation = AgentSignalSchema.safeParse(sanitized);
+
       if (!validation.success) {
-        console.error('🛡️ GLASS: Invalid signal format:', validation.error);
+        console.warn('🛡️ GLASS: Invalid signal format (after fix):', validation.error.format());
         return;
       }
       
@@ -35,7 +43,7 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
       const signal: AgentSignal = {
         type,
         event_type,
-        timestamp: raw.timestamp || Date.now() / 1000,
+        timestamp: sanitized.timestamp,
         data: payload,
         payload,
       };
@@ -72,13 +80,14 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
       }
 
       setSignals((prev) => [signal, ...prev].slice(0, 50));
+      setLastSignal(signal);
       setLifetimeCount((prev) => prev + 1);
       setLifetimeStats((prev) => ({
         ...prev,
         [event_type]: (prev[event_type] || 0) + 1,
       }));
     } catch (err) {
-      console.error('🛡️ GLASS: Failed to parse signal', err);
+      console.error('🛡️ GLASS: Error processing signal:', err);
     }
   }, []);
 
@@ -122,5 +131,5 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
     };
   }, [url, processSignal]);
 
-  return { signals, lifetimeCount, lifetimeStats, status, sendSignal };
+  return { signals, lastSignal, lifetimeCount, lifetimeStats, status, sendSignal };
 }

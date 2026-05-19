@@ -21,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} ${jetBrainsMono.variable} font-sans bg-[#0B0E14] text-[#F2F2F2]`}>
+      <body className={`${inter.variable} ${jetBrainsMono.variable} font-sans bg-[#0B0E14] text-[#F2F2F2]`} suppressHydrationWarning={true}>
         <ThemeProvider>
           <header className="flex justify-between items-center px-4 lg:px-6 py-4 border-b border-[#1E2532] sticky top-0 bg-[#0B0E14]/80 backdrop-blur-sm z-50">
             <div className='flex items-center gap-4 lg:gap-8'>
