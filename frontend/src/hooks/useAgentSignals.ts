@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { AgentSignal, EventType } from '@/types/agent';
+import { AgentSignalSchema } from '@/types/schemas';
 import { triggerAlert } from '@/components/AlertSystem';
 
 export function useAgentSignals(url: string = 'ws://localhost:8765') {
@@ -13,15 +14,22 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
 
   const processSignal = useCallback((raw: any) => {
     try {
-      let type = raw.type as EventType;
-      let payload = raw.data;
-      let event_type = raw.type;
+      const validation = AgentSignalSchema.safeParse(raw);
+      if (!validation.success) {
+        console.error('🛡️ GLASS: Invalid signal format:', validation.error);
+        return;
+      }
+      
+      const validatedRaw = validation.data;
+      let type = validatedRaw.type as EventType;
+      let payload = validatedRaw.data;
+      let event_type = validatedRaw.type;
 
       // Special handling for WSSignal wrapper to flatten it
-      if (raw.type === 'WSSignal' && raw.data) {
-        type = raw.data.event_type as EventType;
-        event_type = raw.data.event_type;
-        payload = raw.data.payload;
+      if (validatedRaw.type === 'WSSignal' && validatedRaw.data) {
+        type = validatedRaw.data.event_type as EventType;
+        event_type = validatedRaw.data.event_type;
+        payload = validatedRaw.data.payload;
       }
 
       const signal: AgentSignal = {

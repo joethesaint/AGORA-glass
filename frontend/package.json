@@ -21,6 +21,7 @@
     "recharts": "^3.8.1",
     "recharts-scale": "^0.4.5",
     "viem": "^2.49.3",
+    "zod": "^4.4.3",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
