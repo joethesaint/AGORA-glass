@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWalletStore } from '@/stores/walletStore';
 import { Lock } from 'lucide-react';
 
@@ -10,6 +10,18 @@ interface SimulatorProps {
 
 export const MockCrashSimulator: React.FC<SimulatorProps> = ({ price, onPriceChange, onReset }) => {
   const { isConnected, setIsModalOpen } = useWalletStore();
+  const [localPrice, setLocalPrice] = useState(price);
+
+  // Sync with prop if external price changes (e.g. reset)
+  useEffect(() => {
+    setLocalPrice(price);
+  }, [price]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Number(e.target.value);
+    setLocalPrice(val);
+    onPriceChange(val);
+  };
 
   return (
     <div className="bg-[#131822] border border-[#1E2532] rounded-xl p-5 mt-4 relative overflow-hidden">
@@ -25,14 +37,14 @@ export const MockCrashSimulator: React.FC<SimulatorProps> = ({ price, onPriceCha
       )}
       
       <h3 className="font-semibold text-md mb-3">Flash Crash Simulator</h3>
-      <label className="block text-[11px] text-[#8A93A3] uppercase mb-2">BTC Market Price: ${price.toLocaleString()}</label>
+      <label className="block text-[11px] text-[#8A93A3] uppercase mb-2">BTC Market Price: ${localPrice.toLocaleString()}</label>
       <input 
         type="range" 
         min={40000} 
         max={80000} 
         step={100} 
-        value={price} 
-        onChange={(e) => onPriceChange(Number(e.target.value))}
+        value={localPrice} 
+        onChange={handleChange}
         className="w-full h-2 bg-[#1E2532] rounded-lg appearance-none cursor-pointer accent-[#00A3FF]"
       />
       <button 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   XAxis,
   YAxis,
@@ -26,6 +26,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAgentSignals } from '@/hooks/useAgentSignals';
 
 interface CorrelationData {
   asset1: string;
@@ -147,19 +148,56 @@ const StatCard = ({ title, value, subtitle, icon, trend }: StatCardProps) => (
 
 export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const correlationData = useMemo(() => generateCorrelationData(), []);
-  const riskHeatmap = useMemo(() => generateRiskHeatmap(), []);
-  const scenarioData = useMemo(() => generateScenarioData(), []);
-  const allocationData = useMemo(() => generateAllocationData(), []);
+  const { signals, status } = useAgentSignals();
 
-  const portfolioMetrics = useMemo(() => {
-    const totalValue = 150000;
-    const sharpeRatio = 1.85;
-    const maxDrawdown = 12.3;
-    const var95 = 4500;
-    
-    return { totalValue, sharpeRatio, maxDrawdown, var95 };
+  // Dashboard state
+  const [correlationData, setCorrelationData] = useState<{ assets: string[]; data: CorrelationData[] } | null>(null);
+  const [riskHeatmap, setRiskHeatmap] = useState<{ positions: string[]; timeframes: string[]; data: RiskHeatmapData[] } | null>(null);
+  const [scenarioData, setScenarioData] = useState<ScenarioData[] | null>(null);
+  const [portfolioValue, setPortfolioValue] = useState(150000);
+  const [sharpeRatio, setSharpeRatio] = useState(1.85);
+  const [maxDrawdown, setMaxDrawdown] = useState(12.3);
+  const [var95, setVar95] = useState(4500);
+  const [allocationData, setAllocationData] = useState<AllocationData[] | null>(null);
+
+  useEffect(() => {
+    // Initialize data on mount
+    setCorrelationData(generateCorrelationData());
+    setRiskHeatmap(generateRiskHeatmap());
+    setScenarioData(generateScenarioData());
+    setAllocationData([
+      { name: 'BTC', value: 35, color: '#FF6B35' },
+      { name: 'ETH', value: 30, color: '#627EEA' },
+      { name: 'SOL', value: 15, color: '#00D98F' },
+      { name: 'AVAX', value: 10, color: '#E84142' },
+      { name: 'Others', value: 10, color: '#8A93A3' },
+    ]);
   }, []);
+
+  useEffect(() => {
+    // Process the latest signal
+    const signal = signals[0];
+    if (!signal) return;
+
+    if (signal.event_type === 'MetricsUpdate') {
+      const { portfolioValue, sharpeRatio, maxDrawdown, var95 } = signal.payload;
+      if (portfolioValue) setPortfolioValue(portfolioValue);
+      if (sharpeRatio) setSharpeRatio(sharpeRatio);
+      if (maxDrawdown) setMaxDrawdown(maxDrawdown);
+      if (var95) setVar95(var95);
+    } else if (signal.event_type === 'AllocationUpdate') {
+      setAllocationData(signal.payload.allocation);
+    } else if (signal.event_type === 'RiskHeatmapUpdate') {
+      setRiskHeatmap(signal.payload.heatmap);
+    } else if (signal.event_type === 'CorrelationUpdate') {
+      setCorrelationData(signal.payload.correlation);
+    } else if (signal.event_type === 'ScenarioUpdate') {
+      setScenarioData(signal.payload.scenarios);
+    }
+  }, [signals]);
+
+  const portfolioMetrics = { totalValue: portfolioValue, sharpeRatio, maxDrawdown, var95 };
+
 
   const handleRefresh = () => {
     setIsLoading(true);
@@ -175,38 +213,6 @@ export default function AnalyticsPage() {
     }).format(value);
   };
 
-  // Custom heatmap cell
-  const HeatmapCell = ({ x, y, width, height, name, risk, level }: any) => {
-    const color = riskColors[level as keyof typeof riskColors];
-    return (
-      <g>
-        <rect
-          x={x}
-          y={y}
-          width={width}
-          height={height}
-          fill={color}
-          fillOpacity={0.7}
-          stroke={color}
-          strokeWidth={1}
-          rx={4}
-        />
-          <text
-          x={x + width / 2}
-          y={y + height / 2}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          dy="0.35em"
-          fill="#fff"
-          fontSize={10}
-          fontWeight="bold"
-        >
-          {risk}%
-        </text>
-      </g>
-    );
-  };
-
   return (
     <main className="p-4 lg:p-8 max-w-7xl mx-auto space-y-8">
       {/* Header */}
@@ -216,6 +222,10 @@ export default function AnalyticsPage() {
           <p className="text-sm text-[#8A93A3] mt-1">
             Risk analysis, correlation matrices, and scenario modeling
           </p>
+          <div className="flex items-center gap-2 mt-2">
+            <span className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500' : 'bg-red-500'}`} />
+            <span className="text-xs text-[#8A93A3] uppercase">{status}</span>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-2 px-4 py-2 bg-[#111111] border border-[#1e1e1e] rounded-lg text-sm text-[#8A93A3] hover:border-[#00A3FF] hover:text-white transition-colors">
@@ -242,7 +252,7 @@ export default function AnalyticsPage() {
         <StatCard
           title="Portfolio Value"
           value={formatCurrency(portfolioMetrics.totalValue)}
-          subtitle="Across all positions"
+          subtitle="Live via WebSocket"
           icon={<Layers size={18} className="text-[#00A3FF]" />}
         />
         <StatCard
@@ -266,110 +276,45 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Risk Heatmap */}
-      <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
-        <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-          <Activity size={16} className="text-[#FF6B35]" />
-          Risk Heatmap by Position & Timeframe
-        </h3>
-        <div className="overflow-x-auto">
-          <div className="min-w-[600px]">
-            <div className="grid grid-cols-6 gap-2">
-              {/* Header row */}
-              <div className="p-2"></div>
-              {riskHeatmap.timeframes.map((tf) => (
-                <div
-                  key={tf}
-                  className="p-2 text-xs text-[#8A93A3] text-center font-mono"
-                >
-                  {tf}
-                </div>
-              ))}
-              
-              {/* Data rows */}
-              {riskHeatmap.positions.map((position) => (
-                <div key={position} className="contents">
-                  <div className="p-2 text-xs text-white font-mono text-right">
-                    {position.slice(0, 7)}
-                  </div>
-                  {riskHeatmap.timeframes.map((tf) => {
-                    const cellData = riskHeatmap.data.find(
-                      (d) => d.position === position && d.timeframe === tf
-                    );
-                    return (
-                      <div
-                        key={`${position}-${tf}`}
-                        className="p-2 text-center rounded-lg font-mono text-xs font-bold text-white"
-                        style={{
-                          backgroundColor: riskColors[cellData?.level as keyof typeof riskColors] || '#484848',
-                        }}
-                      >
-                        {cellData?.risk}%
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center justify-center gap-6 mt-4">
-          {Object.entries(riskColors).map(([level, color]) => (
-            <div key={level} className="flex items-center gap-2">
-              <div
-                className="w-3 h-3 rounded"
-                style={{ backgroundColor: color }}
-              />
-              <span className="text-xs text-[#8A93A3] capitalize">{level}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Correlation Matrix & Scenario Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Correlation Matrix */}
+      {riskHeatmap && (
         <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
           <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Layers size={16} className="text-[#00A3FF]" />
-            Asset Correlation Matrix
+            <Activity size={16} className="text-[#FF6B35]" />
+            Risk Heatmap by Position & Timeframe
           </h3>
           <div className="overflow-x-auto">
-            <div className="min-w-[400px]">
-              <div className="grid grid-cols-5 gap-1">
+            <div className="min-w-[600px]">
+              <div className="grid grid-cols-6 gap-2">
                 {/* Header row */}
-                <div className="p-1"></div>
-                {correlationData.assets.slice(0, 8).map((asset) => (
+                <div className="p-2"></div>
+                {riskHeatmap.timeframes.map((tf) => (
                   <div
-                    key={asset}
-                    className="p-1 text-[10px] text-[#8A93A3] text-center font-mono"
+                    key={tf}
+                    className="p-2 text-xs text-[#8A93A3] text-center font-mono"
                   >
-                    {asset}
+                    {tf}
                   </div>
                 ))}
                 
                 {/* Data rows */}
-                {correlationData.assets.slice(0, 8).map((asset1) => (
-                  <div key={asset1} className="contents">
-                    <div className="p-1 text-[10px] text-white font-mono text-right">
-                      {asset1}
+                {riskHeatmap.positions.map((position) => (
+                  <div key={position} className="contents">
+                    <div className="p-2 text-xs text-white font-mono text-right">
+                      {position.slice(0, 7)}
                     </div>
-                    {correlationData.assets.slice(0, 8).map((asset2) => {
-                      const corr = correlationData.data.find(
-                        (d) => d.asset1 === asset1 && d.asset2 === asset2
+                    {riskHeatmap.timeframes.map((tf) => {
+                      const cellData = riskHeatmap.data.find(
+                        (d) => d.position === position && d.timeframe === tf
                       );
-                      const intensity = corr ? Math.abs(corr.correlation) : 0;
-                      const color = corr
-                        ? corr.correlation > 0
-                          ? `rgba(0, 217, 143, ${intensity})`
-                          : `rgba(255, 59, 59, ${intensity})`
-                        : 'transparent';
                       return (
                         <div
-                          key={`${asset1}-${asset2}`}
-                          className="p-1 text-center rounded text-[9px] font-mono text-white"
-                          style={{ backgroundColor: color }}
+                          key={`${position}-${tf}`}
+                          className="p-2 text-center rounded-lg font-mono text-xs font-bold text-white"
+                          style={{
+                            backgroundColor: riskColors[cellData?.level as keyof typeof riskColors] || '#484848',
+                          }}
                         >
-                          {corr ? corr.correlation.toFixed(2) : '-'}
+                          {cellData?.risk}%
                         </div>
                       );
                     })}
@@ -378,105 +323,178 @@ export default function AnalyticsPage() {
               </div>
             </div>
           </div>
+          <div className="flex items-center justify-center gap-6 mt-4">
+            {Object.entries(riskColors).map(([level, color]) => (
+              <div key={level} className="flex items-center gap-2">
+                <div
+                  className="w-3 h-3 rounded"
+                  style={{ backgroundColor: color }}
+                />
+                <span className="text-xs text-[#8A93A3] capitalize">{level}</span>
+              </div>
+            ))}
+          </div>
         </div>
+      )}
+
+      {/* Correlation Matrix & Scenario Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Correlation Matrix */}
+        {correlationData && (
+          <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
+            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+              <Layers size={16} className="text-[#00A3FF]" />
+              Asset Correlation Matrix
+            </h3>
+            <div className="overflow-x-auto">
+              <div className="min-w-[400px]">
+                <div className="grid grid-cols-5 gap-1">
+                  {/* Header row */}
+                  <div className="p-1"></div>
+                  {correlationData.assets.slice(0, 8).map((asset) => (
+                    <div
+                      key={asset}
+                      className="p-1 text-[10px] text-[#8A93A3] text-center font-mono"
+                    >
+                      {asset}
+                    </div>
+                  ))}
+                  
+                  {/* Data rows */}
+                  {correlationData.assets.slice(0, 8).map((asset1) => (
+                    <div key={asset1} className="contents">
+                      <div className="p-1 text-[10px] text-white font-mono text-right">
+                        {asset1}
+                      </div>
+                      {correlationData.assets.slice(0, 8).map((asset2) => {
+                        const corr = correlationData.data.find(
+                          (d) => d.asset1 === asset1 && d.asset2 === asset2
+                        );
+                        const intensity = corr ? Math.abs(corr.correlation) : 0;
+                        const color = corr
+                          ? corr.correlation > 0
+                            ? `rgba(0, 217, 143, ${intensity})`
+                            : `rgba(255, 59, 59, ${intensity})`
+                          : 'transparent';
+                        return (
+                          <div
+                            key={`${asset1}-${asset2}`}
+                            className="p-1 text-center rounded text-[9px] font-mono text-white"
+                            style={{ backgroundColor: color }}
+                          >
+                            {corr ? corr.correlation.toFixed(2) : '-'}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Scenario Analysis */}
+        {scenarioData && (
+          <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
+            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+              <Target size={16} className="text-[#FF6B35]" />
+              Scenario Analysis
+            </h3>
+            <div className="space-y-4">
+              {scenarioData.map((scenario) => (
+                <div key={scenario.scenario} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-white">{scenario.scenario}</span>
+                    <span
+                      className={`text-sm font-mono font-semibold ${
+                        scenario.pnl >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'
+                      }`}
+                    >
+                      {scenario.pnl >= 0 ? '+' : ''}
+                      {formatCurrency(scenario.pnl)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 bg-[#0a0907] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${scenario.probability}%`,
+                          backgroundColor: scenario.color,
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs text-[#8A93A3] font-mono w-10 text-right">
+                      {scenario.probability}%
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Portfolio Allocation Radar Chart */}
+      {allocationData && (
         <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
           <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Target size={16} className="text-[#FF6B35]" />
-            Scenario Analysis
+            <Activity size={16} className="text-[#00D98F]" />
+            Portfolio Allocation
           </h3>
-          <div className="space-y-4">
-            {scenarioData.map((scenario) => (
-              <div key={scenario.scenario} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-white">{scenario.scenario}</span>
-                  <span
-                    className={`text-sm font-mono font-semibold ${
-                      scenario.pnl >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'
-                    }`}
-                  >
-                    {scenario.pnl >= 0 ? '+' : ''}
-                    {formatCurrency(scenario.pnl)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={allocationData}>
+                  <PolarGrid stroke="#1e1e1e" />
+                  <PolarAngleAxis
+                    dataKey="name"
+                    tick={{ fill: '#8A93A3', fontSize: 12 }}
+                  />
+                  <PolarRadiusAxis
+                    angle={30}
+                    domain={[0, 40]}
+                    tick={{ fill: '#484848', fontSize: 10 }}
+                    tickCount={4}
+                  />
+                  <Radar
+                    name="Allocation"
+                    dataKey="value"
+                    stroke="#00A3FF"
+                    fill="#00A3FF"
+                    fillOpacity={0.3}
+                  />
+                  <Legend />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex flex-col justify-center space-y-4">
+              {allocationData.map((item) => (
+                <div key={item.name} className="flex items-center gap-3">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-sm text-white flex-1">{item.name}</span>
                   <div className="flex-1 h-2 bg-[#0a0907] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full"
                       style={{
-                        width: `${scenario.probability}%`,
-                        backgroundColor: scenario.color,
+                        width: `${item.value}%`,
+                        backgroundColor: item.color,
                       }}
                     />
                   </div>
-                  <span className="text-xs text-[#8A93A3] font-mono w-10 text-right">
-                    {scenario.probability}%
+                  <span className="text-sm font-mono text-[#8A93A3] w-12 text-right">
+                    {item.value}%
                   </span>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Portfolio Allocation Radar Chart */}
-      <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
-        <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-          <Activity size={16} className="text-[#00D98F]" />
-          Portfolio Allocation
-        </h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={allocationData}>
-                <PolarGrid stroke="#1e1e1e" />
-                <PolarAngleAxis
-                  dataKey="name"
-                  tick={{ fill: '#8A93A3', fontSize: 12 }}
-                />
-                <PolarRadiusAxis
-                  angle={30}
-                  domain={[0, 40]}
-                  tick={{ fill: '#484848', fontSize: 10 }}
-                  tickCount={4}
-                />
-                <Radar
-                  name="Allocation"
-                  dataKey="value"
-                  stroke="#00A3FF"
-                  fill="#00A3FF"
-                  fillOpacity={0.3}
-                />
-                <Legend />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex flex-col justify-center space-y-4">
-            {allocationData.map((item) => (
-              <div key={item.name} className="flex items-center gap-3">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-sm text-white flex-1">{item.name}</span>
-                <div className="flex-1 h-2 bg-[#0a0907] rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${item.value}%`,
-                      backgroundColor: item.color,
-                    }}
-                  />
-                </div>
-                <span className="text-sm font-mono text-[#8A93A3] w-12 text-right">
-                  {item.value}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      )}
     </main>
   );
 }

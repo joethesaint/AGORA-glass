@@ -7,20 +7,24 @@ import { Activity, AlertCircle, Shield, Zap, Clock } from 'lucide-react';
 
 interface EventStatsCardProps {
   events: Event[];
+  lifetimeCount: number;
+  lifetimeStats: Record<string, number>;
 }
 
-export const EventStatsCard = memo<EventStatsCardProps>(({ events }) => {
+export const EventStatsCard = memo<EventStatsCardProps>(({ events, lifetimeCount, lifetimeStats }) => {
   const stats = useMemo(() => {
-    const counts: Record<EventType, number> = {
+    const counts: Record<string, number> = {
       PositionUpdate: 0,
       RiskVerdict: 0,
       ReasoningTrace: 0,
       RescueComplete: 0,
-      Unknown: 0,
     };
 
     events.forEach((e) => {
-      counts[e.type] = (counts[e.type] || 0) + 1;
+      const eventType = e.event_type || e.type;
+      if (counts.hasOwnProperty(eventType)) {
+        counts[eventType] = counts[eventType] + 1;
+      }
     });
 
     return counts;
@@ -28,28 +32,28 @@ export const EventStatsCard = memo<EventStatsCardProps>(({ events }) => {
 
   const eventCategories = [
     {
-      type: 'PositionUpdate' as EventType,
+      type: 'PositionUpdate',
       label: 'Position Updates',
       icon: Activity,
       color: 'text-[#00A3FF]',
       bgColor: 'bg-[#00A3FF]/10',
     },
     {
-      type: 'RiskVerdict' as EventType,
+      type: 'RiskVerdict',
       label: 'Risk Verdicts',
       icon: AlertCircle,
       color: 'text-[#F5A623]',
       bgColor: 'bg-[#F5A623]/10',
     },
     {
-      type: 'ReasoningTrace' as EventType,
+      type: 'ReasoningTrace',
       label: 'Reasoning Traces',
       icon: Shield,
       color: 'text-[#d4ff3e]',
       bgColor: 'bg-[#d4ff3e]/10',
     },
     {
-      type: 'RescueComplete' as EventType,
+      type: 'RescueComplete',
       label: 'Rescue Complete',
       icon: Zap,
       color: 'text-[#00D98F]',
@@ -70,8 +74,9 @@ export const EventStatsCard = memo<EventStatsCardProps>(({ events }) => {
       <div className="space-y-4">
         {eventCategories.map((cat) => {
           const Icon = cat.icon;
-          const count = stats[cat.type];
-          const percentage = total > 0 ? (count / total) * 100 : 0;
+          const count = stats[cat.type] || 0;
+          const lifetimeCountForType = lifetimeStats[cat.type] || 0;
+          const percentage = lifetimeCount > 0 ? (lifetimeCountForType / lifetimeCount) * 100 : 0;
 
           return (
             <motion.div
@@ -85,7 +90,11 @@ export const EventStatsCard = memo<EventStatsCardProps>(({ events }) => {
                   <Icon className={`w-4 h-4 ${cat.color}`} />
                   <span className="text-[10px] text-[#787878] uppercase tracking-widest">{cat.label}</span>
                 </div>
-                <span className="text-[10px] font-mono font-semibold text-[#F2F2F2]">{count}</span>
+                <div className="flex items-center gap-2 font-mono text-[10px]">
+                  <span className="text-[#F2F2F2] font-semibold">{count}</span>
+                  <span className="text-[#484848]">/</span>
+                  <span className="text-[#8A93A3]">{lifetimeCountForType}</span>
+                </div>
               </div>
               <div className="w-full h-1.5 bg-[#1e1e1e] rounded overflow-hidden">
                 <motion.div
@@ -103,17 +112,17 @@ export const EventStatsCard = memo<EventStatsCardProps>(({ events }) => {
 
       <div className="mt-6 pt-6 border-t border-[#1e1e1e] grid grid-cols-2 gap-4">
         <div>
-          <p className="text-[10px] text-[#787878] uppercase tracking-widest">Total Events</p>
+          <p className="text-[10px] text-[#787878] uppercase tracking-widest">Buffer Events</p>
           <p className="text-2xl font-bold text-[#00A3FF]">{total}</p>
         </div>
         <div>
-          <p className="text-[10px] text-[#787878] uppercase tracking-widest">Events/Min</p>
+          <p className="text-[10px] text-[#787878] uppercase tracking-widest">Lifetime Events</p>
           <motion.p
             initial={{ opacity: 0.5 }}
             animate={{ opacity: 1 }}
             className="text-2xl font-bold text-[#d4ff3e]"
           >
-            {(total > 0 ? Math.random() * 5 : 0).toFixed(1)}
+            {lifetimeCount}
           </motion.p>
         </div>
       </div>

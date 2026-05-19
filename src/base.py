@@ -15,14 +15,15 @@ class BaseComponent:
         bus (MessageBus): The global message bus instance.
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, agent_id: str = None):
         """Initializes the component with a name and logger.
 
         Args:
             name: The display name for this component.
+            agent_id: Optional unique identifier for this component instance.
         """
         self.name = name
-        self.agent_id = settings.agent_id
+        self.agent_id = agent_id or f"{settings.agent_id}-{name.lower()}"
         self.logger = get_logger(name).bind(agent_id=self.agent_id)
         self.bus = bus
         self.logger.debug("component_initialized", component=name)

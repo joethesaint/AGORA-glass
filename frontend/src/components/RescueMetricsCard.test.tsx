@@ -22,20 +22,20 @@ describe('RescueMetricsCard', () => {
     expect(screen.getByText(/450ms/)).toBeTruthy();
   });
 
-  it('renders success rate', () => {
+  it('renders efficiency (success rate)', () => {
     render(<RescueMetricsCard {...mockProps} />);
-    expect(screen.getByText(/Success Rate/i)).toBeTruthy();
+    expect(screen.getByText(/Efficiency/i)).toBeTruthy();
     expect(screen.getByText(/99.2%/)).toBeTruthy();
   });
 
-  it('shows status as LIVE', () => {
+  it('shows status as ACTIVE', () => {
     render(<RescueMetricsCard {...mockProps} />);
-    expect(screen.getByText(/LIVE/)).toBeTruthy();
+    expect(screen.getByText(/ACTIVE/)).toBeTruthy();
   });
 
   it('displays rescue count correctly', () => {
     render(<RescueMetricsCard {...mockProps} />);
-    expect(screen.getByText(/100 rescues/)).toBeTruthy();
+    expect(screen.getByText(/100 automated rescues/)).toBeTruthy();
   });
 
   it('formats large numbers with commas', () => {

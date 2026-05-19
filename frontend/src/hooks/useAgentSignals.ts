@@ -6,6 +6,8 @@ import { triggerAlert } from '@/components/AlertSystem';
 
 export function useAgentSignals(url: string = 'ws://localhost:8765') {
   const [signals, setSignals] = useState<AgentSignal[]>([]);
+  const [lifetimeCount, setLifetimeCount] = useState<number>(0);
+  const [lifetimeStats, setLifetimeStats] = useState<Record<string, number>>({});
   const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -62,6 +64,11 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
       }
 
       setSignals((prev) => [signal, ...prev].slice(0, 50));
+      setLifetimeCount((prev) => prev + 1);
+      setLifetimeStats((prev) => ({
+        ...prev,
+        [event_type]: (prev[event_type] || 0) + 1,
+      }));
     } catch (err) {
       console.error('🛡️ GLASS: Failed to parse signal', err);
     }
@@ -107,5 +114,5 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
     };
   }, [url, processSignal]);
 
-  return { signals, status, sendSignal };
+  return { signals, lifetimeCount, lifetimeStats, status, sendSignal };
 }

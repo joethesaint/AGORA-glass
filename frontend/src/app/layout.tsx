@@ -26,7 +26,7 @@ export default function RootLayout({
           <header className="flex justify-between items-center px-4 lg:px-6 py-4 border-b border-[#1E2532] sticky top-0 bg-[#0B0E14]/80 backdrop-blur-sm z-50">
             <div className='flex items-center gap-4 lg:gap-8'>
               <div className="flex flex-col">
-                <h1 className="text-2xl lg:text-3xl font-black tracking-tighter glass-text cursor-default">
+                <h1 className="text-2xl lg:text-3xl font-black tracking-tighter glass-text cursor-default pr-2">
                   GLASS
                 </h1>
                 <span className="text-[9px] uppercase tracking-[0.2em] text-[#8A93A3] -mt-1 ml-0.5">

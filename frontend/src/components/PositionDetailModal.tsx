@@ -395,7 +395,7 @@ export const PositionDetailModal = ({
                           type="number"
                           value={marginAmount}
                           onChange={(e) => setMarginAmount(e.target.value)}
-                          placeholder="Amount in USD"
+                          placeholder="Amount in USDC"
                           className="flex-1 px-4 py-2 bg-[#0a0907] border border-[#1e1e1e] rounded-lg text-white text-sm font-mono placeholder-[#484848] focus:outline-none focus:border-[#00A3FF]"
                         />
                         <button

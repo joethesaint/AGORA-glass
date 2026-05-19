@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Shield, Copy, Check, ExternalLink } from 'lucide-react';
 
 export interface ReasoningTrace {
@@ -21,6 +20,10 @@ export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
+  const isSentinel = data.agent_id === 'agora-glass-01';
+  const borderColor = isSentinel ? 'border-[#00D98F]' : 'border-[#A855F7]';
+  const glowColor = isSentinel ? 'bg-[#00D98F]/5' : 'bg-[#A855F7]/5';
+
   const handleCopy = () => {
     const jsonString = JSON.stringify(data, null, 2);
     navigator.clipboard.writeText(jsonString);
@@ -29,14 +32,9 @@ export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className="agora-card relative overflow-hidden"
-    >
+    <div className={`agora-card relative overflow-hidden border ${borderColor}`}>
       {/* Background Accent */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-[#00D98F]/5 blur-3xl -z-10 rounded-full translate-x-1/2 -translate-y-1/2" />
+      <div className={`absolute top-0 right-0 w-64 h-64 ${glowColor} blur-3xl -z-10 rounded-full translate-x-1/2 -translate-y-1/2`} />
       
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6 mb-8">
         <div>
@@ -46,7 +44,9 @@ export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
               </div>
               <h3 className="text-xl font-bold text-white tracking-tight">Glass-Box Reasoning</h3>
             </div>
-            <p className="text-[10px] text-[#8A93A3] font-mono uppercase tracking-[0.2em]">{data.agent_id} • {data.action}</p>
+            <p className="text-[10px] text-[#8A93A3] font-mono uppercase tracking-[0.2em]">
+              {data.agent_id.split('-').slice(2).join(' ').toUpperCase()} • {data.action}
+            </p>
         </div>
         <div className="flex items-center gap-3">
           <span className={`px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest ${data.risk_rating === 'CRITICAL' ? 'bg-[#FF3B3B]/10 text-[#FF3B3B] border border-[#FF3B3B]/20' : 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20'}`}>
@@ -109,6 +109,6 @@ export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
             </a>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

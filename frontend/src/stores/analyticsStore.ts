@@ -19,10 +19,15 @@ export interface PositionMetrics {
 export interface AnalyticsStore {
   rescueMetrics: RescueMetrics;
   positionMetrics: PositionMetrics;
+  marketRegime: string;
+  volatility: number;
+  latestTrade: any | null;
   marginHistory: { timestamp: number; ratio: number }[];
   leverageHistory: { timestamp: number; leverage: number }[];
   updateRescueMetrics: (metrics: Partial<RescueMetrics>) => void;
   updatePositionMetrics: (metrics: Partial<PositionMetrics>) => void;
+  updateMarketIntelligence: (regime: string, volatility: number) => void;
+  updateLatestTrade: (trade: any) => void;
   addMarginHistory: (timestamp: number, ratio: number) => void;
   addLeverageHistory: (timestamp: number, leverage: number) => void;
 }
@@ -42,6 +47,9 @@ export const useAnalyticsStore = create<AnalyticsStore>((set) => ({
     positionCount: 3,
     criticalPositions: 0,
   },
+  marketRegime: 'STABLE',
+  volatility: 0.2,
+  latestTrade: null,
   marginHistory: [
     { timestamp: Date.now() - 60000, ratio: 0.25 },
     { timestamp: Date.now() - 50000, ratio: 0.27 },
@@ -66,6 +74,10 @@ export const useAnalyticsStore = create<AnalyticsStore>((set) => ({
     set((state) => ({
       positionMetrics: { ...state.positionMetrics, ...metrics },
     })),
+  updateMarketIntelligence: (regime, volatility) =>
+    set({ marketRegime: regime, volatility }),
+  updateLatestTrade: (trade) =>
+    set({ latestTrade: trade }),
   addMarginHistory: (timestamp, ratio) =>
     set((state) => ({
       marginHistory: [...state.marginHistory.slice(-19), { timestamp, ratio }],

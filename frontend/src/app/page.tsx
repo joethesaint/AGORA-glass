@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useAnalyticsStore } from '@/stores/analyticsStore';
+import { useWalletStore } from '@/stores/walletStore';
 import { RescueMetricsCard } from '@/components/RescueMetricsCard';
 import { MarginHistoryChart } from '@/components/MarginHistoryChart';
 import { LeverageChart } from '@/components/LeverageChart';
@@ -16,16 +17,32 @@ import { LiveMetricsHeader } from '@/components/LiveMetricsHeader';
 import { RescuePath } from '@/components/RescuePath';
 import { ReasoningTraceCard } from '@/components/ReasoningTraceCard';
 import { PositionDetailModal } from '@/components/PositionDetailModal';
+import { ModeToggleModal } from '@/components/ModeToggleModal';
+import { MarketRegimeBadge } from '@/components/MarketRegimeBadge';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Shield, TrendingUp, Zap } from 'lucide-react';
 
 export default function Dashboard() {
-  const { rescueMetrics, positionMetrics, marginHistory, leverageHistory, updateRescueMetrics, addMarginHistory, addLeverageHistory } = useAnalyticsStore();
-  const { signals, status: connectionStatus, sendSignal } = useAgentSignals();
+  const { 
+    rescueMetrics, 
+    positionMetrics, 
+    marketRegime, 
+    volatility, 
+    marginHistory, 
+    leverageHistory, 
+    updateRescueMetrics, 
+    addMarginHistory, 
+    addLeverageHistory,
+    updateMarketIntelligence,
+    updateLatestTrade 
+  } = useAnalyticsStore();
+  const { signals, lifetimeCount, lifetimeStats, status: connectionStatus, sendSignal } = useAgentSignals();
   const [rescueStage, setRescueStage] = useState<'idle' | 'pinning' | 'releasing' | 'bridging' | 'complete'>('idle');
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [agentMode, setAgentMode] = useState<'sentinel' | 'trading'>('sentinel');
+  const [isToggleModalOpen, setIsToggleModalOpen] = useState(false);
+  const [pendingMode, setPendingMode] = useState<'sentinel' | 'trading'>('sentinel');
+  const [btcPrice, setBtcPrice] = useState(63200);
 
   // Find latest reasoning trace for display
   const latestTrace = useMemo(() => {
@@ -47,54 +64,108 @@ export default function Dashboard() {
 
   // Listen for signals to update state
   useEffect(() => {
-    const latestSignal = signals[0];
-    if (!latestSignal) return;
-
-    // 1. Handle Analytics Updates
-    if (latestSignal.event_type === 'ANALYTICS_UPDATE') {
-        updateRescueMetrics({
-            totalRescued: latestSignal.payload.total_rescued_usdc,
-            avgLatency: latestSignal.payload.avg_latency_ms,
-            totalRescues: latestSignal.payload.rescue_count,
-        });
-    }
-
-    // 2. Handle Position Updates (Add to history)
-    if (latestSignal.event_type === 'PositionUpdate') {
-      addMarginHistory(latestSignal.timestamp * 1000, latestSignal.payload.margin_ratio);
-      addLeverageHistory(latestSignal.timestamp * 1000, latestSignal.payload.leverage);
-      
-      // Update price if available for BTC
-      if (latestSignal.payload.symbol === 'BTC-PERP' && latestSignal.payload.current_price) {
-        setBtcPrice(latestSignal.payload.current_price);
+    signals.forEach((signal) => {
+      // 1. Handle Analytics Updates
+      if (signal.event_type === 'ANALYTICS_UPDATE') {
+          updateRescueMetrics({
+              totalRescued: signal.payload.total_rescued_usdc,
+              avgLatency: signal.payload.avg_latency_ms,
+              totalRescues: signal.payload.rescue_count,
+          });
       }
-    }
 
-    // 3. Map signals to rescue stages for visual progress
-    if (latestSignal.event_type === 'ReasoningTrace') setRescueStage('pinning');
-    if (latestSignal.event_type === 'RescueInitiated') setRescueStage('bridging');
-    if (latestSignal.event_type === 'RescueComplete') setRescueStage('complete');
+      // 2. Handle Position Updates (Add to history)
+      if (signal.event_type === 'PositionUpdate') {
+        addMarginHistory(signal.timestamp * 1000, signal.payload.margin_ratio);
+        addLeverageHistory(signal.timestamp * 1000, signal.payload.leverage);
+        
+        // Remove automatic price update here so the simulator is the source of truth
+      }
+
+      // 3. Map signals to rescue stages for visual progress
+      if (signal.event_type === 'ReasoningTrace') setRescueStage('pinning');
+      if (signal.event_type === 'RescueInitiated') setRescueStage('bridging');
+      if (signal.event_type === 'RescueComplete') setRescueStage('complete');
+      
+      // 4. Handle Mode Changes
+      if (signal.event_type === 'MODE_CHANGED') {
+          setAgentMode(signal.payload.mode);
+      }
+
+      // 5. Handle Volatility & Regime Updates
+      if (signal.event_type === 'MarketVolatilityUpdate') {
+          updateMarketIntelligence(marketRegime, signal.payload.volatility_factor);
+      }
+      if (signal.event_type === 'MarketRegimeUpdate') {
+          updateMarketIntelligence(signal.payload.regime, volatility);
+      }
+      if (signal.event_type === 'TradingSignal') {
+          updateLatestTrade(signal.payload);
+      }
+    });
     
-    // 4. Handle Mode Changes
-    if (latestSignal.event_type === 'MODE_CHANGED') {
-        setAgentMode(latestSignal.payload.mode);
-    }
-    
-  }, [signals, updateRescueMetrics, addMarginHistory, addLeverageHistory]);
+  }, [signals, updateRescueMetrics, addMarginHistory, addLeverageHistory, updateMarketIntelligence, updateLatestTrade]);
+
+  const { isConnected, setIsModalOpen, isModalOpen } = useWalletStore();
+
+  const handleToggleConfirm = () => {
+    sendSignal('TOGGLE_MODE', { mode: pendingMode });
+  };
 
   const toggleAgentMode = useCallback(() => {
-    const newMode = agentMode === 'sentinel' ? 'trading' : 'sentinel';
-    sendSignal('TOGGLE_MODE', { mode: newMode });
-  }, [agentMode, sendSignal]);
+    if (!isConnected) {
+      setIsModalOpen(true);
+      return;
+    }
+    
+    const nextMode = agentMode === 'sentinel' ? 'trading' : 'sentinel';
+    const skipWarning = localStorage.getItem('skipModeToggleWarning') === 'true';
 
-  const [btcPrice, setBtcPrice] = useState(63200);
-  const entryPrice = 60000;
-  
-  // Real-time calculated metrics from mock price
-  const marginRatio = Math.max(0.05, 0.35 - (63200 - btcPrice) / 100000);
-  const leverage = 50000 / (btcPrice * marginRatio);
+    if (skipWarning) {
+      sendSignal('TOGGLE_MODE', { mode: nextMode });
+    } else {
+      setPendingMode(nextMode);
+      setIsToggleModalOpen(true);
+    }
+  }, [agentMode, sendSignal, isConnected, setIsModalOpen]);
+
+  // Mock event generator for live feel
+  useEffect(() => {
+    if (agentMode === 'sentinel') return; // Only mock trading signals when in trading mode
+
+    const interval = setInterval(() => {
+      const symbols = ['BTC-PERP', 'ETH-PERP', 'SOL-PERP'];
+      const actions = ['BUY', 'SELL', 'DE_RISK'];
+      
+      const mockSignal = {
+        event_type: 'TradingSignal',
+        timestamp: Date.now() / 1000,
+        payload: {
+          symbol: symbols[Math.floor(Math.random() * symbols.length)],
+          action: actions[Math.floor(Math.random() * actions.length)],
+          reason: 'Market volatility detected',
+          amount: Math.floor(Math.random() * 1000),
+          price: btcPrice + (Math.random() * 100 - 50)
+        }
+      };
+
+      // In a real app, signals would come from useAgentSignals websocket.
+      // Here we simulate the effect for demonstration.
+      console.log('🛡️ GLASS: Mock Trading Signal', mockSignal);
+      updateLatestTrade(mockSignal.payload);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [agentMode, btcPrice, updateLatestTrade]);
+
+  const { marginRatio, leverage } = useMemo(() => {
+    const marginRatio = Math.max(0.05, 0.35 - (63200 - btcPrice) / 100000);
+    const leverage = 50000 / (btcPrice * marginRatio);
+    return { marginRatio, leverage };
+  }, [btcPrice]);
 
   // Mock positions for demonstration
+  const entryPrice = 60000;
   const positions: Position[] = useMemo(
     () => [
       {
@@ -171,7 +242,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="flex items-center bg-[#1e1e1e] p-1 rounded-xl border border-white/5">
+        <div className="flex items-center gap-4 bg-[#1e1e1e] p-1 rounded-xl border border-white/5">
+          <MarketRegimeBadge regime={marketRegime} volatility={volatility} />
+          <div className="h-6 w-px bg-white/10" />
           <button
             onClick={() => agentMode !== 'sentinel' && toggleAgentMode()}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -222,7 +295,7 @@ export default function Dashboard() {
       <LiveMetricsHeader 
         latencyMs={rescueMetrics.avgLatency}
         totalRescued={rescueMetrics.totalRescued}
-        agentStatus={rescueMetrics.totalRescues > 0 ? "PROTECTING" : "IDLE"}
+        agentStatus={agentMode === 'trading' ? "TRADING" : (rescueMetrics.totalRescues > 0 ? "PROTECTING" : "IDLE")}
         agentName={agentMode.toUpperCase()}
         connectionStatus={connectionStatus}
       />
@@ -288,6 +361,13 @@ export default function Dashboard() {
         onClosePosition={handlePositionClose}
       />
 
+      <ModeToggleModal
+        isOpen={isToggleModalOpen}
+        onClose={() => setIsToggleModalOpen(false)}
+        onConfirm={handleToggleConfirm}
+        targetMode={pendingMode}
+      />
+
       {/* Events Section */}
       <div>
         <h2 className="text-xl font-semibold text-white mb-6">Live Event Monitoring</h2>
@@ -295,7 +375,7 @@ export default function Dashboard() {
           <div className="lg:col-span-2">
             <EventFeed events={signals} maxItems={15} />
           </div>
-          <EventStatsCard events={signals} />
+          <EventStatsCard events={signals} lifetimeCount={lifetimeCount} lifetimeStats={lifetimeStats} />
         </div>
       </div>
 

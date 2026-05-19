@@ -134,6 +134,13 @@ export const AlertSystem = ({ settings }: AlertSystemProps) => {
   // Expose addAlert globally for other components to use
   useEffect(() => {
     (window as any).__AGORA_ALERTS__ = { addAlert };
+    
+    // Process queued alerts
+    while (alertQueue.length > 0) {
+      const queuedAlert = alertQueue.shift();
+      addAlert(queuedAlert);
+    }
+    
     return () => {
       delete (window as any).__AGORA_ALERTS__;
     };
@@ -323,11 +330,15 @@ export const AlertSystem = ({ settings }: AlertSystemProps) => {
   );
 };
 
+// Alert queue for early calls
+const alertQueue: any[] = [];
+
 // Export a hook-like function for other components to trigger alerts
 export const triggerAlert = (alert: Omit<Alert, 'id' | 'timestamp' | 'read'>) => {
   if ((window as any).__AGORA_ALERTS__?.addAlert) {
     return (window as any).__AGORA_ALERTS__.addAlert(alert);
   }
-  console.warn('Alert system not initialized');
+  // If not ready, queue it
+  alertQueue.push(alert);
   return null;
 };

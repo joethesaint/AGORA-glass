@@ -30,7 +30,7 @@ export const LiveMetricsHeader = ({ latencyMs, totalRescued, agentStatus, agentN
       <MetricCard 
         label={`${agentName} Status`} 
         value={agentStatus} 
-        icon={<ShieldCheck className={`w-4 h-4 ${agentStatus.toUpperCase() === 'PROTECTING' ? 'text-[#00D98F]' : 'text-[#8A93A3]'}`} />} 
+        icon={<ShieldCheck className={`w-4 h-4 ${agentStatus.toUpperCase() === 'PROTECTING' || agentStatus.toUpperCase() === 'TRADING' ? 'text-[#00D98F]' : 'text-[#8A93A3]'}`} />} 
         status={agentStatus.toUpperCase()}
         description="Live on Arc Testnet"
       />

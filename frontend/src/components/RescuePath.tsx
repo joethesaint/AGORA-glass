@@ -20,13 +20,12 @@ export const RescuePath = ({ stage }: RescuePathProps) => {
       <div className="flex justify-between items-center mb-8">
         <h3 className="text-sm font-bold text-white uppercase tracking-widest">Rescue Pipeline</h3>
         <div className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] text-[#8A93A3] font-mono">
-          E2E LATENCY: ~487MS
+          E2E LATENCY: DYNAMIC
         </div>
       </div>
       
-      <div className="flex items-center justify-between relative px-2">
-        {/* Connecting Line */}
-        <div className="absolute top-5 left-10 right-10 h-[1px] bg-white/5 z-0" />
+      <div className="flex items-center justify-between relative px-2 pt-2">
+        {/* Connecting Line removed due to artifacts */}
         
         {steps.map((step, index) => {
           const isActive = stage === step.id || stage === 'complete';
@@ -70,7 +69,7 @@ export const RescuePath = ({ stage }: RescuePathProps) => {
                 </div>
               </div>
               {index < steps.length - 1 && (
-                <div className="flex-1 px-4 mb-8">
+                <div className="flex-1 px-4 pb-8 flex items-center justify-center">
                   <motion.div 
                     animate={{ 
                       opacity: stage === 'complete' || (isActive && stage !== step.id) ? 1 : 0.2,
