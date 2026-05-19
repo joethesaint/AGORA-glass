@@ -37,6 +37,11 @@ contract MockUSDC {
 }
 
 contract VaultTest is Test {
+    event Deposited(address indexed depositor, uint256 amount);
+    event RescueReleased(address indexed trader, uint256 amount, bytes32 indexed traceHash);
+    event Withdrawn(address indexed to, uint256 amount);
+    event AgentUpdated(address indexed oldAgent, address indexed newAgent);
+
     Vault public vault;
     MockUSDC public usdc;
 
@@ -70,7 +75,7 @@ contract VaultTest is Test {
     function test_Deposit_EmitsEvent() public {
         vm.prank(depositor);
         vm.expectEmit(true, false, false, true);
-        emit Vault.Deposited(depositor, 500e6);
+        emit Deposited(depositor, 500e6);
         vault.deposit(500e6);
     }
 
@@ -101,7 +106,7 @@ contract VaultTest is Test {
         bytes32 traceHash = keccak256("rescue_trace_002");
         vm.prank(agent);
         vm.expectEmit(true, false, true, true);
-        emit Vault.RescueReleased(trader, 200e6, traceHash);
+        emit RescueReleased(trader, 200e6, traceHash);
         vault.rescue(trader, 200e6, traceHash);
     }
 

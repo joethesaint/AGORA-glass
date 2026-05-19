@@ -5,6 +5,9 @@ import {Test} from "forge-std/Test.sol";
 import {AttributionRegistry} from "../src/AttributionRegistry.sol";
 
 contract AttributionRegistryTest is Test {
+    event ReasonStored(address indexed recorder, bytes32 indexed traceHash, uint256 timestamp);
+    event AgentUpdated(address indexed oldAgent, address indexed newAgent);
+
     AttributionRegistry public registry;
 
     address public agent = makeAddr("agent");
@@ -30,7 +33,7 @@ contract AttributionRegistryTest is Test {
         bytes32 hash = keccak256("trace_001");
         vm.prank(agent);
         vm.expectEmit(true, true, false, true);
-        emit AttributionRegistry.ReasonStored(agent, hash, block.timestamp);
+        emit ReasonStored(agent, hash, block.timestamp);
         registry.storeReason(hash);
     }
 
