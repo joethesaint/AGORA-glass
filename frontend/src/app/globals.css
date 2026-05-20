@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+:root {
+  --font-inter: 'Inter', ui-sans-serif, system-ui;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
 @theme {
   --color-background: #060608;
   --color-foreground: #F2F2F2;

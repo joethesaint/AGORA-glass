@@ -1,13 +1,10 @@
-'use client';
-
 import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Navigation = () => {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
   const links = [
@@ -26,7 +23,7 @@ export const Navigation = () => {
         {links.map((link) => (
           <Link
             key={link.href}
-            href={link.href}
+            to={link.href}
             className={`text-sm transition-colors ${pathname === link.href
                 ? 'text-[#00A3FF] font-semibold'
                 : 'text-[#8A93A3] hover:text-[#F2F2F2]'
@@ -79,7 +76,7 @@ export const Navigation = () => {
               {links.map((link) => (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  to={link.href}
                   onClick={() => setIsOpen(false)}
                   className={`block px-4 py-3 rounded-lg transition-colors ${pathname === link.href
                       ? 'bg-[#00A3FF]/10 text-[#00A3FF] font-semibold'

@@ -1,7 +1,4 @@
-'use client';
-
-import { useState, useCallback, useMemo, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import { useAnalyticsStore } from '@/stores/analyticsStore';
 import { useWalletStore } from '@/stores/walletStore';
 import { RescueMetricsCard } from '@/components/RescueMetricsCard';
@@ -19,17 +16,11 @@ import { PositionDetailModal } from '@/components/PositionDetailModal';
 import { ModeToggleModal } from '@/components/ModeToggleModal';
 import { MarketRegimeBadge } from '@/components/MarketRegimeBadge';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { Shield, TrendingUp, Zap } from 'lucide-react';
+import { Shield, TrendingUp } from 'lucide-react';
 
-// Dynamic imports for heavy chart components to improve initial load time
-const MarginHistoryChart = dynamic(() => import('@/components/MarginHistoryChart').then(mod => mod.MarginHistoryChart), { 
-  ssr: false,
-  loading: () => <div className="h-[300px] w-full bg-white/5 animate-pulse rounded-2xl" />
-});
-const LeverageChart = dynamic(() => import('@/components/LeverageChart').then(mod => mod.LeverageChart), { 
-  ssr: false,
-  loading: () => <div className="h-[300px] w-full bg-white/5 animate-pulse rounded-2xl" />
-});
+// Dynamic imports for heavy chart components using React.lazy
+const MarginHistoryChart = lazy(() => import('@/components/MarginHistoryChart').then(mod => ({ default: mod.MarginHistoryChart })));
+const LeverageChart = lazy(() => import('@/components/LeverageChart').then(mod => ({ default: mod.LeverageChart })));
 
 export default function Dashboard() {
   const { 
@@ -278,8 +269,12 @@ export default function Dashboard() {
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <MarginHistoryChart data={marginHistory} />
-          <LeverageChart data={leverageHistory} />
+          <Suspense fallback={<div className="h-[300px] w-full bg-white/5 animate-pulse rounded-2xl" />}>
+            <MarginHistoryChart data={marginHistory} />
+          </Suspense>
+          <Suspense fallback={<div className="h-[300px] w-full bg-white/5 animate-pulse rounded-2xl" />}>
+            <LeverageChart data={leverageHistory} />
+          </Suspense>
         </div>
 
         <div>
