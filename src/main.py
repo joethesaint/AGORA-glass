@@ -1,11 +1,16 @@
 import asyncio
 import signal
 import argparse
+import os
 from src.monitor import PerpMonitor
 from src.market_monitor import market_monitor
 from src.ws_server import ws_server
 from src.analytics import analytics
+from src.sentiment_agent import SentimentAgent
+from src.capital_agent import CapitalAgent
+from src.plugin_loader import load_plugins
 from src.log_config import configure_logging, get_logger
+from src.config import settings
 
 # Initialize Structured Logging
 configure_logging()
@@ -23,6 +28,7 @@ async def main():
         "--mode", choices=["mock", "live"], default="mock", help="Execution mode"
     )
     parser.add_argument("--account", type=str, help="Hyperliquid account address")
+    parser.add_argument("--port", type=int, default=settings.server.port, help="WebSocket server port")
     args = parser.parse_args()
 
     logger.info("agent_startup", mode=args.mode, monitored_accounts=[args.account])
@@ -30,6 +36,16 @@ async def main():
     perp_monitor = PerpMonitor(mode=args.mode, account_address=args.account)
     # Configure market monitor mode
     market_monitor.mode = args.mode
+    # Configure ws_server settings
+    ws_server.port = args.port
+    ws_server.host = settings.server.host
+
+    # Initialize New TradingAgents Roles
+    _sentiment = SentimentAgent()
+    _capital = CapitalAgent()
+
+    # Load any third-party plugins dropped into the plugins/ directory
+    _plugins = load_plugins()
 
     # Define stop event for graceful shutdown
     stop_event = asyncio.Event()
@@ -53,7 +69,7 @@ async def main():
     ws_task = asyncio.create_task(ws_server.run())
     stop_task = asyncio.create_task(stop_event.wait())
 
-    logger.info("sentinel_active", status="monitoring", ws_port=8765)
+    logger.info("sentinel_active", status="monitoring", ws_port=args.port)
 
     try:
         # Run until stop_event is set or monitors finish
@@ -61,6 +77,17 @@ async def main():
             [perp_task, market_task, ws_task, stop_task],
             return_when=asyncio.FIRST_COMPLETED
         )
+        for task in done:
+            name = "unknown"
+            if task == perp_task: name = "perp_task"
+            elif task == market_task: name = "market_task"
+            elif task == ws_task: name = "ws_task"
+            elif task == stop_task: name = "stop_task"
+            
+            if task.exception():
+                logger.error("task_failed", task=name, error=str(task.exception()))
+            else:
+                logger.info("task_finished", task=name)
     finally:
         perp_task.cancel()
         market_task.cancel()
