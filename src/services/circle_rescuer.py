@@ -2,7 +2,14 @@ import asyncio
 import logging
 import os
 import uuid
-from circle.web3 import utils, developer_controlled_wallets
+
+try:
+    from circle.web3 import utils, developer_controlled_wallets
+    CIRCLE_SDK_AVAILABLE = True
+except ImportError:
+    CIRCLE_SDK_AVAILABLE = False
+    utils = None
+    developer_controlled_wallets = None
 
 class CircleRescuer:
     """Handles USDC transfers using the Circle Developer-Controlled Wallets SDK.
@@ -28,7 +35,10 @@ class CircleRescuer:
         self.entity_secret = os.getenv("CIRCLE_ENTITY_SECRET")
         self.wallet_id = os.getenv("CIRCLE_WALLET_ID")
 
-        if self.api_key and self.entity_secret:
+        if not CIRCLE_SDK_AVAILABLE:
+            self.client = None
+            self.logger.warning("Circle SDK not installed. Rescuer in mock mode.")
+        elif self.api_key and self.entity_secret:
             self.client = utils.init_developer_controlled_wallets_client(
                 api_key=self.api_key,
                 entity_secret=self.entity_secret
