@@ -55,7 +55,27 @@ export function ReasoningTraceCard() {
         <div className="space-y-2">
           <p className="text-sm font-medium">Reasoning</p>
           <div className="rounded-md bg-muted p-4">
-            <p className="text-sm leading-relaxed">{latestReasoningTrace.reasoning_text}</p>
+            {typeof latestReasoningTrace.reasoning_text === 'string' ? (
+              <p className="text-sm leading-relaxed">{latestReasoningTrace.reasoning_text}</p>
+            ) : (
+              <div className="space-y-2 text-sm">
+                {latestReasoningTrace.reasoning_text?.strategy && (
+                  <div>
+                    <span className="font-medium">Strategy:</span> {latestReasoningTrace.reasoning_text.strategy}
+                  </div>
+                )}
+                {latestReasoningTrace.reasoning_text?.reason && (
+                  <div>
+                    <span className="font-medium">Reason:</span> {latestReasoningTrace.reasoning_text.reason}
+                  </div>
+                )}
+                {latestReasoningTrace.reasoning_text?.action && (
+                  <div>
+                    <span className="font-medium">Action:</span> {latestReasoningTrace.reasoning_text.action}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
