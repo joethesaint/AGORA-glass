@@ -6,9 +6,10 @@ solc = "0.8.20"
 
 [rpc_endpoints]
 arc_testnet = "${ARC_RPC_URL}"
+arc_testnet_default = "https://rpc.testnet.arc.network"
 localhost = "http://127.0.0.1:8545"
 
 [etherscan]
-arc_testnet = { key = "${ARCSCAN_API_KEY}", url = "${ARCSCAN_API_URL}" }
+arc_testnet = { key = "${ARCSCAN_API_KEY}", url = "https://testnet.arcscan.app/api" }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
