@@ -45,6 +45,44 @@ export default function Dashboard() {
   const [isToggleModalOpen, setIsToggleModalOpen] = useState(false);
   const [pendingMode, setPendingMode] = useState<'sentinel' | 'trading'>('sentinel');
   const [btcPrice, setBtcPrice] = useState(63200);
+  const [livePositions, setLivePositions] = useState<Record<string, Position>>({
+    'BTC-PERP': {
+        id: 'pos_001',
+        symbol: 'BTC-PERP',
+        entryPrice: 60000,
+        currentPrice: 63200,
+        size: 1.5,
+        marginRatio: 0.35,
+        leverage: 2.5,
+        collateral: 50000,
+        unrealizedPnL: 4800,
+        side: 'LONG',
+    },
+    'ETH-PERP': {
+        id: 'pos_002',
+        symbol: 'ETH-PERP',
+        entryPrice: 3000,
+        currentPrice: 3150,
+        size: 10,
+        marginRatio: 0.22,
+        leverage: 4.1,
+        collateral: 65000,
+        unrealizedPnL: 1500,
+        side: 'LONG',
+    },
+    'SOL-PERP': {
+        id: 'pos_003',
+        symbol: 'SOL-PERP',
+        entryPrice: 180,
+        currentPrice: 175,
+        size: 280,
+        marginRatio: 0.18,
+        leverage: 5.2,
+        collateral: 35000,
+        unrealizedPnL: -1400,
+        side: 'LONG',
+    }
+  });
 
   // Optimized signal processing: Only process the LATEST signal
   useEffect(() => {
@@ -61,10 +99,31 @@ export default function Dashboard() {
         });
     }
 
-    // 2. Handle Position Updates (Add to history)
+    // 2. Handle Position Updates (Add to history and update live state)
     if (signal.event_type === 'PositionUpdate') {
       addMarginHistory(signal.timestamp * 1000, signal.payload.margin_ratio);
       addLeverageHistory(signal.timestamp * 1000, signal.payload.leverage);
+
+      setLivePositions(prev => {
+        const symbol = signal.payload.symbol;
+        const existing = prev[symbol];
+        if (!existing) return prev; 
+        
+        return {
+          ...prev,
+          [symbol]: {
+            ...existing,
+            currentPrice: signal.payload.current_price,
+            marginRatio: signal.payload.margin_ratio,
+            leverage: signal.payload.leverage,
+            unrealizedPnL: (signal.payload.current_price - existing.entryPrice) * existing.size
+          }
+        };
+      });
+
+      if (signal.payload.symbol === 'BTC-PERP') {
+        setBtcPrice(signal.payload.current_price);
+      }
     }
 
     // 3. Map signals to rescue stages for visual progress
@@ -133,49 +192,8 @@ export default function Dashboard() {
     return { marginRatio, leverage };
   }, [btcPrice]);
 
-  // Mock positions for demonstration
-  const entryPrice = 60000;
-  const positions: Position[] = useMemo(
-    () => [
-      {
-        id: 'pos_001',
-        symbol: 'BTC-PERP',
-        entryPrice,
-        currentPrice: btcPrice,
-        size: 1.5,
-        marginRatio,
-        leverage,
-        collateral: 50000,
-        unrealizedPnL: (btcPrice - entryPrice) * 1.5,
-        side: 'LONG',
-      },
-      {
-        id: 'pos_002',
-        symbol: 'ETH-PERP',
-        entryPrice: 3000,
-        currentPrice: 3150,
-        size: 10,
-        marginRatio: 0.22,
-        leverage: 4.1,
-        collateral: 65000,
-        unrealizedPnL: 1500,
-        side: 'LONG',
-      },
-      {
-        id: 'pos_003',
-        symbol: 'SOL-PERP',
-        entryPrice: 180,
-        currentPrice: 175,
-        size: 280,
-        marginRatio: 0.18,
-        leverage: 5.2,
-        collateral: 35000,
-        unrealizedPnL: -1400,
-        side: 'LONG',
-      },
-    ],
-    [btcPrice, marginRatio, leverage]
-  );
+  // Real-time positions derived from signal stream
+  const positions = useMemo(() => Object.values(livePositions), [livePositions]);
 
   const handlePositionClose = useCallback((id: string) => {}, []);
   const handleAddMargin = useCallback((id: string) => {}, []);
