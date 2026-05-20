@@ -2,6 +2,7 @@ import { ConnectionStatus } from '@/components/ConnectionStatus';
 import { MarginTrendChart } from '@/components/charts/MarginTrendChart';
 import { LeverageHistoryChart } from '@/components/charts/LeverageHistoryChart';
 import { RescueTimelineChart } from '@/components/charts/RescueTimelineChart';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useWebSocketData } from '@/contexts/WebSocketContext';
 import { formatUSDC } from '@/lib/utils';
 import { Button } from '@workspace/ui/components/button';
@@ -39,6 +40,7 @@ export function Analytics({ monitoredAccount, onBack, onReset }: AnalyticsProps)
           </div>
           
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <ConnectionStatus />
             <Button variant="outline" size="sm" onClick={onReset}>
               Reset

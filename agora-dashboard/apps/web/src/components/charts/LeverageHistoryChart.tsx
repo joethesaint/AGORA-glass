@@ -32,17 +32,19 @@ export function LeverageHistoryChart() {
 
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
           <XAxis
             dataKey="time"
             className="text-xs"
             tick={{ fill: 'hsl(var(--muted-foreground))' }}
+            stroke="hsl(var(--border))"
           />
           <YAxis
             className="text-xs"
             tick={{ fill: 'hsl(var(--muted-foreground))' }}
-            label={{ value: 'Leverage', angle: -90, position: 'insideLeft' }}
+            label={{ value: 'Leverage', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
             domain={[0, 10]}
+            stroke="hsl(var(--border))"
           />
           <Tooltip
             contentStyle={{

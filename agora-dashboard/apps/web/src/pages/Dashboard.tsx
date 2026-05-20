@@ -7,6 +7,7 @@ import { ReasoningTraceCard } from '@/components/ReasoningTraceCard';
 import { RescueFeedCard } from '@/components/RescueFeedCard';
 import { ModeToggleModal } from '@/components/ModeToggleModal';
 import { MarketRegimeBadge } from '@/components/MarketRegimeBadge';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@workspace/ui/components/button';
 import { useWebSocketData } from '@/contexts/WebSocketContext';
 
@@ -69,6 +70,7 @@ export function Dashboard({ monitoredAccount, onReset, onViewAnalytics }: Dashbo
             <Button variant="outline" size="sm" onClick={onViewAnalytics}>
               Analytics
             </Button>
+            <ThemeToggle />
             <Button variant="outline" size="sm" onClick={onReset}>
               Reset
             </Button>
