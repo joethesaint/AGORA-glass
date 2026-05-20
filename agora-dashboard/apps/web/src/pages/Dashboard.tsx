@@ -17,11 +17,10 @@ interface DashboardProps {
 }
 
 export function Dashboard({ monitoredAccount, onReset, onViewAnalytics }: DashboardProps) {
-  const { volatility } = useWebSocketData();
+  const { volatility, marketRegime } = useWebSocketData();
   const [agentMode, setAgentMode] = useState<'sentinel' | 'trading'>('sentinel');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pendingMode, setPendingMode] = useState<'sentinel' | 'trading'>('sentinel');
-  const [marketRegime, setMarketRegime] = useState('RISK_ON');
 
   const handleModeToggle = () => {
     const nextMode = agentMode === 'sentinel' ? 'trading' : 'sentinel';

@@ -20,6 +20,8 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   const [rescueHistory, setRescueHistory] = useState<DashboardState['rescueHistory']>([]);
   const [positionHistory, setPositionHistory] = useState<DashboardState['positionHistory']>([]);
   const [volatility, setVolatility] = useState<DashboardState['volatility']>({});
+  const [marketRegime, setMarketRegime] = useState<DashboardState['marketRegime']>('RISK_ON');
+  const [tradingSignals, setTradingSignals] = useState<DashboardState['tradingSignals']>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
@@ -68,6 +70,24 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
             ...prev,
             [message.data.symbol]: message.data.volatility_factor,
           }));
+          break;
+
+        case 'MarketRegimeUpdate':
+          setMarketRegime(message.data.regime);
+          break;
+
+        case 'RescueOptimization':
+          console.log('Capital optimization:', message.data);
+          break;
+
+        case 'TradingSignal':
+          setTradingSignals((prev) => {
+            const updated = [message.data, ...prev];
+            return updated.slice(0, 20);
+          });
+          toast.info(`Trading Signal: ${message.data.action}`, {
+            description: `${message.data.symbol} - ${message.data.reason}`,
+          });
           break;
 
         default:
@@ -165,6 +185,8 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     rescueHistory,
     positionHistory,
     volatility,
+    marketRegime,
+    tradingSignals,
     connect,
     disconnect,
     reconnect,

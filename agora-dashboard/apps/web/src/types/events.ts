@@ -49,12 +49,37 @@ export interface MarketVolatilityUpdate {
   timestamp: string;
 }
 
+export interface MarketRegimeUpdate {
+  regime: 'RISK_ON' | 'RISK_OFF' | 'EXTREME_VOLATILITY';
+  sentiment_score: number;
+  timestamp: string;
+}
+
+export interface RescueOptimization {
+  account: string;
+  optimized_amount_usdc: number;
+  allocation_rationale: string;
+  timestamp: string;
+}
+
+export interface TradingSignal {
+  symbol: string;
+  action: 'BUY' | 'SELL' | 'DE_RISK';
+  reason: string;
+  amount: number;
+  price: number;
+  timestamp: string;
+}
+
 export type WebSocketEvent =
   | { type: 'PositionUpdate'; data: PositionUpdate; timestamp: string }
   | { type: 'RiskVerdict'; data: RiskVerdict; timestamp: string }
   | { type: 'ReasoningTrace'; data: ReasoningTrace; timestamp: string }
   | { type: 'RescueComplete'; data: RescueComplete; timestamp: string }
-  | { type: 'MarketVolatilityUpdate'; data: MarketVolatilityUpdate; timestamp: string };
+  | { type: 'MarketVolatilityUpdate'; data: MarketVolatilityUpdate; timestamp: string }
+  | { type: 'MarketRegimeUpdate'; data: MarketRegimeUpdate; timestamp: string }
+  | { type: 'RescueOptimization'; data: RescueOptimization; timestamp: string }
+  | { type: 'TradingSignal'; data: TradingSignal; timestamp: string };
 
 export interface DashboardState {
   currentPosition: PositionUpdate | null;
@@ -63,5 +88,7 @@ export interface DashboardState {
   rescueHistory: RescueComplete[];
   positionHistory: PositionUpdate[];
   volatility: Record<string, number>;
+  marketRegime: string;
+  tradingSignals: TradingSignal[];
   isConnected: boolean;
 }
