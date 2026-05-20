@@ -1,9 +1,14 @@
+import { useState } from 'react';
+import { Shield, Zap } from 'lucide-react';
 import { ConnectionStatus } from '@/components/ConnectionStatus';
 import { PositionHealthCard } from '@/components/PositionHealthCard';
 import { RiskAssessmentCard } from '@/components/RiskAssessmentCard';
 import { ReasoningTraceCard } from '@/components/ReasoningTraceCard';
 import { RescueFeedCard } from '@/components/RescueFeedCard';
+import { ModeToggleModal } from '@/components/ModeToggleModal';
+import { MarketRegimeBadge } from '@/components/MarketRegimeBadge';
 import { Button } from '@workspace/ui/components/button';
+import { useWebSocketData } from '@/contexts/WebSocketContext';
 
 interface DashboardProps {
   monitoredAccount: string;
@@ -12,6 +17,32 @@ interface DashboardProps {
 }
 
 export function Dashboard({ monitoredAccount, onReset, onViewAnalytics }: DashboardProps) {
+  const { volatility } = useWebSocketData();
+  const [agentMode, setAgentMode] = useState<'sentinel' | 'trading'>('sentinel');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pendingMode, setPendingMode] = useState<'sentinel' | 'trading'>('sentinel');
+  const [marketRegime, setMarketRegime] = useState('RISK_ON');
+
+  const handleModeToggle = () => {
+    const nextMode = agentMode === 'sentinel' ? 'trading' : 'sentinel';
+    const skipWarning = localStorage.getItem('skipModeToggleWarning') === 'true';
+
+    if (skipWarning) {
+      setAgentMode(nextMode);
+      // TODO: Send WebSocket signal to backend to change mode
+    } else {
+      setPendingMode(nextMode);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleConfirmModeChange = () => {
+    setAgentMode(pendingMode);
+    // TODO: Send WebSocket signal to backend to change mode
+  };
+
+  const avgVolatility = Object.values(volatility).reduce((a, b) => a + b, 0) / Object.keys(volatility).length || 0.5;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -25,7 +56,17 @@ export function Dashboard({ monitoredAccount, onReset, onViewAnalytics }: Dashbo
           </div>
           
           <div className="flex items-center gap-4">
+            <MarketRegimeBadge regime={marketRegime} volatility={avgVolatility} />
             <ConnectionStatus />
+            <Button 
+              variant={agentMode === 'trading' ? 'default' : 'outline'} 
+              size="sm" 
+              onClick={handleModeToggle}
+              className="gap-2"
+            >
+              {agentMode === 'sentinel' ? <Shield className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+              {agentMode === 'sentinel' ? 'Sentinel Mode' : 'Trading Mode'}
+            </Button>
             <Button variant="outline" size="sm" onClick={onViewAnalytics}>
               Analytics
             </Button>
@@ -35,6 +76,13 @@ export function Dashboard({ monitoredAccount, onReset, onViewAnalytics }: Dashbo
           </div>
         </div>
       </header>
+
+      <ModeToggleModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleConfirmModeChange}
+        targetMode={pendingMode}
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
