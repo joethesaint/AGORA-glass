@@ -1,0 +1,135 @@
+'use client';
+
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { AgentSignal, EventType } from '@/types/agent';
+import { AgentSignalSchema } from '@/types/schemas';
+import { triggerAlert } from '@/components/AlertSystem';
+
+export function useAgentSignals(url: string = 'ws://localhost:8765') {
+  const [signals, setSignals] = useState<AgentSignal[]>([]);
+  const [lastSignal, setLastSignal] = useState<AgentSignal | null>(null);
+  const [lifetimeCount, setLifetimeCount] = useState<number>(0);
+  const [lifetimeStats, setLifetimeStats] = useState<Record<string, number>>({});
+  const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  const wsRef = useRef<WebSocket | null>(null);
+
+  const processSignal = useCallback((raw: any) => {
+    try {
+      // Fix for null timestamp coming from backend
+      const sanitized = {
+        ...raw,
+        timestamp: raw.timestamp || Date.now() / 1000,
+      };
+
+      const validation = AgentSignalSchema.safeParse(sanitized);
+
+      if (!validation.success) {
+        console.warn('🛡️ GLASS: Invalid signal format (after fix):', validation.error.format());
+        return;
+      }
+      
+      const validatedRaw = validation.data;
+      let type = validatedRaw.type as EventType;
+      let payload = validatedRaw.data;
+      let event_type = validatedRaw.type;
+
+      // Special handling for WSSignal wrapper to flatten it
+      if (validatedRaw.type === 'WSSignal' && validatedRaw.data) {
+        type = validatedRaw.data.event_type as EventType;
+        event_type = validatedRaw.data.event_type;
+        payload = validatedRaw.data.payload;
+      }
+
+      const signal: AgentSignal = {
+        type,
+        event_type,
+        timestamp: sanitized.timestamp,
+        data: payload,
+        payload,
+      };
+
+      // Trigger Alerts based on signal type
+      if (event_type === 'RescueInitiated') {
+        triggerAlert({
+          type: 'rescue',
+          title: 'Rescue Initiated',
+          message: `Sentinel is rescuing positions for ${payload.symbol || 'portfolio'}`,
+          severity: 'high',
+        });
+      } else if (event_type === 'RescueComplete') {
+        triggerAlert({
+          type: 'success',
+          title: 'Rescue Complete',
+          message: `Successfully moved ${payload.amount || 'funds'} to Circle Vault`,
+          severity: 'low',
+        });
+      } else if (event_type === 'RiskVerdict' && payload.status === 'CRITICAL') {
+        triggerAlert({
+          type: 'system',
+          title: 'Emergency Verdict',
+          message: `Risk engine determined rescue is necessary: ${payload.reason || 'Critical risk'}`,
+          severity: 'critical',
+        });
+      } else if (event_type === 'MODE_CHANGED') {
+          triggerAlert({
+              type: 'system',
+              title: 'Agent Mode Swapped',
+              message: `Now operating in ${payload.mode.toUpperCase()} mode`,
+              severity: 'low'
+          });
+      }
+
+      setSignals((prev) => [signal, ...prev].slice(0, 50));
+      setLastSignal(signal);
+      setLifetimeCount((prev) => prev + 1);
+      setLifetimeStats((prev) => ({
+        ...prev,
+        [event_type]: (prev[event_type] || 0) + 1,
+      }));
+    } catch (err) {
+      console.error('🛡️ GLASS: Error processing signal:', err);
+    }
+  }, []);
+
+  const sendSignal = useCallback((type: string, data: any) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type, ...data }));
+    } else {
+      console.warn('🛡️ GLASS: Cannot send signal, WebSocket not connected');
+    }
+  }, []);
+
+  useEffect(() => {
+    let reconnectTimeout: NodeJS.Timeout;
+
+    const connect = () => {
+      setStatus('connecting');
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        setStatus('connected');
+        console.log('🛡️ GLASS: Connected to Sentinel Bridge');
+      };
+
+      ws.onmessage = (event) => {
+        const raw = JSON.parse(event.data);
+        processSignal(raw);
+      };
+
+      ws.onclose = () => {
+        setStatus('disconnected');
+        reconnectTimeout = setTimeout(connect, 3000);
+      };
+    };
+
+    connect();
+
+    return () => {
+      if (wsRef.current) wsRef.current.close();
+      clearTimeout(reconnectTimeout);
+    };
+  }, [url, processSignal]);
+
+  return { signals, lastSignal, lifetimeCount, lifetimeStats, status, sendSignal };
+}

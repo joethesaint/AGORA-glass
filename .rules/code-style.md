@@ -1,0 +1,21 @@
+# Code Style & Commit Convention
+
+- **Python**: 
+  - Use `black` for formatting, `ruff` for linting. 
+  - Mandatory type hints on all public functions (`typing`).
+  - Docstrings must follow [PEP 257](https://peps.python.org/pep-0257/).
+- **Solidity**: 
+  - Use `prettier-plugin-solidity` and `solhint`. 
+  - NatSpec comments required for all `external` and `public` functions.
+- **TypeScript**: 
+  - Use `prettier` and `eslint`. 
+  - Strict mode enabled in `tsconfig.json`.
+- **Commits**: 
+  - Follow Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`). 
+  - Scope prefix mandatory (e.g., `feat(monitor):`, `fix(vault):`).
+- **Environment**: 
+  - Never commit `.env` files. 
+  - Maintain `.env.example` with up-to-date placeholders for all required keys.
+- **Async**: 
+  - Python: Avoid blocking calls (`time.sleep`) in coroutines; use `asyncio.sleep`.
+  - Prefer `asyncio.gather` for parallel I/O.
