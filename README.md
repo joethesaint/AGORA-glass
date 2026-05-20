@@ -43,7 +43,7 @@ flowchart TD
         Bus -->|position_update| Engine
         Engine -->|risk_verdict| Bus
         Bus -->|risk_verdict| Tracer
-        Bus -->|risk_verdict (CRITICAL)| Dispatcher
+        Bus -->|"risk_verdict (CRITICAL)"| Dispatcher
         Tracer -->|reasoning_trace, trace_pinned| Bus
         Dispatcher -->|rescue_initiated, rescue_complete| Bus
     end
