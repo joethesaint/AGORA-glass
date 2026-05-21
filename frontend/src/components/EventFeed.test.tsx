@@ -1,30 +1,28 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { EventFeed, EventStatsCard, EventTypeIcon, EventType } from './EventFeed';
+import { EventFeed, EventTypeIcon } from './EventFeed';
+import { EventStatsCard } from './EventStatsCard';
+import { EventType } from '@/types/agent';
 
 describe('EventTypeIcon', () => {
   it('renders icon for PositionUpdate', () => {
-    render(<EventTypeIcon type="PositionUpdate" />);
-    const element = screen.getByRole('presentation', { hidden: true }).parentElement;
-    expect(element).toBeTruthy();
+    const { container } = render(<EventTypeIcon type="PositionUpdate" />);
+    expect(container.querySelector('.lucide-activity')).toBeTruthy();
   });
 
   it('renders icon for RiskVerdict', () => {
-    render(<EventTypeIcon type="RiskVerdict" />);
-    const element = screen.getByRole('presentation', { hidden: true }).parentElement;
-    expect(element).toBeTruthy();
+    const { container } = render(<EventTypeIcon type="RiskVerdict" />);
+    expect(container.querySelector('.lucide-circle-alert')).toBeTruthy();
   });
 
   it('renders icon for ReasoningTrace', () => {
-    render(<EventTypeIcon type="ReasoningTrace" />);
-    const element = screen.getByRole('presentation', { hidden: true }).parentElement;
-    expect(element).toBeTruthy();
+    const { container } = render(<EventTypeIcon type="ReasoningTrace" />);
+    expect(container.querySelector('.lucide-shield')).toBeTruthy();
   });
 
   it('renders icon for RescueComplete', () => {
-    render(<EventTypeIcon type="RescueComplete" />);
-    const element = screen.getByRole('presentation', { hidden: true }).parentElement;
-    expect(element).toBeTruthy();
+    const { container } = render(<EventTypeIcon type="RescueComplete" />);
+    expect(container.querySelector('.lucide-zap')).toBeTruthy();
   });
 });
 
@@ -49,7 +47,7 @@ describe('EventFeed', () => {
 
   it('renders event timeline title', () => {
     render(<EventFeed events={mockEvents} />);
-    expect(screen.getByText(/Event Timeline/i)).toBeTruthy();
+    expect(screen.getByText(/System Intelligence/i)).toBeTruthy();
   });
 
   it('renders event types', () => {
@@ -61,7 +59,7 @@ describe('EventFeed', () => {
 
   it('displays no events message when empty', () => {
     render(<EventFeed events={[]} />);
-    expect(screen.getByText(/No events yet/i)).toBeTruthy();
+    expect(screen.getByText(/Awaiting initialization/i)).toBeTruthy();
   });
 
   it('respects maxItems prop', () => {
@@ -70,7 +68,7 @@ describe('EventFeed', () => {
       timestamp: (Date.now() - i * 1000) / 1000,
     }));
     render(<EventFeed events={events} maxItems={2} />);
-    expect(screen.getByText(/\+1 more/i)).toBeTruthy();
+    expect(screen.getByText(/\+1 deeper signals/i)).toBeTruthy();
   });
 
   it('displays RiskVerdict data correctly', () => {
@@ -80,7 +78,7 @@ describe('EventFeed', () => {
 
   it('displays RescueComplete data correctly', () => {
     render(<EventFeed events={mockEvents} />);
-    expect(screen.getByText(/SUCCESS/i)).toBeTruthy();
+    expect(screen.getByText(/\$500/i)).toBeTruthy();
   });
 });
 
@@ -129,7 +127,7 @@ describe('EventStatsCard', () => {
 
   it('displays total events', () => {
     render(<EventStatsCard events={mockEvents} />);
-    expect(screen.getByText(/Total Events/i)).toBeTruthy();
+    expect(screen.getByText(/Buffer Events/i)).toBeTruthy();
   });
 
   it('handles empty events', () => {

@@ -3,7 +3,7 @@ import os
 import logging
 import random
 from src.base import BaseComponent
-from src.events import PositionUpdate, RiskVerdict, MarketVolatilityUpdate, MarketRegimeUpdate
+from src.events import PositionUpdate, RiskVerdict, MarketVolatilityUpdate, MarketRegimeUpdate, TradingSignal
 from src.errors import safe_handler
 from src.config import settings
 from src.analytics import analytics

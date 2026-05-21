@@ -16,20 +16,37 @@ export interface PositionMetrics {
   criticalPositions: number;
 }
 
+export interface Position {
+  id: string;
+  symbol: string;
+  entryPrice: number;
+  currentPrice: number;
+  size: number;
+  marginRatio: number;
+  leverage: number;
+  collateral: number;
+  unrealizedPnL: number;
+  side: 'LONG' | 'SHORT';
+}
+
 export interface AnalyticsStore {
   rescueMetrics: RescueMetrics;
   positionMetrics: PositionMetrics;
   marketRegime: string;
-  volatility: number;
+  volatility: Record<string, number>;
   latestTrade: any | null;
+  latestReasoningTrace: any | null;
   marginHistory: { timestamp: number; ratio: number }[];
   leverageHistory: { timestamp: number; leverage: number }[];
+  livePositions: Record<string, Position>;
   updateRescueMetrics: (metrics: Partial<RescueMetrics>) => void;
   updatePositionMetrics: (metrics: Partial<PositionMetrics>) => void;
-  updateMarketIntelligence: (regime: string, volatility: number) => void;
+  updateMarketIntelligence: (regime: string, symbolVolatility: {symbol: string, factor: number} | null) => void;
   updateLatestTrade: (trade: any) => void;
+  updateLatestReasoningTrace: (trace: any) => void;
   addMarginHistory: (timestamp: number, ratio: number) => void;
   addLeverageHistory: (timestamp: number, leverage: number) => void;
+  updateLivePosition: (symbol: string, data: any) => void;
 }
 
 export const useAnalyticsStore = create<AnalyticsStore>((set) => ({
@@ -48,24 +65,37 @@ export const useAnalyticsStore = create<AnalyticsStore>((set) => ({
     criticalPositions: 0,
   },
   marketRegime: 'STABLE',
-  volatility: 0.2,
+  volatility: {},
   latestTrade: null,
-  marginHistory: [
-    { timestamp: Date.now() - 60000, ratio: 0.25 },
-    { timestamp: Date.now() - 50000, ratio: 0.27 },
-    { timestamp: Date.now() - 40000, ratio: 0.30 },
-    { timestamp: Date.now() - 30000, ratio: 0.28 },
-    { timestamp: Date.now() - 20000, ratio: 0.32 },
-    { timestamp: Date.now() - 10000, ratio: 0.28 },
-  ],
-  leverageHistory: [
-    { timestamp: Date.now() - 60000, leverage: 3.5 },
-    { timestamp: Date.now() - 50000, leverage: 3.8 },
-    { timestamp: Date.now() - 40000, leverage: 3.2 },
-    { timestamp: Date.now() - 30000, leverage: 3.1 },
-    { timestamp: Date.now() - 20000, leverage: 2.8 },
-    { timestamp: Date.now() - 10000, leverage: 3.0 },
-  ],
+  latestReasoningTrace: null,
+  marginHistory: [],
+  leverageHistory: [],
+  livePositions: {
+    'BTC-PERP': {
+        id: 'pos_001',
+        symbol: 'BTC-PERP',
+        entryPrice: 60000,
+        currentPrice: 63200,
+        size: 1.5,
+        marginRatio: 0.35,
+        leverage: 2.5,
+        collateral: 50000,
+        unrealizedPnL: 4800,
+        side: 'LONG',
+    },
+    'ETH-PERP': {
+        id: 'pos_002',
+        symbol: 'ETH-PERP',
+        entryPrice: 3000,
+        currentPrice: 3150,
+        size: 10,
+        marginRatio: 0.22,
+        leverage: 4.1,
+        collateral: 65000,
+        unrealizedPnL: 1500,
+        side: 'LONG',
+    }
+  },
   updateRescueMetrics: (metrics) =>
     set((state) => ({
       rescueMetrics: { ...state.rescueMetrics, ...metrics },
@@ -74,10 +104,17 @@ export const useAnalyticsStore = create<AnalyticsStore>((set) => ({
     set((state) => ({
       positionMetrics: { ...state.positionMetrics, ...metrics },
     })),
-  updateMarketIntelligence: (regime, volatility) =>
-    set({ marketRegime: regime, volatility }),
+  updateMarketIntelligence: (regime, symbolVolatility) =>
+    set((state) => ({
+      marketRegime: regime,
+      volatility: symbolVolatility 
+        ? { ...state.volatility, [symbolVolatility.symbol]: symbolVolatility.factor }
+        : state.volatility
+    })),
   updateLatestTrade: (trade) =>
     set({ latestTrade: trade }),
+  updateLatestReasoningTrace: (trace) =>
+    set({ latestReasoningTrace: trace }),
   addMarginHistory: (timestamp, ratio) =>
     set((state) => ({
       marginHistory: [...state.marginHistory.slice(-19), { timestamp, ratio }],
@@ -86,4 +123,24 @@ export const useAnalyticsStore = create<AnalyticsStore>((set) => ({
     set((state) => ({
       leverageHistory: [...state.leverageHistory.slice(-19), { timestamp, leverage }],
     })),
+  updateLivePosition: (symbol, data) =>
+    set((state) => {
+        const existing = state.livePositions[symbol];
+        if (!existing) return state;
+        
+        return {
+            livePositions: {
+                ...state.livePositions,
+                [symbol]: {
+                    ...existing,
+                    currentPrice: data.current_price || existing.currentPrice,
+                    marginRatio: data.margin_ratio || existing.marginRatio,
+                    leverage: data.leverage || existing.leverage,
+                    unrealizedPnL: data.current_price 
+                        ? (data.current_price - existing.entryPrice) * existing.size
+                        : existing.unrealizedPnL
+                }
+            }
+        };
+    })
 }));

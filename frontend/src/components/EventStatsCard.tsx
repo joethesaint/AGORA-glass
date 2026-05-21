@@ -8,11 +8,11 @@ import { Activity, AlertCircle, Shield, Zap, Clock } from 'lucide-react';
 
 interface EventStatsCardProps {
   events: Event[];
-  lifetimeCount: number;
-  lifetimeStats: Record<string, number>;
+  lifetimeCount?: number;
+  lifetimeStats?: Record<string, number>;
 }
 
-export const EventStatsCard = memo<EventStatsCardProps>(({ events, lifetimeCount, lifetimeStats }) => {
+export const EventStatsCard = memo<EventStatsCardProps>(({ events, lifetimeCount = 0, lifetimeStats = {} }) => {
   const stats = useMemo(() => {
     const counts: Record<string, number> = {
       PositionUpdate: 0,

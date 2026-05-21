@@ -12,18 +12,36 @@ interface WalletState {
   connect: (type: 'web2' | 'web3') => Promise<void>;
   disconnect: () => void;
   setIsModalOpen: (isOpen: boolean) => void;
+  isOnboarded: boolean;
+  setOnboarded: (status: boolean) => void;
 }
 
 export const useWalletStore = create<WalletState>((set, get) => ({
-  address: null,
-  isConnected: false,
+  address: process.env.NODE_ENV === 'development' ? '0xDevMockAddress' : null,
+  isConnected: process.env.NODE_ENV === 'development',
   isConnecting: false,
   isModalOpen: false,
-  connectionType: null,
-  chain: null,
-  balance: '0.00',
+  connectionType: process.env.NODE_ENV === 'development' ? 'web2' : null,
+  chain: process.env.NODE_ENV === 'development' ? 'Arc Testnet (Dev)' : null,
+  balance: process.env.NODE_ENV === 'development' ? '10000.00' : '0.00',
+  isOnboarded: false,
+  setOnboarded: (status) => set({ isOnboarded: status }),
   setIsModalOpen: (isOpen) => set({ isModalOpen: isOpen }),
   connect: async (type: 'web2' | 'web3') => {
+    // In development, auto‑connect mock wallet instantly
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🛡️ GLASS: Dev mode auto‑connect wallet');
+      set({
+        address: '0xDevMockAddress',
+        isConnected: true,
+        isConnecting: false,
+        isModalOpen: false,
+        connectionType: type,
+        chain: 'Arc Testnet (Dev)',
+        balance: '10000.00',
+      });
+      return;
+    }
     set({ isConnecting: true, connectionType: type });
     
     try {

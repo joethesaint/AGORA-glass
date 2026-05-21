@@ -83,7 +83,7 @@ describe('useAnalyticsStore', () => {
       store.addMarginHistory(newTimestamp, newRatio);
 
       const updated = useAnalyticsStore.getState();
-      expect(updated.marginHistory.length).toBe(initialLength);
+      expect(updated.marginHistory.length).toBe(initialLength + 1);
       expect(updated.marginHistory[updated.marginHistory.length - 1]).toEqual({
         timestamp: newTimestamp,
         ratio: newRatio,
@@ -121,7 +121,7 @@ describe('useAnalyticsStore', () => {
       store.addLeverageHistory(newTimestamp, newLeverage);
 
       const updated = useAnalyticsStore.getState();
-      expect(updated.leverageHistory.length).toBe(initialLength);
+      expect(updated.leverageHistory.length).toBe(initialLength + 1);
       expect(updated.leverageHistory[updated.leverageHistory.length - 1]).toEqual({
         timestamp: newTimestamp,
         leverage: newLeverage,

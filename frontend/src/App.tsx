@@ -4,6 +4,9 @@ import { AlertSystem } from "@/components/AlertSystem";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { WalletConnect } from "@/components/WalletConnect";
 
+import { OnboardingWizard } from "@/components/OnboardingWizard";
+import { useWalletStore } from "@/stores/walletStore";
+
 // Pages
 import DashboardPage from "@/app/page";
 import TransparencyPage from "@/app/transparency/page";
@@ -15,19 +18,34 @@ import SettingsPage from "@/app/settings/page";
 import "./app/globals.css";
 
 function App() {
+  const { isOnboarded, setOnboarded } = useWalletStore();
+
+  if (!isOnboarded) {
+    return (
+      <ThemeProvider>
+        <OnboardingWizard onComplete={() => setOnboarded(true)} />
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-[#0B0E14] text-[#F2F2F2] font-sans">
         <header className="flex justify-between items-center px-4 lg:px-6 py-4 border-b border-[#1E2532] sticky top-0 bg-[#0B0E14]/80 backdrop-blur-sm z-50">
           <div className='flex items-center gap-4 lg:gap-8'>
-            <div className="flex flex-col">
-              <h1 className="text-2xl lg:text-3xl font-black tracking-tighter glass-text cursor-default pr-2">
+            <button 
+              onClick={() => {
+                window.location.href = '/';
+              }}
+              className="flex flex-col text-left hover:opacity-80 transition-opacity"
+            >
+              <h1 className="text-2xl lg:text-3xl font-black tracking-tighter glass-text pr-2">
                 GLASS
               </h1>
               <span className="text-[9px] uppercase tracking-[0.2em] text-[#8A93A3] -mt-1 ml-0.5">
                 by AGORA
               </span>
-            </div>
+            </button>
             <Navigation />
           </div>
           <div className="flex items-center gap-3 lg:gap-4">

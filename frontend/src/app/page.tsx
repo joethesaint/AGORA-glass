@@ -15,8 +15,9 @@ import { ReasoningTraceCard } from '@/components/ReasoningTraceCard';
 import { PositionDetailModal } from '@/components/PositionDetailModal';
 import { ModeToggleModal } from '@/components/ModeToggleModal';
 import { MarketRegimeBadge } from '@/components/MarketRegimeBadge';
+import { StrategyControlPanel } from '@/components/StrategyControlPanel';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { Shield, TrendingUp } from 'lucide-react';
+import { Shield, TrendingUp, Settings } from 'lucide-react';
 
 // Dynamic imports for heavy chart components using React.lazy
 const MarginHistoryChart = lazy(() => import('@/components/MarginHistoryChart').then(mod => ({ default: mod.MarginHistoryChart })));
@@ -30,14 +31,12 @@ export default function Dashboard() {
     volatility, 
     marginHistory, 
     leverageHistory, 
-    updateRescueMetrics, 
-    addMarginHistory, 
-    addLeverageHistory,
-    updateMarketIntelligence,
-    updateLatestTrade 
+    livePositions,
+    latestReasoningTrace,
+    updateRescueMetrics
   } = useAnalyticsStore();
   
-  const { signals, lastSignal, status: connectionStatus, sendSignal, lifetimeCount, lifetimeStats } = useAgentSignals();
+  const { signals, status: connectionStatus, sendSignal, lifetimeCount, lifetimeStats } = useAgentSignals();
   
   const [rescueStage, setRescueStage] = useState<'idle' | 'pinning' | 'releasing' | 'bridging' | 'complete'>('idle');
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
@@ -45,136 +44,40 @@ export default function Dashboard() {
   const [isToggleModalOpen, setIsToggleModalOpen] = useState(false);
   const [pendingMode, setPendingMode] = useState<'sentinel' | 'trading'>('sentinel');
   const [btcPrice, setBtcPrice] = useState(63200);
-  const [livePositions, setLivePositions] = useState<Record<string, Position>>({
-    'BTC-PERP': {
-        id: 'pos_001',
-        symbol: 'BTC-PERP',
-        entryPrice: 60000,
-        currentPrice: 63200,
-        size: 1.5,
-        marginRatio: 0.35,
-        leverage: 2.5,
-        collateral: 50000,
-        unrealizedPnL: 4800,
-        side: 'LONG',
-    },
-    'ETH-PERP': {
-        id: 'pos_002',
-        symbol: 'ETH-PERP',
-        entryPrice: 3000,
-        currentPrice: 3150,
-        size: 10,
-        marginRatio: 0.22,
-        leverage: 4.1,
-        collateral: 65000,
-        unrealizedPnL: 1500,
-        side: 'LONG',
-    },
-    'SOL-PERP': {
-        id: 'pos_003',
-        symbol: 'SOL-PERP',
-        entryPrice: 180,
-        currentPrice: 175,
-        size: 280,
-        marginRatio: 0.18,
-        leverage: 5.2,
-        collateral: 35000,
-        unrealizedPnL: -1400,
-        side: 'LONG',
-    }
-  });
+  const [showStrategyPanel, setShowStrategyPanel] = useState(false);
 
-  // Optimized signal processing: Only process the LATEST signal
+  // Map latest signals to rescue stages for visual progress
   useEffect(() => {
+    const lastSignal = signals[0];
     if (!lastSignal) return;
+
+    if (lastSignal.event_type === 'ReasoningTrace') setRescueStage('pinning');
+    if (lastSignal.event_type === 'RescueInitiated') setRescueStage('bridging');
+    if (lastSignal.event_type === 'RescueComplete') setRescueStage('complete');
     
-    const signal = lastSignal;
-
-    // 1. Handle Analytics Updates
-    if (signal.event_type === 'ANALYTICS_UPDATE') {
-        updateRescueMetrics({
-            totalRescued: signal.payload.total_rescued_usdc,
-            avgLatency: signal.payload.avg_latency_ms,
-            totalRescues: signal.payload.rescue_count,
-        });
+    if (lastSignal.event_type === 'MODE_CHANGED') {
+        setAgentMode(lastSignal.payload.mode);
     }
-
-    // 2. Handle Position Updates (Add to history and update live state)
-    if (signal.event_type === 'PositionUpdate') {
-      addMarginHistory(signal.timestamp * 1000, signal.payload.margin_ratio);
-      addLeverageHistory(signal.timestamp * 1000, signal.payload.leverage);
-
-      setLivePositions(prev => {
-        const symbol = signal.payload.symbol;
-        const existing = prev[symbol];
-        if (!existing) return prev; 
-        
-        return {
-          ...prev,
-          [symbol]: {
-            ...existing,
-            currentPrice: signal.payload.current_price,
-            marginRatio: signal.payload.margin_ratio,
-            leverage: signal.payload.leverage,
-            unrealizedPnL: (signal.payload.current_price - existing.entryPrice) * existing.size
-          }
-        };
-      });
-
-      if (signal.payload.symbol === 'BTC-PERP') {
-        setBtcPrice(signal.payload.current_price);
-      }
-    }
-
-    // 3. Map signals to rescue stages for visual progress
-    if (signal.event_type === 'ReasoningTrace') setRescueStage('pinning');
-    if (signal.event_type === 'RescueInitiated') setRescueStage('bridging');
-    if (signal.event_type === 'RescueComplete') setRescueStage('complete');
-    
-    // 4. Handle Mode Changes
-    if (signal.event_type === 'MODE_CHANGED') {
-        setAgentMode(signal.payload.mode);
-    }
-
-    // 5. Handle Volatility & Regime Updates
-    if (signal.event_type === 'MarketVolatilityUpdate') {
-        updateMarketIntelligence(marketRegime, signal.payload.volatility_factor);
-    }
-    if (signal.event_type === 'MarketRegimeUpdate') {
-        updateMarketIntelligence(signal.payload.regime, volatility);
-    }
-    if (signal.event_type === 'TradingSignal') {
-        updateLatestTrade(signal.payload);
-    }
-  }, [lastSignal, marketRegime, volatility, updateRescueMetrics, addMarginHistory, addLeverageHistory, updateMarketIntelligence, updateLatestTrade]); 
-
-  // Find latest reasoning trace for display
-  const latestTrace = useMemo(() => {
-    const trace = signals.find(s => s.event_type === 'ReasoningTrace');
-    if (trace) {
-      const data = { ...trace.data };
-      if (typeof data.reasoning_text === 'string') {
-        try {
-          data.reasoning_text = JSON.parse(data.reasoning_text);
-        } catch (e) {}
-      }
-      return data;
-    }
-    return null;
   }, [signals]);
+
+  // Demo auto-increment latency in development mode
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      const interval = setInterval(() => {
+        updateRescueMetrics({ avgLatency: rescueMetrics.avgLatency + Math.floor(Math.random() * 10) + 1 });
+      }, 4000);
+      return () => clearInterval(interval);
+    }
+  }, []);
 
   const { isConnected, setIsModalOpen, isModalOpen } = useWalletStore();
 
   const handleToggleConfirm = () => {
     sendSignal('TOGGLE_MODE', { mode: pendingMode });
+    setIsToggleModalOpen(false);
   };
 
   const toggleAgentMode = useCallback(() => {
-    if (!isConnected) {
-      setIsModalOpen(true);
-      return;
-    }
-    
     const nextMode = agentMode === 'sentinel' ? 'trading' : 'sentinel';
     const skipWarning = localStorage.getItem('skipModeToggleWarning') === 'true';
 
@@ -184,13 +87,7 @@ export default function Dashboard() {
       setPendingMode(nextMode);
       setIsToggleModalOpen(true);
     }
-  }, [agentMode, sendSignal, isConnected, setIsModalOpen]);
-
-  const { marginRatio, leverage } = useMemo(() => {
-    const marginRatio = Math.max(0.05, 0.35 - (63200 - btcPrice) / 100000);
-    const leverage = 50000 / (btcPrice * marginRatio);
-    return { marginRatio, leverage };
-  }, [btcPrice]);
+  }, [agentMode, sendSignal]);
 
   // Real-time positions derived from signal stream
   const positions = useMemo(() => Object.values(livePositions), [livePositions]);
@@ -202,7 +99,7 @@ export default function Dashboard() {
   const handlePositionClick = useCallback((id: string) => {
     const pos = positions.find(p => p.id === id);
     if (pos) {
-      setSelectedPosition(pos);
+      setSelectedPosition(pos as any);
       setIsModalOpen(true);
     }
   }, [positions, setIsModalOpen]);
@@ -211,39 +108,48 @@ export default function Dashboard() {
     <main className="p-8 max-w-7xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Sentinel Dashboard</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">GLASS Dashboard</h1>
           <div className="flex items-center gap-2 mt-1">
-            <div className={`w-2 h-2 rounded-full animate-pulse ${signals.length > 0 ? 'bg-[#00D98F]' : 'bg-[#787878]'}`} />
-            <span className="text-[10px] text-[#787878] uppercase tracking-widest">
-              {signals.length > 0 ? 'Live Sentinel Connected' : 'Waiting for Sentinel...'}
+            <div className={`w-2 h-2 rounded-full animate-pulse ${connectionStatus === 'connected' ? 'bg-[#00D98F]' : 'bg-[#787878]'}`} />
+            <span className="text-[10px] text-[#787878] uppercase tracking-widest font-bold">
+              {connectionStatus === 'connected' ? 'Live Sentinel Active' : 'Connecting to Node...'}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 bg-[#1e1e1e] p-1 rounded-xl border border-white/5">
-          <MarketRegimeBadge regime={marketRegime} volatility={volatility} />
+        <div className="flex items-center gap-4 bg-[#1e1e1e]/50 backdrop-blur-md p-1 rounded-2xl border border-white/5">
+          <MarketRegimeBadge regime={marketRegime} volatility={Object.values(volatility)[0] || 0.2} />
           <div className="h-6 w-px bg-white/10" />
-          <button
-            onClick={() => agentMode !== 'sentinel' && toggleAgentMode()}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-              agentMode === 'sentinel' 
-                ? 'bg-[#00A3FF] text-white shadow-lg' 
-                : 'text-[#8A93A3] hover:text-white'
-            }`}
+          <div className="flex gap-1 p-0.5">
+            <button
+              onClick={() => agentMode !== 'sentinel' && toggleAgentMode()}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                agentMode === 'sentinel' 
+                  ? 'bg-[#00A3FF] text-white shadow-[0_0_20px_rgba(0,163,255,0.3)]' 
+                  : 'text-[#8A93A3] hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Shield size={12} />
+              Sentinel
+            </button>
+            <button
+              onClick={() => agentMode !== 'trading' && toggleAgentMode()}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                agentMode === 'trading' 
+                  ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)]' 
+                  : 'text-[#8A93A3] hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <TrendingUp size={12} />
+              Trading Agent
+            </button>
+          </div>
+          <div className="h-6 w-px bg-white/10" />
+          <button 
+            onClick={() => setShowStrategyPanel(!showStrategyPanel)}
+            className={`p-2 rounded-xl transition-all ${showStrategyPanel ? 'bg-white/10 text-white' : 'text-[#8A93A3] hover:text-white hover:bg-white/5'}`}
           >
-            <Shield size={14} />
-            Sentinel
-          </button>
-          <button
-            onClick={() => agentMode !== 'trading' && toggleAgentMode()}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-              agentMode === 'trading' 
-                ? 'bg-purple-600 text-white shadow-lg' 
-                : 'text-[#8A93A3] hover:text-white'
-            }`}
-          >
-            <TrendingUp size={14} />
-            Trading Agent
+            <Settings size={16} />
           </button>
         </div>
       </div>
@@ -256,22 +162,29 @@ export default function Dashboard() {
         connectionStatus={connectionStatus}
       />
       
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
         <div className="xl:col-span-1 space-y-8">
           <RescuePath stage={rescueStage} />
-          <RescueMetricsCard
-            totalRescued={rescueMetrics.totalRescued}
-            avgLatency={rescueMetrics.avgLatency}
-            successRate={rescueMetrics.successRate}
-            totalRescues={rescueMetrics.totalRescues}
-          />
+          {showStrategyPanel ? (
+            <StrategyControlPanel />
+          ) : (
+            <RescueMetricsCard
+              totalRescued={rescueMetrics.totalRescued}
+              avgLatency={rescueMetrics.avgLatency}
+              successRate={rescueMetrics.successRate}
+              totalRescues={rescueMetrics.totalRescues}
+            />
+          )}
         </div>
         <div className="xl:col-span-2">
-          {latestTrace ? (
-            <ReasoningTraceCard data={latestTrace} />
+          {latestReasoningTrace ? (
+            <ReasoningTraceCard data={latestReasoningTrace} />
           ) : (
-            <div className="h-full min-h-[300px] flex items-center justify-center border border-dashed border-[#1e1e1e] rounded-2xl text-[#484848] text-sm italic">
-              No reasoning traces generated yet. Trigger a rescue to see "Glass-Box" transparency.
+            <div className="h-full min-h-[400px] flex flex-col items-center justify-center agora-card border-dashed border-white/5 text-[#484848] text-sm italic gap-4">
+              <div className="w-12 h-12 rounded-full border-2 border-dashed border-white/5 flex items-center justify-center">
+                <Shield size={24} className="opacity-20" />
+              </div>
+              <p>Waiting for real-time reasoning traces from the Arc Network...</p>
             </div>
           )}
         </div>
@@ -296,9 +209,14 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-white mb-6">Open Positions</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white tracking-tight">Open Positions</h2>
+            <div className="px-3 py-1 rounded-full bg-[#00D98F]/10 border border-[#00D98F]/20 text-[#00D98F] text-[10px] font-bold uppercase tracking-widest">
+                {positions.length} Active
+            </div>
+          </div>
           <PositionsList
-            positions={positions}
+            positions={positions as any}
             onPositionClose={handlePositionClose}
             onAddMargin={handleAddMargin}
             onDeleverage={handleDeleverage}
@@ -324,7 +242,7 @@ export default function Dashboard() {
       />
 
       <div>
-        <h2 className="text-xl font-semibold text-white mb-6">Live Event Monitoring</h2>
+        <h2 className="text-xl font-bold text-white mb-6 tracking-tight">Live Event Monitoring</h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <EventFeed events={signals} maxItems={15} />
@@ -333,11 +251,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="pt-8 border-t border-[#1e1e1e]">
+      <div className="pt-8 border-t border-white/5">
         <div className="flex items-center gap-2 mb-6">
-          <h2 className="text-xl font-semibold text-white">System Verification</h2>
+          <h2 className="text-xl font-bold text-white tracking-tight">System Stress Verification</h2>
           <span className="px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[8px] font-bold uppercase tracking-widest">
-            Judge Mode
+            Simulation Controller
           </span>
         </div>
         <MockCrashSimulator
@@ -346,6 +264,14 @@ export default function Dashboard() {
           onReset={() => setBtcPrice(63200)}
         />
       </div>
+
+      <footer className="border-t border-white/5 bg-black/20 py-8 mt-12">
+        <div className="container mx-auto px-6 text-center text-sm text-[#484848]">
+          <p className="font-bold text-[#8A93A3] mb-1 tracking-widest uppercase text-[10px]">GLASS</p>
+          <p>Gateway Liquidation Autonomous Safety Sentinel</p>
+          <p className="mt-1">Sub-500ms rescue • Glass-Box transparency • Arc Network verified</p>
+        </div>
+      </footer>
     </main>
   );
 }

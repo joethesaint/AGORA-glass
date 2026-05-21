@@ -3,7 +3,7 @@ import ujson as json
 import websockets
 from typing import Set
 from src.base import BaseComponent
-from src.events import PositionUpdate, RiskVerdict, ReasoningTrace, RescueComplete, WSSignal
+from src.events import PositionUpdate, RiskVerdict, ReasoningTrace, RescueComplete, WSSignal, TradingSignal
 from src.log_config import get_logger
 from src.config import settings
 
@@ -26,6 +26,7 @@ class WebSocketServer(BaseComponent):
         self.subscribe(ReasoningTrace, self.on_event)
         self.subscribe(RescueComplete, self.on_event)
         self.subscribe(WSSignal, self.on_event)
+        self.subscribe(TradingSignal, self.on_event)
 
     async def on_event(self, event):
         """
@@ -89,6 +90,31 @@ class WebSocketServer(BaseComponent):
                             event_type="MODE_CHANGED",
                             payload={"mode": new_mode}
                         ))
+                
+                elif data.get("type") == "UPDATE_CONFIG":
+                    # Update internal settings dynamically
+                    # We create a new RiskConfig since it's frozen
+                    from src.config import RiskConfig
+                    new_risk = RiskConfig(
+                        max_leverage=float(data.get("max_leverage", settings.risk.max_leverage)),
+                        rescue_target_margin=float(data.get("rescue_target_margin", settings.risk.rescue_target_margin)),
+                        base_critical_threshold=float(data.get("base_critical_threshold", settings.risk.base_critical_threshold)),
+                        volatility_multiplier=float(data.get("volatility_multiplier", settings.risk.volatility_multiplier)),
+                    )
+                    # Update global settings (Settings dataclass itself is not frozen)
+                    settings.risk = new_risk
+                    self.logger.info("config_updated", 
+                                     max_leverage=settings.risk.max_leverage, 
+                                     threshold=settings.risk.base_critical_threshold)
+                    
+                    # Broadcast the config change if needed (optional)
+                    await self.on_event(WSSignal(
+                        event_type="CONFIG_UPDATED",
+                        payload={
+                            "max_leverage": settings.risk.max_leverage,
+                            "base_critical_threshold": settings.risk.base_critical_threshold
+                        }
+                    ))
             except Exception as e:
                 self.logger.error("ws_message_error", error=str(e))
 

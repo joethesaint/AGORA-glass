@@ -29,13 +29,13 @@ describe('PortfolioOverviewCard', () => {
   it('shows critical status when critical positions exist', () => {
     const criticalProps = { ...mockProps, criticalPositions: 1 };
     render(<PortfolioOverviewCard {...criticalProps} />);
-    expect(screen.getByText(/CRITICAL/i)).toBeTruthy();
+    expect(screen.getAllByText(/CRITICAL/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it('displays total portfolio value', () => {
     render(<PortfolioOverviewCard {...mockProps} />);
     expect(screen.getByText(/Total Value/i)).toBeTruthy();
-    expect(screen.getByText(/150K/)).toBeTruthy();
+    expect(screen.getByText(/150,000/)).toBeTruthy();
   });
 
   it('displays average margin ratio', () => {

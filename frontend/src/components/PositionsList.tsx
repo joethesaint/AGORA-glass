@@ -119,17 +119,27 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
 
         {/* Core Risk Metrics */}
         <div className="grid grid-cols-2 gap-6 bg-white/5 p-4 rounded-xl border border-white/5">
-          <div className="space-y-1">
-            <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest">Margin Ratio</p>
-            <motion.p
-              key={position.marginRatio}
-              initial={{ opacity: 0.5 }}
-              animate={{ opacity: 1 }}
-              className={`text-2xl font-bold font-mono ${position.marginRatio >= 0.12 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}
-            >
-              {(position.marginRatio * 100).toFixed(1)}%
-            </motion.p>
-          </div>
+            <div className="space-y-2">
+              <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest text-glow">Margin Ratio</p>
+              <motion.p
+                key={position.marginRatio}
+                initial={{ opacity: 0.5 }}
+                animate={{ opacity: 1 }}
+                className={`text-2xl font-bold font-mono ${position.marginRatio >= 0.12 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}
+              >
+                {(position.marginRatio * 100).toFixed(1)}%
+              </motion.p>
+              {/* Safety Band Bar */}
+              <div className="w-full bg-gray-700/30 h-2 rounded-full overflow-hidden mt-1">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${position.marginRatio * 100}%`,
+                    background: position.marginRatio >= 0.12 ? 'hsl(150, 100%, 45%)' : 'hsl(0, 80%, 55%)',
+                  }}
+                />
+              </div>
+            </div>
           <div className="space-y-1">
             <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest">Leverage</p>
             <motion.p
@@ -230,23 +240,19 @@ export const PositionsList = memo<PositionsListProps>(
         {/* Summary Stats */}
         <div className="agora-card p-4 flex gap-6 items-center">
           <div>
-            <p className="text-[10px] text-[#787878] uppercase tracking-widest">Total Positions</p>
-            <p className="text-2xl font-bold text-[#00A3FF]">{positions.length}</p>
+            <p className="text-[10px] text-[#787878] uppercase tracking-widest text-glow">Total Positions</p>
+            <p className="text-2xl font-bold" style={{color: 'hsl(210, 100%, 70%)'}}>{positions.length}</p>
           </div>
           {criticalCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-[#FF3B3B]/10 border border-[#FF3B3B]/20 rounded">
-              <AlertTriangle className="w-4 h-4 text-[#FF3B3B]" />
-              <span className="text-[10px] text-[#FF3B3B] font-mono uppercase tracking-widest">
-                {criticalCount} CRITICAL
-              </span>
+            <div className="flex items-center gap-2 px-3 py-2" style={{background: 'hsla(0, 80%, 55%, 0.1)', border: '1px solid hsla(0, 80%, 55%, 0.2)', borderRadius: '0.5rem'}}>
+              <AlertTriangle className="w-4 h-4" style={{color: 'hsl(0, 80%, 55%)'}} />
+              <span className="text-[10px] font-mono uppercase" style={{color: 'hsl(0, 80%, 55%)'}}>{criticalCount} CRITICAL</span>
             </div>
           )}
           {warningCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-[#F5A623]/10 border border-[#F5A623]/20 rounded">
-              <TrendingUp className="w-4 h-4 text-[#F5A623]" />
-              <span className="text-[10px] text-[#F5A623] font-mono uppercase tracking-widest">
-                {warningCount} WARNING
-              </span>
+            <div className="flex items-center gap-2 px-3 py-2" style={{background: 'hsla(30, 100%, 55%, 0.1)', border: '1px solid hsla(30, 100%, 55%, 0.2)', borderRadius: '0.5rem'}}>
+              <TrendingUp className="w-4 h-4" style={{color: 'hsl(30, 100%, 55%)'}} />
+              <span className="text-[10px] font-mono uppercase" style={{color: 'hsl(30, 100%, 55%)'}}>{warningCount} WARNING</span>
             </div>
           )}
         </div>

@@ -335,8 +335,8 @@ export const PositionDetailModal = ({
                                 borderRadius: '8px',
                               }}
                               labelFormatter={(t) => formatTime(t as number)}
-                              formatter={(value: number) => [
-                                formatCurrency(value),
+                              formatter={(value: any) => [
+                                formatCurrency(Number(value)),
                                 'Price',
                               ]}
                             />

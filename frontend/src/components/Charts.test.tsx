@@ -17,7 +17,7 @@ describe('MarginHistoryChart', () => {
 
   it('displays current margin ratio', () => {
     render(<MarginHistoryChart data={mockData} />);
-    expect(screen.getByText(/Current/i)).toBeTruthy();
+    expect(screen.getAllByText(/Current/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it('displays average margin ratio', () => {
@@ -50,12 +50,12 @@ describe('LeverageChart', () => {
 
   it('displays current leverage', () => {
     render(<LeverageChart data={mockData} />);
-    expect(screen.getByText(/Current/i)).toBeTruthy();
+    expect(screen.getAllByText(/Current/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it('displays max leverage', () => {
     render(<LeverageChart data={mockData} />);
-    expect(screen.getByText(/Max/i)).toBeTruthy();
+    expect(screen.getAllByText(/Max/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows safety threshold warning', () => {

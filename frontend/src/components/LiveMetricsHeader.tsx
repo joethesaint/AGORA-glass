@@ -13,6 +13,7 @@ interface LiveMetricsHeaderProps {
 }
 
 export const LiveMetricsHeader = ({ latencyMs, totalRescued, agentStatus, agentName = 'SENTINEL', connectionStatus = 'connected' }: LiveMetricsHeaderProps) => {
+  const latencyStatus = latencyMs > 500 ? 'slow' : 'fast';
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
       <MetricCard 
@@ -20,6 +21,7 @@ export const LiveMetricsHeader = ({ latencyMs, totalRescued, agentStatus, agentN
         value={`${latencyMs.toFixed(0)}ms`} 
         icon={<Clock className="w-4 h-4 text-[#00A3FF]" />} 
         description="Sub-500ms target"
+        status={latencyStatus}
       />
       <MetricCard 
         label="Total Rescued Equity" 
@@ -55,7 +57,7 @@ const MetricCard = ({ label, value, icon, status, description }: { label: string
     </div>
     <div className="flex-1 min-w-0">
       <p className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest mb-0.5">{label}</p>
-      <p className={`text-lg lg:text-xl font-bold font-mono tracking-tight ${status === 'PROTECTING' || status === 'connected' ? 'text-[#00D98F] text-glow' : status === 'disconnected' ? 'text-[#FF3B3B]' : 'text-white'}`}>
+      <p className={`text-lg lg:text-xl font-bold font-mono tracking-tight ${status === 'PROTECTING' || status === 'connected' || status === 'fast' ? 'text-[#00D98F] text-glow' : status === 'disconnected' || status === 'slow' ? 'text-[#FF3B3B]' : 'text-white'}`}>
         {value}
       </p>
       <p className="text-[9px] text-[#484848] font-mono mt-1 uppercase tracking-tighter">{description}</p>

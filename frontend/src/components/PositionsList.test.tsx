@@ -1,6 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { PositionCardEnhanced, PositionsList, Position } from './PositionsList';
+import { PositionCardEnhanced, PositionsList } from './PositionsList';
+import { Position } from '@/types/position';
+import { useWalletStore } from '@/stores/walletStore';
 
 describe('PositionCardEnhanced', () => {
   const mockPosition: Position = {
@@ -14,6 +16,14 @@ describe('PositionCardEnhanced', () => {
     collateral: 50000,
     unrealizedPnL: 4800,
   };
+
+  beforeEach(() => {
+    useWalletStore.setState({ isConnected: true });
+  });
+
+  afterEach(() => {
+    useWalletStore.setState({ isConnected: false });
+  });
 
   it('renders position symbol', () => {
     render(<PositionCardEnhanced position={mockPosition} />);
@@ -36,7 +46,7 @@ describe('PositionCardEnhanced', () => {
     render(<PositionCardEnhanced position={mockPosition} />);
     expect(screen.getByText(/Margin Ratio/i)).toBeTruthy();
     expect(screen.getByText(/28\.0%/)).toBeTruthy();
-    expect(screen.getByText(/Leverage/i)).toBeTruthy();
+    expect(screen.getByText(/^Leverage$/i)).toBeTruthy();
     expect(screen.getByText(/3\.2x/)).toBeTruthy();
   });
 
@@ -63,7 +73,8 @@ describe('PositionCardEnhanced', () => {
   });
 
   it('shows safe status for low leverage', () => {
-    render(<PositionCardEnhanced position={mockPosition} />);
+    const safePosition = { ...mockPosition, leverage: 2.5 };
+    render(<PositionCardEnhanced position={safePosition} />);
     expect(screen.getByText(/safe/i)).toBeTruthy();
   });
 });
@@ -97,7 +108,7 @@ describe('PositionsList', () => {
   it('renders total positions count', () => {
     render(<PositionsList positions={mockPositions} />);
     expect(screen.getByText(/Total Positions/i)).toBeTruthy();
-    expect(screen.getByText(/2/)).toBeTruthy();
+    expect(screen.getByText('2', { selector: 'p.text-2xl' })).toBeTruthy();
   });
 
   it('renders all positions', () => {
@@ -127,7 +138,7 @@ describe('PositionsList', () => {
       },
     ];
     render(<PositionsList positions={criticalPositions} />);
-    expect(screen.getByText(/CRITICAL/i)).toBeTruthy();
+    expect(screen.getAllByText(/CRITICAL/i).length).toBeGreaterThan(0);
   });
 
   it('calls callbacks when position actions clicked', () => {

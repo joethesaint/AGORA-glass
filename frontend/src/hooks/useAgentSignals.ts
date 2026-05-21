@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { AgentSignal, EventType } from '@/types/agent';
 import { AgentSignalSchema } from '@/types/schemas';
 import { triggerAlert } from '@/components/AlertSystem';
+import { useAnalyticsStore } from '@/stores/analyticsStore';
 
 export function useAgentSignals(url: string = 'ws://localhost:8765') {
   const [signals, setSignals] = useState<AgentSignal[]>([]);
@@ -12,6 +13,17 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
   const [lifetimeStats, setLifetimeStats] = useState<Record<string, number>>({});
   const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
+
+  const { 
+    updateRescueMetrics, 
+    addMarginHistory, 
+    addLeverageHistory, 
+    updateLivePosition,
+    updateMarketIntelligence,
+    updateLatestReasoningTrace,
+    updateLatestTrade,
+    marketRegime
+  } = useAnalyticsStore();
 
   const processSignal = useCallback((raw: any) => {
     try {
@@ -48,7 +60,40 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
         payload,
       };
 
-      // Trigger Alerts based on signal type
+      // --- INTEGRATION WITH ANALYTICS STORE ---
+      
+      if (event_type === 'ANALYTICS_UPDATE') {
+        updateRescueMetrics({
+            totalRescued: payload.total_rescued_usdc,
+            avgLatency: payload.avg_latency_ms,
+            totalRescues: payload.rescue_count,
+        });
+      }
+
+      if (event_type === 'PositionUpdate') {
+        addMarginHistory(sanitized.timestamp * 1000, payload.margin_ratio);
+        addLeverageHistory(sanitized.timestamp * 1000, payload.leverage);
+        updateLivePosition(payload.symbol, payload);
+      }
+
+      if (event_type === 'ReasoningTrace') {
+        updateLatestReasoningTrace(payload);
+      }
+
+      if (event_type === 'MarketVolatilityUpdate') {
+        updateMarketIntelligence(marketRegime, { symbol: payload.symbol, factor: payload.volatility_factor });
+      }
+
+      if (event_type === 'MarketRegimeUpdate') {
+        updateMarketIntelligence(payload.regime, null);
+      }
+
+      if (event_type === 'TradingSignal') {
+        updateLatestTrade(payload);
+      }
+
+      // --- ALERTS ---
+
       if (event_type === 'RescueInitiated') {
         triggerAlert({
           type: 'rescue',
@@ -89,7 +134,7 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
     } catch (err) {
       console.error('🛡️ GLASS: Error processing signal:', err);
     }
-  }, []);
+  }, [updateRescueMetrics, addMarginHistory, addLeverageHistory, updateLivePosition, updateMarketIntelligence, updateLatestReasoningTrace, updateLatestTrade, marketRegime]);
 
   const sendSignal = useCallback((type: string, data: any) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
