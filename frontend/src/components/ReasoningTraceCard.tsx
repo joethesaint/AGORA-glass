@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Shield, Copy, Check, ExternalLink } from 'lucide-react';
+import { Shield, Copy, Check, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 
 export interface ReasoningTrace {
   agent_id: string;
@@ -19,6 +19,7 @@ export interface ReasoningTrace {
 export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showJson, setShowJson] = useState(false);
 
   const isSentinel = data.agent_id === 'agora-glass-01';
   const borderColor = isSentinel ? 'border-[#00D98F]' : 'border-[#A855F7]';
@@ -42,7 +43,7 @@ export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
               <div className="p-1.5 rounded bg-[#00D98F]/10 border border-[#00D98F]/20">
                 <Shield className="w-4 h-4 text-[#00D98F]" />
               </div>
-              <h3 className="text-xl font-bold text-white tracking-tight">Glass-Box Reasoning</h3>
+              <h3 className="text-xl font-bold text-white tracking-tight">GLASS Reasoning</h3>
             </div>
             <p className="text-[10px] text-[#8A93A3] font-mono uppercase tracking-[0.2em]">
               {data.agent_id.split('-').slice(2).join(' ').toUpperCase()} • {data.action}
@@ -66,9 +67,32 @@ export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
         <div className="absolute top-4 right-6 text-[9px] text-[#484848] font-mono font-bold uppercase group-hover:text-[#8A93A3] transition-colors">
           Deterministic Reasoning Log
         </div>
-        <pre className="text-[11px] font-mono text-[#00D98F]/90 whitespace-pre-wrap leading-relaxed custom-scrollbar max-h-[300px] overflow-y-auto pr-4">
-          {JSON.stringify(data.reasoning_text, null, 2)}
-        </pre>
+        <div className="text-[11px] font-mono text-[#00D98F]/90 whitespace-pre-wrap leading-relaxed custom-scrollbar max-h-[300px] overflow-y-auto pr-4">
+          {typeof data.reasoning_text === 'string' ? (
+              <p>{data.reasoning_text}</p>
+          ) : (
+              <div className="space-y-4">
+                  {data.reasoning_text?.strategy && (
+                      <div>
+                          <span className="text-[#8A93A3] uppercase text-[9px] block mb-1">Active Strategy</span>
+                          <span className="text-white font-bold">{data.reasoning_text.strategy}</span>
+                      </div>
+                  )}
+                  {data.reasoning_text?.reason && (
+                      <div>
+                          <span className="text-[#8A93A3] uppercase text-[9px] block mb-1">Core Rationale</span>
+                          <span className="leading-relaxed">{data.reasoning_text.reason}</span>
+                      </div>
+                  )}
+                  {data.reasoning_text?.action && (
+                      <div>
+                          <span className="text-[#8A93A3] uppercase text-[9px] block mb-1">Planned Execution</span>
+                          <span className="text-[#00A3FF] font-bold underline decoration-dotted">{data.reasoning_text.action}</span>
+                      </div>
+                  )}
+              </div>
+          )}
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-white/5">
@@ -99,16 +123,39 @@ export function ReasoningTraceCard({ data }: { data: ReasoningTrace }) {
                     {data.reason_hash}
                 </div>
             </div>
-            <a 
-              href={`https://testnet.arcscan.io/hash/${data.reason_hash}`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-[10px] font-bold text-[#00A3FF] hover:text-[#00A3FF]/80 transition-colors uppercase tracking-widest"
-            >
-              Verify on Explorer <ExternalLink className="w-3 h-3" />
-            </a>
+            <div className="flex items-center justify-between">
+                <a 
+                href={`https://testnet.arcscan.io/hash/${data.reason_hash}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-[10px] font-bold text-[#00A3FF] hover:text-[#00A3FF]/80 transition-colors uppercase tracking-widest"
+                >
+                Verify on Explorer <ExternalLink className="w-3 h-3" />
+                </a>
+                <button 
+                    onClick={() => setShowJson(!showJson)}
+                    className="flex items-center gap-1 text-[9px] font-bold text-[#484848] hover:text-[#8A93A3] transition-colors uppercase tracking-widest"
+                >
+                    {showJson ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                    {showJson ? 'Hide JSON' : 'Show JSON'}
+                </button>
+            </div>
         </div>
       </div>
+
+      {showJson && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mt-8 pt-8 border-t border-white/5"
+          >
+              <div className="rounded-xl bg-black/60 p-4 border border-white/5 overflow-x-auto">
+                <pre className="text-[10px] font-mono text-[#8A93A3]">
+                    {JSON.stringify(data, null, 2)}
+                </pre>
+              </div>
+          </motion.div>
+      )}
     </div>
   );
 }

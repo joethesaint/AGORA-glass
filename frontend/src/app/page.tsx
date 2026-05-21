@@ -154,26 +154,29 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <LiveMetricsHeader 
-        latencyMs={rescueMetrics.avgLatency}
-        totalRescued={rescueMetrics.totalRescued}
-        agentStatus={agentMode === 'trading' ? "TRADING" : (rescueMetrics.totalRescues > 0 ? "PROTECTING" : "IDLE")}
-        agentName={agentMode.toUpperCase()}
-        connectionStatus={connectionStatus}
-      />
-      
+      {/* Refined Metrics Header */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          { label: "Total Rescued", value: `$${rescueMetrics.totalRescued.toLocaleString()}`, sub: `${rescueMetrics.totalRescues} automated rescues`, color: "text-[#00A3FF]" },
+          { label: "Avg Latency", value: `${rescueMetrics.avgLatency}ms`, sub: "Sub-500ms target", color: "text-[#F5A623]" },
+          { label: "Efficiency", value: `${rescueMetrics.successRate}%`, sub: "Operational uptime", color: "text-[#00D98F]" },
+          { label: "Sentinel", value: connectionStatus === 'connected' ? "ACTIVE" : "OFFLINE", sub: "Monitoring live risk", color: connectionStatus === 'connected' ? "text-[#00D98F]" : "text-[#FF3B3B]" }
+        ].map((metric, i) => (
+          <div key={i} className="agora-card p-4 space-y-1">
+            <p className="text-[10px] font-bold text-[#8A93A3] uppercase tracking-widest">{metric.label}</p>
+            <p className={`text-2xl font-black font-mono ${metric.color}`}>{metric.value}</p>
+            <p className="text-[9px] text-[#484848] font-medium uppercase tracking-tighter">{metric.sub}</p>
+          </div>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
         <div className="xl:col-span-1 space-y-8">
           <RescuePath stage={rescueStage} />
           {showStrategyPanel ? (
             <StrategyControlPanel />
           ) : (
-            <RescueMetricsCard
-              totalRescued={rescueMetrics.totalRescued}
-              avgLatency={rescueMetrics.avgLatency}
-              successRate={rescueMetrics.successRate}
-              totalRescues={rescueMetrics.totalRescues}
-            />
+            <PositionHealthCard />
           )}
         </div>
         <div className="xl:col-span-2">

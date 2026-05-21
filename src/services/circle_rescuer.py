@@ -25,7 +25,7 @@ class CircleRescuer:
         self.logger = logging.getLogger("CircleRescuer")
         
         self.api_key = os.getenv("CIRCLE_API_KEY")
-        self.entity_secret = os.getenv("ENTITY_SECRET")
+        self.entity_secret = os.getenv("CIRCLE_ENTITY_SECRET")
         self.client = None
         self.transactions_api = None
         
