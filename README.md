@@ -43,7 +43,7 @@ flowchart TD
         Bus -->|position_update| Engine
         Engine -->|risk_verdict| Bus
         Bus -->|risk_verdict| Tracer
-        Bus -->|risk_verdict (CRITICAL)| Dispatcher
+        Bus -->|"risk_verdict (CRITICAL)"| Dispatcher
         Tracer -->|reasoning_trace, trace_pinned| Bus
         Dispatcher -->|rescue_initiated, rescue_complete| Bus
     end
@@ -71,10 +71,10 @@ flowchart TD
     Vault -.->|funds managed by| Wallets
     UI -.->|read events| Registry
 
-    style OffChain fill:#fdfcf0,stroke:#d4a017,stroke-width:2px
-    style OnChain fill:#f0f7ff,stroke:#0052ff,stroke-width:2px
-    style CircleStack fill:#f5f0ff,stroke:#6700eb,stroke-width:2px
-    style Frontend fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style OffChain fill:none,stroke:#d4a017,stroke-width:2px,stroke-dasharray:5 5,color:#000
+    style OnChain fill:none,stroke:#0052ff,stroke-width:2px,stroke-dasharray:5 5,color:#000
+    style CircleStack fill:none,stroke:#6700eb,stroke-width:2px,stroke-dasharray:5 5,color:#000
+    style Frontend fill:none,stroke:#333,stroke-width:2px,stroke-dasharray:5 5,color:#000
 ```
 
 ### 🧠 Multi-Agent Architecture & Plugins

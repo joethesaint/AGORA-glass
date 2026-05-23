@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title Vault
@@ -15,8 +15,12 @@ contract Vault is Ownable {
     event RescueReleased(address indexed recipient, uint256 amount, string destinationChain, bytes32 reasonHash);
     event AgentUpdated(address indexed oldAgent, address indexed newAgent);
 
+    error Unauthorized();
+    error InsufficientBalance();
+    error TransferFailed();
+
     modifier onlyAgent() {
-        require(msg.sender == agent, "Caller is not the authorized agent");
+        if (msg.sender != agent && msg.sender != owner()) revert Unauthorized();
         _;
     }
 
@@ -30,7 +34,7 @@ contract Vault is Ownable {
      * @param _newAgent The new agent address.
      */
     function setAgent(address _newAgent) external onlyOwner {
-        require(_newAgent != address(0), "New agent is the zero address");
+        if (_newAgent == address(0)) revert Unauthorized();
         emit AgentUpdated(agent, _newAgent);
         agent = _newAgent;
     }
@@ -48,12 +52,10 @@ contract Vault is Ownable {
         address _recipient,
         bytes32 _reasonHash
     ) external onlyAgent {
-        require(usdc.balanceOf(address(this)) >= _amount, "Insufficient vault balance");
+        if (usdc.balanceOf(address(this)) < _amount) revert InsufficientBalance();
         
-        // Transfer USDC to the agent (who will then route it via Circle Gateway)
-        // or directly to the recipient if using a specific Gateway integration pattern.
-        // For this PoC, we transfer to the agent who handles the off-chain Circle call.
-        require(usdc.transfer(agent, _amount), "USDC transfer failed");
+        // Transfer USDC to the agent (who handles the off-chain Circle call)
+        if (!usdc.transfer(agent, _amount)) revert TransferFailed();
         
         emit RescueReleased(_recipient, _amount, _destinationChain, _reasonHash);
     }
@@ -62,6 +64,6 @@ contract Vault is Ownable {
      * @notice Allows the owner to emergency withdraw funds.
      */
     function emergencyWithdraw(uint256 _amount) external onlyOwner {
-        require(usdc.transfer(owner(), _amount), "Emergency withdraw failed");
+        if (!usdc.transfer(owner(), _amount)) revert TransferFailed();
     }
 }
