@@ -1,23 +1,12 @@
 import asyncio
+import json
 import logging
 import os
+from pathlib import Path
 from web3 import AsyncWeb3, AsyncHTTPProvider
 
-# ABI for Vault contract (minimal for releaseForRescue)
-VAULT_ABI = [
-    {
-        "inputs": [
-            {"internalType": "uint256", "name": "_amount", "type": "uint256"},
-            {"internalType": "string", "name": "_destinationChain", "type": "string"},
-            {"internalType": "address", "name": "_recipient", "type": "address"},
-            {"internalType": "bytes32", "name": "_reasonHash", "type": "bytes32"},
-        ],
-        "name": "releaseForRescue",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    }
-]
+_ABI_PATH = Path(__file__).parent.parent.parent / "contracts" / "Vault_abi.json"
+VAULT_ABI = json.loads(_ABI_PATH.read_text())
 
 
 class VaultService:
@@ -27,7 +16,7 @@ class VaultService:
         """Initializes the vault service with environment variables."""
         self.logger = logging.getLogger("VaultService")
         
-        self.rpc_url = os.getenv("RPC", "https://rpc.testnet.arc-node.thecanteenapp.com/v1/swrm_42b1f431a6cfa6a62d2c14e6c91d2c39545bc99bb8ee5c241f85f8108a4af369")
+        self.rpc_url = os.getenv("RPC", "https://rpc.testnet.arc.network")
         self.vault_address = os.getenv("VAULT_ADDRESS", "0x0000000000000000000000000000000000000000")
         self.private_key = os.getenv("AGENT_PRIVATE_KEY")
         

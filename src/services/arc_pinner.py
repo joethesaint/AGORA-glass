@@ -1,18 +1,12 @@
 import asyncio
+import json
 import logging
 import os
+from pathlib import Path
 from web3 import AsyncWeb3, AsyncHTTPProvider
 
-# Minimal ABI for AttributionRegistry
-REGISTRY_ABI = [
-    {
-        "inputs": [{"internalType": "bytes32", "name": "reasonHash", "type": "bytes32"}],
-        "name": "storeReason",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    }
-]
+_ABI_PATH = Path(__file__).parent.parent.parent / "contracts" / "AttributionRegistry_abi.json"
+REGISTRY_ABI = json.loads(_ABI_PATH.read_text())
 
 
 class ArcPinner:
@@ -26,7 +20,7 @@ class ArcPinner:
         self.logger = logging.getLogger("ArcPinner")
         
         # Load configuration
-        self.rpc_url = os.getenv("RPC", "https://rpc.testnet.arc-node.thecanteenapp.com/v1/swrm_42b1f431a6cfa6a62d2c14e6c91d2c39545bc99bb8ee5c241f85f8108a4af369")
+        self.rpc_url = os.getenv("RPC", "https://rpc.testnet.arc.network")
         self.registry_address = os.getenv(
             "REGISTRY_ADDRESS", "0x0000000000000000000000000000000000000000"
         )
