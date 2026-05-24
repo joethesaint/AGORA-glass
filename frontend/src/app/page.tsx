@@ -17,6 +17,7 @@ import { ModeToggleModal } from '@/components/ModeToggleModal';
 import { MarketRegimeBadge } from '@/components/MarketRegimeBadge';
 import { StrategyControlPanel } from '@/components/StrategyControlPanel';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { PositionHealthCard } from '@/components/PositionHealthCard';
 import { Shield, TrendingUp, Settings } from 'lucide-react';
 
 // Dynamic imports for heavy chart components using React.lazy

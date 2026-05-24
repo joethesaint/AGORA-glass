@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Shield, Copy, Check, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export interface ReasoningTrace {
   agent_id: string;

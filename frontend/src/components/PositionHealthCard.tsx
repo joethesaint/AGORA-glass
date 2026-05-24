@@ -1,17 +1,27 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAnalyticsStore } from '@/stores/analyticsStore';
-import { Shield, Activity, TrendingUp, AlertTriangle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Shield, Activity, TrendingUp, AlertTriangle, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function PositionHealthCard() {
   const { livePositions } = useAnalyticsStore();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   
-  // For the shakedown, we track the most "active" or first position
   const positions = Object.values(livePositions);
-  const primaryPosition = positions[0];
+  
+  // Set default selection if none selected
+  useEffect(() => {
+    if (!selectedId && positions.length > 0) {
+      setSelectedId(positions[0].id);
+    }
+  }, [positions, selectedId]);
 
-  if (!primaryPosition) {
+  const activePosition = positions.find(p => p.id === selectedId) || positions[0];
+
+  if (!activePosition) {
     return (
       <div className="agora-card flex items-center justify-center py-12 text-[#484848] italic text-sm">
         <Activity className="w-4 h-4 mr-2 animate-pulse" />
@@ -20,8 +30,8 @@ export function PositionHealthCard() {
     );
   }
 
-  const marginRatio = primaryPosition.marginRatio;
-  const leverage = primaryPosition.leverage;
+  const marginRatio = activePosition.marginRatio;
+  const leverage = activePosition.leverage;
   
   const CRITICAL_THRESHOLD = 0.12;
   const WARNING_THRESHOLD = 0.20;
@@ -45,7 +55,7 @@ export function PositionHealthCard() {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`agora-card relative overflow-hidden border ${isCritical ? 'border-[#FF3B3B]/30 shadow-[0_0_30px_rgba(255,59,59,0.1)]' : 'border-white/5'}`}
+      className={`agora-card relative overflow-visible border ${isCritical ? 'border-[#FF3B3B]/30 shadow-[0_0_30px_rgba(255,59,59,0.1)]' : 'border-white/5'}`}
     >
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
@@ -54,8 +64,49 @@ export function PositionHealthCard() {
           </div>
           <h3 className="text-lg font-bold text-white tracking-tight uppercase">Live Position Health</h3>
         </div>
-        <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono text-[#8A93A3] uppercase tracking-widest">
-            {primaryPosition.symbol}
+        
+        <div className="relative">
+          <button 
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-mono text-white transition-colors"
+          >
+            {activePosition.symbol}
+            <ChevronDown className={`w-3 h-3 text-[#8A93A3] transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+          </button>
+
+          <AnimatePresence>
+            {showDropdown && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setShowDropdown(false)} 
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 5 }}
+                  className="absolute right-0 mt-2 w-32 bg-[#1A202C] border border-[#2D3748] rounded-xl shadow-2xl z-20 overflow-hidden"
+                >
+                  {positions.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setSelectedId(p.id);
+                        setShowDropdown(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-[10px] font-mono transition-colors ${
+                        selectedId === p.id 
+                          ? 'bg-[#00A3FF]/10 text-[#00A3FF] font-bold' 
+                          : 'text-[#8A93A3] hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      {p.symbol}
+                    </button>
+                  ))}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

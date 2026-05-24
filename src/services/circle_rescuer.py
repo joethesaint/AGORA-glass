@@ -77,7 +77,7 @@ class CircleRescuer:
             self.logger.info(f"Initiating Circle DCW transfer for {amount} USDC to {destination_address}...")
             
             wallet_id = os.getenv("CIRCLE_WALLET_ID")
-            blockchain = os.getenv("CIRCLE_BLOCKCHAIN", "POLY-AMOY") # Default to Polygon Amoy testnet
+            blockchain = os.getenv("CIRCLE_BLOCKCHAIN", "ARC-TESTNET") # Default to Arc testnet
             usdc_address = os.getenv("USDC_ADDRESS") # Contract address for USDC on the selected blockchain
 
             if not wallet_id:

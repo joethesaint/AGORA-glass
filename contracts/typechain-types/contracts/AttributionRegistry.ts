@@ -9,6 +9,7 @@ import type {
   Result,
   Interface,
   EventFragment,
+  AddressLike,
   ContractRunner,
   ContractMethod,
   Listener,
@@ -22,45 +23,98 @@ import type {
   TypedContractMethod,
 } from "../common";
 
-export interface AttributionRegistryInterface extends Interface {
-  getFunction(
-    nameOrSignature: "reasonHashes" | "storeReason" | "verifyReason"
-  ): FunctionFragment;
+export declare namespace AttributionRegistry {
+  export type TraceEntryStruct = {
+    recorder: AddressLike;
+    timestamp: BigNumberish;
+    blockNumber: BigNumberish;
+  };
 
-  getEvent(nameOrSignatureOrTopic: "ReasonHashStored"): EventFragment;
-
-  encodeFunctionData(
-    functionFragment: "reasonHashes",
-    values: [BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "storeReason",
-    values: [BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "verifyReason",
-    values: [BytesLike]
-  ): string;
-
-  decodeFunctionResult(
-    functionFragment: "reasonHashes",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "storeReason",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "verifyReason",
-    data: BytesLike
-  ): Result;
+  export type TraceEntryStructOutput = [
+    recorder: string,
+    timestamp: bigint,
+    blockNumber: bigint
+  ] & { recorder: string; timestamp: bigint; blockNumber: bigint };
 }
 
-export namespace ReasonHashStoredEvent {
-  export type InputTuple = [hash: BytesLike, timestamp: BigNumberish];
-  export type OutputTuple = [hash: string, timestamp: bigint];
+export interface AttributionRegistryInterface extends Interface {
+  getFunction(
+    nameOrSignature:
+      | "agent"
+      | "getTrace"
+      | "owner"
+      | "setAgent"
+      | "storeReason"
+      | "traceCount"
+      | "traceLog"
+      | "traces"
+  ): FunctionFragment;
+
+  getEvent(
+    nameOrSignatureOrTopic: "AgentUpdated" | "ReasonStored"
+  ): EventFragment;
+
+  encodeFunctionData(functionFragment: "agent", values?: undefined): string;
+  encodeFunctionData(functionFragment: "getTrace", values: [BytesLike]): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "setAgent",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "storeReason",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "traceCount",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "traceLog",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(functionFragment: "traces", values: [BytesLike]): string;
+
+  decodeFunctionResult(functionFragment: "agent", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getTrace", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "setAgent", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "storeReason",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "traceCount", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "traceLog", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "traces", data: BytesLike): Result;
+}
+
+export namespace AgentUpdatedEvent {
+  export type InputTuple = [oldAgent: AddressLike, newAgent: AddressLike];
+  export type OutputTuple = [oldAgent: string, newAgent: string];
   export interface OutputObject {
-    hash: string;
+    oldAgent: string;
+    newAgent: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ReasonStoredEvent {
+  export type InputTuple = [
+    recorder: AddressLike,
+    traceHash: BytesLike,
+    timestamp: BigNumberish
+  ];
+  export type OutputTuple = [
+    recorder: string,
+    traceHash: string,
+    timestamp: bigint
+  ];
+  export interface OutputObject {
+    recorder: string;
+    traceHash: string;
     timestamp: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -112,44 +166,119 @@ export interface AttributionRegistry extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  reasonHashes: TypedContractMethod<[arg0: BytesLike], [bigint], "view">;
+  agent: TypedContractMethod<[], [string], "view">;
 
-  storeReason: TypedContractMethod<[_hash: BytesLike], [void], "nonpayable">;
+  getTrace: TypedContractMethod<
+    [traceHash: BytesLike],
+    [AttributionRegistry.TraceEntryStructOutput],
+    "view"
+  >;
 
-  verifyReason: TypedContractMethod<[_hash: BytesLike], [bigint], "view">;
+  owner: TypedContractMethod<[], [string], "view">;
+
+  setAgent: TypedContractMethod<[_agent: AddressLike], [void], "nonpayable">;
+
+  storeReason: TypedContractMethod<
+    [traceHash: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
+  traceCount: TypedContractMethod<[], [bigint], "view">;
+
+  traceLog: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+
+  traces: TypedContractMethod<
+    [arg0: BytesLike],
+    [
+      [string, bigint, bigint] & {
+        recorder: string;
+        timestamp: bigint;
+        blockNumber: bigint;
+      }
+    ],
+    "view"
+  >;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
   getFunction(
-    nameOrSignature: "reasonHashes"
-  ): TypedContractMethod<[arg0: BytesLike], [bigint], "view">;
+    nameOrSignature: "agent"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "getTrace"
+  ): TypedContractMethod<
+    [traceHash: BytesLike],
+    [AttributionRegistry.TraceEntryStructOutput],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "setAgent"
+  ): TypedContractMethod<[_agent: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "storeReason"
-  ): TypedContractMethod<[_hash: BytesLike], [void], "nonpayable">;
+  ): TypedContractMethod<[traceHash: BytesLike], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "verifyReason"
-  ): TypedContractMethod<[_hash: BytesLike], [bigint], "view">;
+    nameOrSignature: "traceCount"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "traceLog"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "traces"
+  ): TypedContractMethod<
+    [arg0: BytesLike],
+    [
+      [string, bigint, bigint] & {
+        recorder: string;
+        timestamp: bigint;
+        blockNumber: bigint;
+      }
+    ],
+    "view"
+  >;
 
   getEvent(
-    key: "ReasonHashStored"
+    key: "AgentUpdated"
   ): TypedContractEvent<
-    ReasonHashStoredEvent.InputTuple,
-    ReasonHashStoredEvent.OutputTuple,
-    ReasonHashStoredEvent.OutputObject
+    AgentUpdatedEvent.InputTuple,
+    AgentUpdatedEvent.OutputTuple,
+    AgentUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "ReasonStored"
+  ): TypedContractEvent<
+    ReasonStoredEvent.InputTuple,
+    ReasonStoredEvent.OutputTuple,
+    ReasonStoredEvent.OutputObject
   >;
 
   filters: {
-    "ReasonHashStored(bytes32,uint256)": TypedContractEvent<
-      ReasonHashStoredEvent.InputTuple,
-      ReasonHashStoredEvent.OutputTuple,
-      ReasonHashStoredEvent.OutputObject
+    "AgentUpdated(address,address)": TypedContractEvent<
+      AgentUpdatedEvent.InputTuple,
+      AgentUpdatedEvent.OutputTuple,
+      AgentUpdatedEvent.OutputObject
     >;
-    ReasonHashStored: TypedContractEvent<
-      ReasonHashStoredEvent.InputTuple,
-      ReasonHashStoredEvent.OutputTuple,
-      ReasonHashStoredEvent.OutputObject
+    AgentUpdated: TypedContractEvent<
+      AgentUpdatedEvent.InputTuple,
+      AgentUpdatedEvent.OutputTuple,
+      AgentUpdatedEvent.OutputObject
+    >;
+
+    "ReasonStored(address,bytes32,uint256)": TypedContractEvent<
+      ReasonStoredEvent.InputTuple,
+      ReasonStoredEvent.OutputTuple,
+      ReasonStoredEvent.OutputObject
+    >;
+    ReasonStored: TypedContractEvent<
+      ReasonStoredEvent.InputTuple,
+      ReasonStoredEvent.OutputTuple,
+      ReasonStoredEvent.OutputObject
     >;
   };
 }
