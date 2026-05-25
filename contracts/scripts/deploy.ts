@@ -12,7 +12,7 @@ async function main() {
 
   // 1. Deploy AttributionRegistry
   const AttributionRegistry = await ethers.getContractFactory("AttributionRegistry");
-  const registry = await AttributionRegistry.deploy();
+  const registry = await AttributionRegistry.deploy(AGENT_ADDRESS);
   await registry.waitForDeployment();
   const regAddr = await registry.getAddress();
   console.log("✅ AttributionRegistry:", regAddr);
@@ -42,8 +42,7 @@ async function main() {
 
   const configPath = path.join(__dirname, "../config/addresses.json");
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-  console.log("
-📝 Saved addresses to:", configPath);
+  console.log("📝 Saved addresses to:", configPath);
 }
 
 main().catch((error) => {
