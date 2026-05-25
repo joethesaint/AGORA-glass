@@ -3,7 +3,7 @@ import ujson as json
 import websockets
 from typing import Set
 from src.base import BaseComponent
-from src.events import PositionUpdate, RiskVerdict, ReasoningTrace, RescueComplete, WSSignal, TradingSignal
+from src.events import PositionUpdate, RiskVerdict, ReasoningTrace, RescueInitiated, BridgeInitiated, RescueComplete, WSSignal, TradingSignal
 from src.log_config import get_logger
 from src.config import settings
 
@@ -24,6 +24,8 @@ class WebSocketServer(BaseComponent):
         self.subscribe(PositionUpdate, self.on_event)
         self.subscribe(RiskVerdict, self.on_event)
         self.subscribe(ReasoningTrace, self.on_event)
+        self.subscribe(RescueInitiated, self.on_event)
+        self.subscribe(BridgeInitiated, self.on_event)
         self.subscribe(RescueComplete, self.on_event)
         self.subscribe(WSSignal, self.on_event)
         self.subscribe(TradingSignal, self.on_event)
@@ -35,6 +37,9 @@ class WebSocketServer(BaseComponent):
         """
         if not self.clients:
             return
+
+        event_name = event.__class__.__name__
+        self.logger.debug("broadcasting_event", event_type=event_name)
 
         # Prepare payload and pre-serialize for efficiency
         payload = {
@@ -115,6 +120,28 @@ class WebSocketServer(BaseComponent):
                             "base_critical_threshold": settings.risk.base_critical_threshold
                         }
                     ))
+
+                elif data.get("type") == "CONFIGURE_MONITORING":
+                    account = data.get("account")
+                    mode = "mock" if data.get("isMock") else "live"
+                    vault_amount = data.get("vaultAmount", "500")
+                    
+                    self.logger.info("monitoring_config_received", account=account, mode=mode)
+                    
+                    # Publish event to trigger monitor restart in main loop
+                    from src.events import UpdateMonitoringRequest
+                    from src.bus import bus
+                    await bus.publish(UpdateMonitoringRequest(
+                        account=account,
+                        mode=mode,
+                        vault_amount=vault_amount
+                    ))
+                    
+                    # Notify frontend that configuration is being applied
+                    await self.on_event(WSSignal(
+                        event_type="MONITORING_CONFIG_APPLIED",
+                        payload={"account": account, "mode": mode}
+                    ))
             except Exception as e:
                 self.logger.error("ws_message_error", error=str(e))
 
@@ -127,6 +154,15 @@ class WebSocketServer(BaseComponent):
         await websocket.send(json.dumps({
             "type": "WSSignal",
             "data": {"event_type": "MODE_CHANGED", "payload": {"mode": settings.agent_mode}},
+            "timestamp": None
+        }))
+
+        # Send initial history to the client
+        from src.analytics import analytics
+        history = analytics.get_history()
+        await websocket.send(json.dumps({
+            "type": "WSSignal",
+            "data": {"event_type": "INITIAL_HISTORY", "payload": history},
             "timestamp": None
         }))
 

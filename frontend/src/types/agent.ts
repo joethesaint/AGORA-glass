@@ -3,6 +3,7 @@ export type EventType =
   | 'RiskVerdict' 
   | 'ReasoningTrace' 
   | 'RescueInitiated'
+  | 'BridgeInitiated'
   | 'RescueComplete' 
   | 'WSSignal'
   | 'ANALYTICS_UPDATE' // Sub-type for WSSignal

@@ -53,7 +53,8 @@ export default function Dashboard() {
     if (!lastSignal) return;
 
     if (lastSignal.event_type === 'ReasoningTrace') setRescueStage('pinning');
-    if (lastSignal.event_type === 'RescueInitiated') setRescueStage('bridging');
+    if (lastSignal.event_type === 'RescueInitiated') setRescueStage('releasing');
+    if (lastSignal.event_type === 'BridgeInitiated') setRescueStage('bridging');
     if (lastSignal.event_type === 'RescueComplete') setRescueStage('complete');
     
     if (lastSignal.event_type === 'MODE_CHANGED') {
@@ -61,15 +62,7 @@ export default function Dashboard() {
     }
   }, [signals]);
 
-  // Demo auto-increment latency in development mode
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      const interval = setInterval(() => {
-        updateRescueMetrics({ avgLatency: rescueMetrics.avgLatency + Math.floor(Math.random() * 10) + 1 });
-      }, 4000);
-      return () => clearInterval(interval);
-    }
-  }, []);
+
 
   const { isConnected, setIsModalOpen, isModalOpen } = useWalletStore();
 
@@ -195,37 +188,41 @@ export default function Dashboard() {
       </div>
 
       <ProtectedRoute>
-        <PortfolioOverviewCard
-          totalValue={positionMetrics.totalValue}
-          avgMarginRatio={positionMetrics.avgMarginRatio}
-          avgLeverage={positionMetrics.avgLeverage}
-          positionCount={positionMetrics.positionCount}
-          criticalPositions={positionMetrics.criticalPositions}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Suspense fallback={<div className="h-[300px] w-full bg-white/5 animate-pulse rounded-2xl" />}>
-            <MarginHistoryChart data={marginHistory} />
-          </Suspense>
-          <Suspense fallback={<div className="h-[300px] w-full bg-white/5 animate-pulse rounded-2xl" />}>
-            <LeverageChart data={leverageHistory} />
-          </Suspense>
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white tracking-tight">Open Positions</h2>
-            <div className="px-3 py-1 rounded-full bg-[#00D98F]/10 border border-[#00D98F]/20 text-[#00D98F] text-[10px] font-bold uppercase tracking-widest">
-                {positions.length} Active
-            </div>
+        <div className="flex flex-col gap-12">
+          <div className="w-full">
+            <PortfolioOverviewCard
+              totalValue={positionMetrics.totalValue}
+              avgMarginRatio={positionMetrics.avgMarginRatio}
+              avgLeverage={positionMetrics.avgLeverage}
+              positionCount={positionMetrics.positionCount}
+              criticalPositions={positionMetrics.criticalPositions}
+            />
           </div>
-          <PositionsList
-            positions={positions as any}
-            onPositionClose={handlePositionClose}
-            onAddMargin={handleAddMargin}
-            onDeleverage={handleDeleverage}
-            onPositionClick={handlePositionClick}
-          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Suspense fallback={<div className="h-[300px] w-full bg-white/5 animate-pulse rounded-2xl" />}>
+              <MarginHistoryChart data={marginHistory} />
+            </Suspense>
+            <Suspense fallback={<div className="h-[300px] w-full bg-white/5 animate-pulse rounded-2xl" />}>
+              <LeverageChart data={leverageHistory} />
+            </Suspense>
+          </div>
+
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white tracking-tight">Open Positions</h2>
+              <div className="px-3 py-1 rounded-full bg-[#00D98F]/10 border border-[#00D98F]/20 text-[#00D98F] text-[10px] font-bold uppercase tracking-widest">
+                  {positions.length} Active
+              </div>
+            </div>
+            <PositionsList
+              positions={positions as any}
+              onPositionClose={handlePositionClose}
+              onAddMargin={handleAddMargin}
+              onDeleverage={handleDeleverage}
+              onPositionClick={handlePositionClick}
+            />
+          </div>
         </div>
       </ProtectedRoute>
 

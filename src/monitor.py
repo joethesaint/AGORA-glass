@@ -57,9 +57,9 @@ class PerpMonitor(BaseComponent):
                 state["price"] *= (1 + random.normalvariate(0, 0.001))
                 
                 # Occasionally spike leverage or drop margin to trigger the engine
-                if random.random() < 0.05:
-                    state["margin"] -= 0.05
-                    state["leverage"] += 0.5
+                if random.random() < 0.1:
+                    state["margin"] -= 0.08
+                    state["leverage"] += 0.8
 
                 self.logger.info(
                     "position_fetch_success",

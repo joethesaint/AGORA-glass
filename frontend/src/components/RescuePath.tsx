@@ -28,7 +28,11 @@ export const RescuePath = ({ stage }: RescuePathProps) => {
         {/* Connecting Line removed due to artifacts */}
         
         {steps.map((step, index) => {
-          const isActive = stage === step.id || stage === 'complete';
+          const stageOrder = ['idle', 'pinning', 'releasing', 'bridging', 'complete'];
+          const currentStageIndex = stageOrder.indexOf(stage);
+          const stepIndex = stageOrder.indexOf(step.id);
+          
+          const isActive = (currentStageIndex >= stepIndex && stepIndex !== -1) || stage === 'complete';
           const isCurrent = stage === step.id;
           
           return (

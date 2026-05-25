@@ -36,6 +36,14 @@ class RescueDispatcher(BaseComponent):
         """Processes a reasoning trace to initiate on-chain and financial actions."""
         self.logger.info("rescue_cycle_start", reason_hash=event.reason_hash)
 
+        # Notify that rescue is initiated
+        from src.events import RescueInitiated
+        await self.publish(RescueInitiated(
+            reason_hash=event.reason_hash,
+            amount=event.rescue_amount_usdc,
+            target_chain="Arc_Testnet"
+        ))
+
         start_time = time.time()
 
         # 1. Orchestrate four-pillar rescue: 
@@ -54,6 +62,13 @@ class RescueDispatcher(BaseComponent):
             amount_usdc=event.rescue_amount_usdc,
             reason_hash=event.reason_hash
         ))
+        
+        from src.events import BridgeInitiated
+        await self.publish(BridgeInitiated(
+            reason_hash=event.reason_hash,
+            target_chain="Circle_Gateway"
+        ))
+        
         circle_task = asyncio.create_task(self.rescuer.rescue(
             amount=event.rescue_amount_usdc,
             destination_address=event.account,

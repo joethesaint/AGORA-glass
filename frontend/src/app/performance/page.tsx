@@ -30,6 +30,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react';
+import { useAnalyticsStore } from '@/stores/analyticsStore';
 import { motion } from 'framer-motion';
 
 // Generate mock performance data
@@ -119,21 +120,21 @@ export default function PerformancePage() {
   const performanceData = useMemo(() => generatePerformanceData(timeRange), [timeRange]);
   const hourlyData = useMemo(() => generateHourlyData(), []);
 
+  const { rescueMetrics } = useAnalyticsStore();
+
   const stats = useMemo(() => {
     const totalRescued = performanceData.reduce((sum, d) => sum + d.rescued, 0);
-    const avgLatency =
-      performanceData.reduce((sum, d) => sum + d.latency, 0) / performanceData.length;
     const avgSuccessRate =
       performanceData.reduce((sum, d) => sum + d.successRate, 0) / performanceData.length;
     const totalRescues = performanceData.reduce((sum, d) => sum + d.rescues, 0);
 
     return {
       totalRescued,
-      avgLatency: Math.round(avgLatency),
-      avgSuccessRate: avgSuccessRate.toFixed(1),
+      avgLatency: Math.round(rescueMetrics.avgLatency),
+      avgSuccessRate: rescueMetrics.successRate.toFixed(1),
       totalRescues,
     };
-  }, [performanceData]);
+  }, [performanceData, rescueMetrics.avgLatency, rescueMetrics.successRate]);
 
   const handleRefresh = () => {
     setIsLoading(true);

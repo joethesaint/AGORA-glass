@@ -22,6 +22,8 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
     updateMarketIntelligence,
     updateLatestReasoningTrace,
     updateLatestTrade,
+    setHistory,
+    setInitialPositions,
     marketRegime
   } = useAnalyticsStore();
 
@@ -67,7 +69,43 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
             totalRescued: payload.total_rescued_usdc,
             avgLatency: payload.avg_latency_ms,
             totalRescues: payload.rescue_count,
+            successRate: payload.success_rate,
         });
+      }
+
+      if (event_type === 'INITIAL_HISTORY') {
+        // Flatten the backend history into the format expected by the store
+        // We take the average or the first symbol's history for the main chart
+        const marginValues: { timestamp: number, ratio: number }[] = [];
+        const leverageValues: { timestamp: number, leverage: number }[] = [];
+        
+        // Use the first symbol found in history for now
+        const firstSymbol = Object.keys(payload.margin)[0];
+        if (firstSymbol) {
+            payload.margin[firstSymbol].forEach(([ts, ratio]: [number, number]) => {
+                marginValues.push({ timestamp: ts * 1000, ratio });
+            });
+            payload.leverage[firstSymbol].forEach(([ts, leverage]: [number, number]) => {
+                leverageValues.push({ timestamp: ts * 1000, leverage });
+            });
+        }
+        
+        setHistory(marginValues, leverageValues);
+
+        if (payload.positions) {
+            setInitialPositions(payload.positions);
+        }
+
+        if (payload.events) {
+            const initialSignals = payload.events.map((e: any) => ({
+                type: e.type as EventType,
+                event_type: e.type,
+                timestamp: e.timestamp || Date.now() / 1000,
+                data: e.data,
+                payload: e.data
+            }));
+            setSignals(initialSignals.reverse());
+        }
       }
 
       if (event_type === 'PositionUpdate') {
@@ -134,7 +172,7 @@ export function useAgentSignals(url: string = 'ws://localhost:8765') {
     } catch (err) {
       console.error('🛡️ GLASS: Error processing signal:', err);
     }
-  }, [updateRescueMetrics, addMarginHistory, addLeverageHistory, updateLivePosition, updateMarketIntelligence, updateLatestReasoningTrace, updateLatestTrade, marketRegime]);
+  }, [updateRescueMetrics, addMarginHistory, addLeverageHistory, updateLivePosition, updateMarketIntelligence, updateLatestReasoningTrace, updateLatestTrade, setHistory, setInitialPositions, marketRegime]);
 
   const sendSignal = useCallback((type: string, data: any) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {

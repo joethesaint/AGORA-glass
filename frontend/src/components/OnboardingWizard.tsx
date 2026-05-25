@@ -9,7 +9,7 @@ interface OnboardingWizardProps {
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const [step, setStep] = useState(0); // 0: Landing/About, 1: HL Config, 2: Wallet, 3: Review
-  const { isConnected, connect, isConnecting, address } = useWalletStore();
+  const { isConnected, connect, isConnecting, address, connectionType } = useWalletStore();
   
   const [hlAccount, setHlAccount] = useState('');
   const [vaultAmount, setVaultAmount] = useState('500');
@@ -48,6 +48,18 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   const handleBack = () => setStep(step - 1);
+
+  // Allow Enter key to continue
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        if (step === 2 && !address && !isMock) return;
+        handleNext();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [step, hlAccount, vaultAmount, isMock, address]);
 
   const containerVariants = {
     initial: { opacity: 1, y: 0 },
@@ -189,33 +201,33 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                   
                   <div className="grid grid-cols-1 gap-4">
                     <button 
-                      onClick={() => !isMock && connect('web2')}
+                      onClick={() => connect('web2')}
                       disabled={isConnecting}
                       className={`flex flex-col items-start p-4 rounded-xl border transition-all ${
-                        address?.includes('Circle') || (isMock && address)
+                        connectionType === 'web2' || (isMock && !connectionType)
                         ? 'bg-[#00A3FF]/10 border-[#00A3FF] text-white' 
                         : 'bg-white/5 border-white/10 text-[#8A93A3] hover:border-white/20'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full mb-1">
                         <span className="font-bold text-sm text-white">Modular Wallet (Circle)</span>
-                        {address?.includes('Circle') && <CheckCircle2 className="w-4 h-4 text-[#00A3FF]" />}
+                        {(connectionType === 'web2' || (isMock && !connectionType)) && <CheckCircle2 className="w-4 h-4 text-[#00A3FF]" />}
                       </div>
                       <span className="text-[10px] uppercase tracking-wider font-mono">Web2 Flow • Passkeys / PIN</span>
                     </button>
 
                     <button 
-                      onClick={() => !isMock && connect('web3')}
+                      onClick={() => connect('web3')}
                       disabled={isConnecting}
                       className={`flex flex-col items-start p-4 rounded-xl border transition-all ${
-                        address?.includes('Web3')
+                        connectionType === 'web3'
                         ? 'bg-[#00A3FF]/10 border-[#00A3FF] text-white' 
                         : 'bg-white/5 border-white/10 text-[#8A93A3] hover:border-white/20'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full mb-1">
                         <span className="font-bold text-sm text-white">External Wallet</span>
-                        {address?.includes('Web3') && <CheckCircle2 className="w-4 h-4 text-[#00A3FF]" />}
+                        {connectionType === 'web3' && <CheckCircle2 className="w-4 h-4 text-[#00A3FF]" />}
                       </div>
                       <span className="text-[10px] uppercase tracking-wider font-mono">Web3 Flow • Metamask / Coinbase</span>
                     </button>

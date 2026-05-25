@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Zap, ShieldAlert, Sliders } from 'lucide-react';
+import { Settings, Zap, ShieldAlert, Sliders, ChevronRight, Target, Activity } from 'lucide-react';
 import { useAgentSignals } from '@/hooks/useAgentSignals';
 
 export const StrategyControlPanel = () => {
@@ -23,76 +23,107 @@ export const StrategyControlPanel = () => {
 
   return (
     <motion.div 
-      className="agora-card p-6 space-y-8"
+      className="agora-card p-6 space-y-8 relative overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <div className="flex items-center justify-between">
+      <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+        <Settings size={120} />
+      </div>
+
+      <div className="flex items-center justify-between relative z-10">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-[#00A3FF]/10 rounded-lg text-[#00A3FF]">
-            <Sliders className="w-5 h-5" />
+            <Target className="w-5 h-5" />
           </div>
-          <h3 className="text-lg font-bold text-white tracking-tight">Strategy Control</h3>
+          <h3 className="text-lg font-bold text-white tracking-tight">Active Controls</h3>
         </div>
-        <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${loading ? 'bg-yellow-500/10 text-yellow-500 animate-pulse' : 'bg-green-500/10 text-green-500'}`}>
-          {loading ? 'Syncing...' : 'Real-time'}
+        <div className={`flex items-center gap-2 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${loading ? 'bg-yellow-500/10 text-yellow-500 animate-pulse' : 'bg-green-500/10 text-green-500'}`}>
+          <div className={`w-1.5 h-1.5 rounded-full ${loading ? 'bg-yellow-500' : 'bg-green-500'}`} />
+          {loading ? 'Syncing' : 'Connected'}
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-8 relative z-10">
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <label className="text-[10px] font-bold text-[#8A93A3] uppercase tracking-widest flex items-center gap-2">
-              <Zap className="w-3 h-3 text-yellow-500" />
-              Max Leverage Band
-            </label>
-            <span className="text-sm font-mono text-white font-bold">{maxLeverage.toFixed(1)}x</span>
+          <div className="flex justify-between items-end">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-[#8A93A3] uppercase tracking-widest flex items-center gap-2">
+                <Zap className="w-3 h-3 text-yellow-500" />
+                Max Leverage Band
+              </label>
+              <p className="text-[10px] text-[#484848] font-medium leading-relaxed">
+                Threshold for automated deleveraging.
+              </p>
+            </div>
+            <span className="text-xl font-mono text-white font-black">{maxLeverage.toFixed(1)}<span className="text-xs text-[#8A93A3]">x</span></span>
           </div>
-          <input 
-            type="range"
-            min="1.0"
-            max="10.0"
-            step="0.1"
-            value={maxLeverage}
-            onChange={(e) => setMaxLeverage(parseFloat(e.target.value))}
-            onMouseUp={() => handleUpdate('max_leverage', maxLeverage)}
-            className="w-full h-1.5 bg-white/5 rounded-lg appearance-none cursor-pointer accent-[#00A3FF]"
-          />
-          <p className="text-[10px] text-[#484848] leading-relaxed">
-            The agent will automatically deleverage if positions exceed this threshold. Recommended: 3.0x - 5.0x.
-          </p>
+          <div className="relative pt-2">
+            <input 
+              type="range"
+              min="1.0"
+              max="10.0"
+              step="0.1"
+              value={maxLeverage}
+              onChange={(e) => setMaxLeverage(parseFloat(e.target.value))}
+              onMouseUp={() => handleUpdate('max_leverage', maxLeverage)}
+              className="w-full h-1.5 bg-white/5 rounded-lg appearance-none cursor-pointer accent-[#00A3FF] hover:accent-[#00B2FF] transition-all"
+            />
+            <div className="flex justify-between mt-2 text-[8px] font-bold text-[#484848] uppercase tracking-widest">
+                <span>Conservative</span>
+                <span>Aggressive</span>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <label className="text-[10px] font-bold text-[#8A93A3] uppercase tracking-widest flex items-center gap-2">
-              <ShieldAlert className="w-3 h-3 text-[#FF3B3B]" />
-              Critical Safety Band
-            </label>
-            <span className="text-sm font-mono text-white font-bold">{(safetyBand * 100).toFixed(1)}%</span>
+          <div className="flex justify-between items-end">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-[#8A93A3] uppercase tracking-widest flex items-center gap-2">
+                <ShieldAlert className="w-3 h-3 text-[#FF3B3B]" />
+                Critical Safety Band
+              </label>
+              <p className="text-[10px] text-[#484848] font-medium leading-relaxed">
+                Trigger point for rescue operations.
+              </p>
+            </div>
+            <span className="text-xl font-mono text-white font-black">{(safetyBand * 100).toFixed(1)}<span className="text-xs text-[#8A93A3]">%</span></span>
           </div>
-          <input 
-            type="range"
-            min="0.05"
-            max="0.25"
-            step="0.01"
-            value={safetyBand}
-            onChange={(e) => setSafetyBand(parseFloat(e.target.value))}
-            onMouseUp={() => handleUpdate('base_critical_threshold', safetyBand)}
-            className="w-full h-1.5 bg-white/5 rounded-lg appearance-none cursor-pointer accent-[#FF3B3B]"
-          />
-          <p className="text-[10px] text-[#484848] leading-relaxed">
-            Rescue logic triggers when the account margin ratio falls below this percentage.
-          </p>
+          <div className="relative pt-2">
+            <input 
+              type="range"
+              min="0.05"
+              max="0.25"
+              step="0.01"
+              value={safetyBand}
+              onChange={(e) => setSafetyBand(parseFloat(e.target.value))}
+              onMouseUp={() => handleUpdate('base_critical_threshold', safetyBand)}
+              className="w-full h-1.5 bg-white/5 rounded-lg appearance-none cursor-pointer accent-[#FF3B3B] hover:accent-[#FF5050] transition-all"
+            />
+            <div className="flex justify-between mt-2 text-[8px] font-bold text-[#484848] uppercase tracking-widest">
+                <span>Tight</span>
+                <span>Wide</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="pt-4 border-t border-white/5">
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#00A3FF]/5 border border-[#00A3FF]/10">
-          <div className="w-2 h-2 rounded-full bg-[#00A3FF] animate-pulse" />
-          <p className="text-[9px] text-[#8A93A3] font-medium leading-relaxed">
-            Changes are propagated instantly to the Python risk engine via WebSocket and stored in memory.
-          </p>
+      <div className="pt-6 border-t border-white/5 space-y-4 relative z-10">
+        <div className="flex items-center justify-between text-[10px] font-bold text-[#8A93A3] uppercase tracking-widest">
+            <span>Agent Precision</span>
+            <span className="text-white">High</span>
+        </div>
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5 group hover:border-[#00A3FF]/20 transition-all cursor-default">
+          <div className="p-2 rounded-lg bg-[#00A3FF]/10 text-[#00A3FF] group-hover:bg-[#00A3FF] group-hover:text-white transition-all">
+            <Activity className="w-4 h-4" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-white uppercase tracking-widest">Live Optimization</p>
+            <p className="text-[9px] text-[#8A93A3] font-medium leading-relaxed">
+              Propagating 48 parameters to Arc Network for validation.
+            </p>
+          </div>
+          <ChevronRight className="w-4 h-4 ml-auto text-[#484848]" />
         </div>
       </div>
     </motion.div>

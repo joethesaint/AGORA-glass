@@ -46,6 +46,8 @@ export interface AnalyticsStore {
   updateLatestReasoningTrace: (trace: any) => void;
   addMarginHistory: (timestamp: number, ratio: number) => void;
   addLeverageHistory: (timestamp: number, leverage: number) => void;
+  setHistory: (margin: { timestamp: number, ratio: number }[], leverage: { timestamp: number, leverage: number }[]) => void;
+  setInitialPositions: (positions: Record<string, any>) => void;
   updateLivePosition: (symbol: string, data: any) => void;
 }
 
@@ -70,32 +72,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set) => ({
   latestReasoningTrace: null,
   marginHistory: [],
   leverageHistory: [],
-  livePositions: {
-    'BTC-PERP': {
-        id: 'pos_001',
-        symbol: 'BTC-PERP',
-        entryPrice: 60000,
-        currentPrice: 63200,
-        size: 1.5,
-        marginRatio: 0.35,
-        leverage: 2.5,
-        collateral: 50000,
-        unrealizedPnL: 4800,
-        side: 'LONG',
-    },
-    'ETH-PERP': {
-        id: 'pos_002',
-        symbol: 'ETH-PERP',
-        entryPrice: 3000,
-        currentPrice: 3150,
-        size: 10,
-        marginRatio: 0.22,
-        leverage: 4.1,
-        collateral: 65000,
-        unrealizedPnL: 1500,
-        side: 'LONG',
-    }
-  },
+  livePositions: {},
   updateRescueMetrics: (metrics) =>
     set((state) => ({
       rescueMetrics: { ...state.rescueMetrics, ...metrics },
@@ -117,28 +94,59 @@ export const useAnalyticsStore = create<AnalyticsStore>((set) => ({
     set({ latestReasoningTrace: trace }),
   addMarginHistory: (timestamp, ratio) =>
     set((state) => ({
-      marginHistory: [...state.marginHistory.slice(-19), { timestamp, ratio }],
+      marginHistory: [...state.marginHistory.slice(-49), { timestamp, ratio }],
     })),
   addLeverageHistory: (timestamp, leverage) =>
     set((state) => ({
-      leverageHistory: [...state.leverageHistory.slice(-19), { timestamp, leverage }],
+      leverageHistory: [...state.leverageHistory.slice(-49), { timestamp, leverage }],
     })),
+  setHistory: (margin, leverage) =>
+    set(() => ({
+      marginHistory: margin,
+      leverageHistory: leverage
+    })),
+  setInitialPositions: (positions) =>
+    set(() => {
+        const livePositions: Record<string, Position> = {};
+        Object.entries(positions).forEach(([symbol, data]: [string, any]) => {
+            livePositions[symbol] = {
+                id: `pos_init_${symbol}`,
+                symbol,
+                entryPrice: data.current_price || 0,
+                currentPrice: data.current_price || 0,
+                size: data.size || 0,
+                marginRatio: data.margin_ratio || 0,
+                leverage: data.leverage || 0,
+                collateral: data.collateral || 0,
+                unrealizedPnL: data.unrealized_pnl || 0,
+                side: data.side || 'LONG'
+            };
+        });
+        return { livePositions };
+    }),
   updateLivePosition: (symbol, data) =>
     set((state) => {
         const existing = state.livePositions[symbol];
-        if (!existing) return state;
         
         return {
             livePositions: {
                 ...state.livePositions,
                 [symbol]: {
-                    ...existing,
-                    currentPrice: data.current_price || existing.currentPrice,
-                    marginRatio: data.margin_ratio || existing.marginRatio,
-                    leverage: data.leverage || existing.leverage,
-                    unrealizedPnL: data.current_price 
+                    ...(existing || {
+                        id: `pos_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        symbol,
+                        entryPrice: data.current_price || 0,
+                        size: data.size || 0,
+                        collateral: data.collateral || 0,
+                        unrealizedPnL: data.unrealized_pnl || 0,
+                        side: data.side || 'LONG'
+                    }),
+                    currentPrice: data.current_price || existing?.currentPrice || 0,
+                    marginRatio: data.margin_ratio || existing?.marginRatio || 0,
+                    leverage: data.leverage || existing?.leverage || 0,
+                    unrealizedPnL: (data.current_price && existing) 
                         ? (data.current_price - existing.entryPrice) * existing.size
-                        : existing.unrealizedPnL
+                        : (existing?.unrealizedPnL || 0)
                 }
             }
         };

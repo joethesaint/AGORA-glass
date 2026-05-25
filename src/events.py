@@ -125,6 +125,14 @@ class RescueInitiated(BaseEvent):
 
 
 @dataclass(frozen=True)
+class BridgeInitiated(BaseEvent):
+    """Event representing the start of the cross-chain bridge/gateway transfer.
+    """
+    reason_hash: str
+    target_chain: str
+
+
+@dataclass(frozen=True)
 class RescueComplete(BaseEvent):
     """Event representing the completion of a rescue operation.
 
@@ -188,4 +196,13 @@ class TradingSignal(BaseEvent):
     reason: str
     amount: float
     price: float
+
+@dataclass(frozen=True)
+class UpdateMonitoringRequest(BaseEvent):
+    """
+    Event to trigger a change in the monitored account or mode.
+    """
+    account: str
+    mode: str  # "mock" or "live"
+    vault_amount: str = "500"
 

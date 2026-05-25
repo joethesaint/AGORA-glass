@@ -190,6 +190,28 @@ export function PositionHealthCard() {
                 {isCritical ? 'CRITICAL RISK DETECTED' : isWarning ? 'CAUTION: VOLATILE' : 'NOMINAL STABILITY'}
             </div>
         </div>
+
+        {/* Supplementary Metrics Row */}
+        <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/5">
+            <div className="text-left">
+                <p className="text-[9px] font-bold text-[#8A93A3] uppercase tracking-widest mb-1">Unrealized PnL</p>
+                <p className={`text-sm font-black font-mono ${activePosition.unrealizedPnL >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}>
+                    ${activePosition.unrealizedPnL?.toFixed(2) || '0.00'}
+                </p>
+            </div>
+            <div className="text-center border-x border-white/5">
+                <p className="text-[9px] font-bold text-[#8A93A3] uppercase tracking-widest mb-1">Collateral</p>
+                <p className="text-sm font-bold text-white font-mono">
+                    ${activePosition.collateral?.toLocaleString() || '0'}
+                </p>
+            </div>
+            <div className="text-right">
+                <p className="text-[9px] font-bold text-[#8A93A3] uppercase tracking-widest mb-1">Position Size</p>
+                <p className="text-sm font-bold text-white font-mono">
+                    {activePosition.size?.toFixed(4) || '0'}
+                </p>
+            </div>
+        </div>
       </div>
     </motion.div>
   );

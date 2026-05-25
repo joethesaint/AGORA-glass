@@ -6,6 +6,7 @@ import { WalletConnect } from "@/components/WalletConnect";
 
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { useWalletStore } from "@/stores/walletStore";
+import { useAgentSignals } from "@/hooks/useAgentSignals";
 
 // Pages
 import DashboardPage from "@/app/page";
@@ -19,11 +20,18 @@ import "./app/globals.css";
 
 function App() {
   const { isOnboarded, setOnboarded } = useWalletStore();
+  const { sendSignal } = useAgentSignals();
 
   if (!isOnboarded) {
     return (
       <ThemeProvider>
-        <OnboardingWizard onComplete={() => setOnboarded(true)} />
+        <OnboardingWizard 
+          onComplete={(data) => {
+            console.log('🛡️ GLASS: Onboarding complete, sending config:', data);
+            sendSignal('CONFIGURE_MONITORING', data);
+            setOnboarded(true);
+          }} 
+        />
       </ThemeProvider>
     );
   }

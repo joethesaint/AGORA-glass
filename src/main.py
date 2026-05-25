@@ -13,7 +13,8 @@ from src.log_config import configure_logging, get_logger
 from src.config import settings
 
 # Initialize Structured Logging
-configure_logging()
+import logging
+configure_logging(log_level=logging.DEBUG)
 logger = get_logger("main")
 
 # Register components to ensure singletons are initialized and subscribed
@@ -64,7 +65,30 @@ async def main():
         pass
 
     # Start monitor tasks
-    perp_task = asyncio.create_task(perp_monitor.run())
+    perp_task_container = [asyncio.create_task(perp_monitor.run())]
+    
+    async def on_update_monitoring(event):
+        logger.info("restarting_monitor", account=event.account, mode=event.mode)
+        # Cancel current task
+        if perp_task_container[0]:
+            perp_task_container[0].cancel()
+            try:
+                await perp_task_container[0]
+            except asyncio.CancelledError:
+                pass
+        
+        # Update settings for other components if needed
+        market_monitor.mode = event.mode
+        
+        # Start new monitor
+        new_monitor = PerpMonitor(mode=event.mode, account_address=event.account)
+        perp_task_container[0] = asyncio.create_task(new_monitor.run())
+        logger.info("monitor_restarted", account=event.account, mode=event.mode)
+
+    from src.bus import bus
+    from src.events import UpdateMonitoringRequest
+    bus.subscribe(UpdateMonitoringRequest, on_update_monitoring)
+
     market_task = asyncio.create_task(market_monitor.run())
     ws_task = asyncio.create_task(ws_server.run())
     stop_task = asyncio.create_task(stop_event.wait())
@@ -73,23 +97,38 @@ async def main():
 
     try:
         # Run until stop_event is set or monitors finish
-        done, pending = await asyncio.wait(
-            [perp_task, market_task, ws_task, stop_task],
-            return_when=asyncio.FIRST_COMPLETED
-        )
-        for task in done:
-            name = "unknown"
-            if task == perp_task: name = "perp_task"
-            elif task == market_task: name = "market_task"
-            elif task == ws_task: name = "ws_task"
-            elif task == stop_task: name = "stop_task"
+        # Note: we use a loop here because perp_task might be swapped
+        while not stop_event.is_set():
+            perp_task = perp_task_container[0]
+            done, pending = await asyncio.wait(
+                [perp_task, market_task, ws_task, stop_task],
+                return_when=asyncio.FIRST_COMPLETED
+            )
             
-            if task.exception():
-                logger.error("task_failed", task=name, error=str(task.exception()))
-            else:
-                logger.info("task_finished", task=name)
+            if stop_event.is_set():
+                break
+
+            for task in done:
+                name = "unknown"
+                if task == perp_task: name = "perp_task"
+                elif task == market_task: name = "market_task"
+                elif task == ws_task: name = "ws_task"
+                elif task == stop_task: name = "stop_task"
+                
+                if task.cancelled():
+                    logger.info("task_cancelled", task=name)
+                elif task.exception():
+                    logger.error("task_failed", task=name, error=str(task.exception()))
+                else:
+                    logger.info("task_finished", task=name)
+                
+                # If it wasn't the perp_task (which we handle via subscription), 
+                # or if perp_task finished naturally, we might want to exit or restart
+                if task != perp_task:
+                    stop_event.set()
     finally:
-        perp_task.cancel()
+        if perp_task_container[0]:
+            perp_task_container[0].cancel()
         market_task.cancel()
         ws_task.cancel()
         stop_task.cancel()
