@@ -39,6 +39,8 @@ export interface AnalyticsStore {
   marginHistory: { timestamp: number; ratio: number }[];
   leverageHistory: { timestamp: number; leverage: number }[];
   livePositions: Record<string, Position>;
+  selectedSymbol: string | null;
+  setSelectedSymbol: (symbol: string | null) => void;
   updateRescueMetrics: (metrics: Partial<RescueMetrics>) => void;
   updatePositionMetrics: (metrics: Partial<PositionMetrics>) => void;
   updateMarketIntelligence: (regime: string, symbolVolatility: {symbol: string, factor: number} | null) => void;
@@ -73,6 +75,8 @@ export const useAnalyticsStore = create<AnalyticsStore>((set) => ({
   marginHistory: [],
   leverageHistory: [],
   livePositions: {},
+  selectedSymbol: null,
+  setSelectedSymbol: (symbol) => set({ selectedSymbol: symbol }),
   updateRescueMetrics: (metrics) =>
     set((state) => ({
       rescueMetrics: { ...state.rescueMetrics, ...metrics },

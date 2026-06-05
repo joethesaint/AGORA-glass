@@ -115,3 +115,57 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.15);
 }
+
+/* Monarch Quant Terminal Utilities */
+@utility terminal-dropdown {
+  background-color: #060608;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #F2F2F2;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.2s ease;
+  cursor: pointer;
+
+  &:focus {
+    border-color: #00F3FF;
+  }
+}
+
+@utility terminal-go-btn {
+  background-color: #D4AF37;
+  color: #000000;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: bold;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #E5C158;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+@utility quant-grid-cell {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-family: var(--font-mono);
+
+  &:nth-child(2n) {
+    border-right: none;
+  }
+}
+

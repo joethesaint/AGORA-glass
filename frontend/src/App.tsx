@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { Navigation } from "@/components/Navigation";
+import { CommandBar } from "@/components/CommandBar";
 import { AlertSystem } from "@/components/AlertSystem";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { WalletConnect } from "@/components/WalletConnect";
@@ -54,7 +54,7 @@ function App() {
                 by AGORA
               </span>
             </button>
-            <Navigation />
+            <CommandBar />
           </div>
           <div className="flex items-center gap-3 lg:gap-4">
             <div className="text-right hidden sm:block">
