@@ -204,14 +204,14 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                       onClick={() => connect('web2')}
                       disabled={isConnecting}
                       className={`flex flex-col items-start p-4 rounded-xl border transition-all ${
-                        connectionType === 'web2' || (isMock && !connectionType)
+                        connectionType === 'web2' || address?.includes('Circle') || (isMock && !connectionType && address)
                         ? 'bg-[#00A3FF]/10 border-[#00A3FF] text-white' 
                         : 'bg-white/5 border-white/10 text-[#8A93A3] hover:border-white/20'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full mb-1">
                         <span className="font-bold text-sm text-white">Modular Wallet (Circle)</span>
-                        {(connectionType === 'web2' || (isMock && !connectionType)) && <CheckCircle2 className="w-4 h-4 text-[#00A3FF]" />}
+                        {(connectionType === 'web2' || address?.includes('Circle') || (isMock && !connectionType && address)) && <CheckCircle2 className="w-4 h-4 text-[#00A3FF]" />}
                       </div>
                       <span className="text-[10px] uppercase tracking-wider font-mono">Web2 Flow • Passkeys / PIN</span>
                     </button>
@@ -220,14 +220,14 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                       onClick={() => connect('web3')}
                       disabled={isConnecting}
                       className={`flex flex-col items-start p-4 rounded-xl border transition-all ${
-                        connectionType === 'web3'
+                        connectionType === 'web3' || address?.includes('Web3')
                         ? 'bg-[#00A3FF]/10 border-[#00A3FF] text-white' 
                         : 'bg-white/5 border-white/10 text-[#8A93A3] hover:border-white/20'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full mb-1">
                         <span className="font-bold text-sm text-white">External Wallet</span>
-                        {connectionType === 'web3' && <CheckCircle2 className="w-4 h-4 text-[#00A3FF]" />}
+                        {(connectionType === 'web3' || address?.includes('Web3')) && <CheckCircle2 className="w-4 h-4 text-[#00A3FF]" />}
                       </div>
                       <span className="text-[10px] uppercase tracking-wider font-mono">Web3 Flow • Metamask / Coinbase</span>
                     </button>
