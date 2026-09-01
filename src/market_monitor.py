@@ -27,6 +27,23 @@ class MarketDataMonitor(BaseComponent):
         self.price_history = {}
         self._info = None
         self._loop = None
+        
+        self.mock_prices = {
+            "BTC-PERP": 65000.0,
+            "ETH-PERP": 3500.0,
+            "SOL-PERP": 150.0,
+            "ARB-PERP": 1.10,
+            "TIA-PERP": 10.50,
+        }
+        
+        from src.events import SimulateCrash
+        self.subscribe(SimulateCrash, self.on_simulate_crash)
+
+    async def on_simulate_crash(self, event):
+        if self.mode == "mock":
+            if event.symbol in self.mock_prices:
+                self.mock_prices[event.symbol] *= (1.0 - event.drop_percentage)
+                self.logger.warning("flash_crash_executed", symbol=event.symbol, new_price=self.mock_prices[event.symbol])
 
     async def run(self):
         self.logger.info("market_monitor_started", mode=self.mode)
@@ -40,14 +57,6 @@ class MarketDataMonitor(BaseComponent):
     async def _run_mock(self):
         """Realistic mock volatility and price updates using random walks."""
         symbols = ["BTC-PERP", "ETH-PERP", "SOL-PERP", "ARB-PERP", "TIA-PERP"]
-        # Initial prices
-        prices = {
-            "BTC-PERP": 65000.0,
-            "ETH-PERP": 3500.0,
-            "SOL-PERP": 150.0,
-            "ARB-PERP": 1.10,
-            "TIA-PERP": 10.50,
-        }
         import random
 
         self.logger.info("mock_market_running", symbols=symbols)
@@ -56,7 +65,8 @@ class MarketDataMonitor(BaseComponent):
             for symbol in symbols:
                 # Random walk for price
                 change_pct = random.normalvariate(0, 0.002)  # 0.2% std dev
-                prices[symbol] *= (1 + change_pct)
+                self.mock_prices[symbol] *= (1 + change_pct)
+
                 
                 # Dynamic volatility factor (0.1 to 0.8)
                 # Volatility itself follows a bit of a trend/random walk
@@ -68,7 +78,7 @@ class MarketDataMonitor(BaseComponent):
                 self.logger.debug(
                     "mock_market_update", 
                     symbol=symbol, 
-                    price=round(prices[symbol], 4), 
+                    price=round(self.mock_prices[symbol], 4), 
                     vol=round(vol_factor, 4)
                 )
                 

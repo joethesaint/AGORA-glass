@@ -22,17 +22,17 @@ export const RescueMetricsCard = memo<RescueMetricsCardProps>(
         {/* Total Rescued */}
         <div className="space-y-3 relative group border-b border-white/5 sm:border-none pb-6 sm:pb-0">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-[#00D98F]/10 border border-[#00D98F]/20">
-              <Shield className="w-3.5 h-3.5 text-[#00D98F]" />
+            <div className="p-1.5 rounded-lg bg-pos/10 border border-pos/20">
+              <Shield className="w-3.5 h-3.5 text-pos" />
             </div>
-            <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Total Rescued</span>
+            <span className="text-[10px] text-muted font-bold uppercase tracking-widest">Total Rescued</span>
           </div>
           <div>
             <motion.p
               key={totalRescued}
               initial={{ opacity: 0.5 }}
               animate={{ opacity: 1 }}
-              className="text-2xl font-bold text-[#00D98F] text-glow"
+              className="text-2xl font-bold text-pos text-glow"
             >
               ${totalRescued.toLocaleString()}
             </motion.p>
@@ -43,17 +43,17 @@ export const RescueMetricsCard = memo<RescueMetricsCardProps>(
         {/* Avg Latency */}
         <div className="space-y-3 border-b border-white/5 sm:border-none pb-6 sm:pb-0">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-[#00A3FF]/10 border border-[#00A3FF]/20">
-              <Zap className="w-3.5 h-3.5 text-[#00A3FF]" />
+            <div className="p-1.5 rounded-lg bg-accent/10 border border-accent/20">
+              <Zap className="w-3.5 h-3.5 text-accent" />
             </div>
-            <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Avg Latency</span>
+            <span className="text-[10px] text-muted font-bold uppercase tracking-widest">Avg Latency</span>
           </div>
           <div>
             <motion.p
               key={avgLatency}
               initial={{ opacity: 0.5 }}
               animate={{ opacity: 1 }}
-              className="text-2xl font-bold text-[#00A3FF]"
+              className="text-2xl font-bold text-accent"
             >
               {avgLatency.toFixed(0)}ms
             </motion.p>
@@ -67,7 +67,7 @@ export const RescueMetricsCard = memo<RescueMetricsCardProps>(
             <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
               <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
             </div>
-            <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Efficiency</span>
+            <span className="text-[10px] text-muted font-bold uppercase tracking-widest">Efficiency</span>
           </div>
           <div>
             <motion.p
@@ -85,15 +85,15 @@ export const RescueMetricsCard = memo<RescueMetricsCardProps>(
         {/* Health */}
         <div className="space-y-3 pb-2 sm:pb-0">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-[#00D98F]/10 border border-[#00D98F]/20">
+            <div className="p-1.5 rounded-lg bg-pos/10 border border-pos/20">
               <div className="w-3.5 h-3.5 flex items-center justify-center">
-                <div className="w-2 h-2 bg-[#00D98F] rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-pos rounded-full animate-pulse" />
               </div>
             </div>
-            <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Sentinel</span>
+            <span className="text-[10px] text-muted font-bold uppercase tracking-widest">Sentinel</span>
           </div>
           <div>
-            <motion.p className="text-2xl font-bold text-[#00D98F]">ACTIVE</motion.p>
+            <motion.p className="text-2xl font-bold text-pos">ACTIVE</motion.p>
             <p className="text-[10px] text-[#484848] font-mono mt-1">Monitoring live risk</p>
           </div>
         </div>

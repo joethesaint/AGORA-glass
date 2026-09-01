@@ -34,11 +34,11 @@ const EVENT_ICONS: Record<string, React.ReactNode> = {
 };
 
 const EVENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  PositionUpdate: { bg: 'bg-[#00A3FF]/10', text: 'text-[#00A3FF]', border: 'border-[#00A3FF]/20' },
-  RiskVerdict: { bg: 'bg-[#F5A623]/10', text: 'text-[#F5A623]', border: 'border-[#F5A623]/20' },
+  PositionUpdate: { bg: 'bg-accent/10', text: 'text-accent', border: 'border-accent/20' },
+  RiskVerdict: { bg: 'bg-warn/10', text: 'text-warn', border: 'border-warn/20' },
   ReasoningTrace: { bg: 'bg-[#d4ff3e]/10', text: 'text-[#d4ff3e]', border: 'border-[#d4ff3e]/20' },
-  RescueInitiated: { bg: 'bg-[#00A3FF]/10', text: 'text-[#00A3FF]', border: 'border-[#00A3FF]/20' },
-  RescueComplete: { bg: 'bg-[#00D98F]/10', text: 'text-[#00D98F]', border: 'border-[#00D98F]/20' },
+  RescueInitiated: { bg: 'bg-accent/10', text: 'text-accent', border: 'border-accent/20' },
+  RescueComplete: { bg: 'bg-pos/10', text: 'text-pos', border: 'border-pos/20' },
   ANALYTICS_UPDATE: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20' },
   Unknown: { bg: 'bg-[#787878]/10', text: 'text-[#787878]', border: 'border-[#787878]/20' },
 };
@@ -76,10 +76,10 @@ export const EventFeed = memo<EventFeedProps>(({ events, maxItems = 10 }) => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h3 className="text-lg font-bold text-white mb-1">System Intelligence</h3>
-          <p className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Real-time Sentinel Signals</p>
+          <p className="text-[10px] text-muted font-bold uppercase tracking-widest">Real-time Sentinel Signals</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/10">
-          <div className="w-1.5 h-1.5 bg-[#00D98F] rounded-full animate-pulse" />
+          <div className="w-1.5 h-1.5 bg-pos rounded-full animate-pulse" />
           <span className="text-[9px] text-white font-mono uppercase">Streaming</span>
         </div>
       </div>
@@ -103,12 +103,10 @@ export const EventFeed = memo<EventFeedProps>(({ events, maxItems = 10 }) => {
             });
 
             return (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className={`group flex gap-4 p-4 min-h-[100px] rounded-xl border ${colors.bg} ${colors.border} hover:bg-white/[0.04] transition-all duration-300 relative overflow-hidden`}
+              <div
+                key={`${event.timestamp}-${event.event_type || event.type}-${JSON.stringify(event.payload || {}).length}`}
+                className={`group flex gap-4 p-4 min-h-[100px] rounded-xl border ${colors.bg} ${colors.border} hover:bg-white/[0.04] transition-all duration-300 relative overflow-hidden animate-in fade-in slide-in-from-left-2`}
+                style={{ animationFillMode: 'both' }}
               >
                 {/* Visual Accent */}
                 <div className={`absolute left-0 top-0 bottom-0 w-0.5 opacity-40 ${colors.text.replace('text-', 'bg-')}`} />
@@ -124,7 +122,7 @@ export const EventFeed = memo<EventFeedProps>(({ events, maxItems = 10 }) => {
                     <span className={`text-[10px] font-bold ${colors.text} uppercase tracking-widest`}>
                       {type}
                     </span>
-                    <span className="text-[10px] text-[#484848] font-mono group-hover:text-[#8A93A3] transition-colors">{time}</span>
+                    <span className="text-[10px] text-[#484848] font-mono group-hover:text-muted transition-colors">{time}</span>
                   </div>
 
                   <div className="text-[11px] text-white/70 leading-relaxed font-mono">
@@ -132,17 +130,17 @@ export const EventFeed = memo<EventFeedProps>(({ events, maxItems = 10 }) => {
                       <div className="space-y-1.5">
                         <div className="flex justify-between">
                           <span className="text-[#484848]">HASH</span>
-                          <span className="text-[#00D98F] text-[10px] truncate max-w-[200px]">{data?.reason_hash}</span>
+                          <span className="text-pos text-[10px] truncate max-w-[200px]">{data?.reason_hash}</span>
                         </div>
                         <div className="flex justify-between border-t border-white/5 pt-1">
                           <span className="text-[#484848]">ACTION</span>
-                          <span className="text-[#00A3FF] text-[10px]">{data?.action}</span>
+                          <span className="text-accent text-[10px]">{data?.action}</span>
                         </div>
                       </div>
                     )}
                     {type === 'RiskVerdict' && (
                       <div className="flex items-center justify-between">
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${data?.status === 'CRITICAL' ? 'bg-[#FF3B3B]/20 text-[#FF3B3B]' : 'bg-[#F5A623]/20 text-[#F5A623]'}`}>
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${data?.status === 'CRITICAL' ? 'bg-neg/20 text-neg' : 'bg-warn/20 text-warn'}`}>
                           {data?.status}
                         </span>
                         <span className="text-white font-bold">{data?.leverage?.toFixed(2)}x LEVERAGE</span>
@@ -152,11 +150,11 @@ export const EventFeed = memo<EventFeedProps>(({ events, maxItems = 10 }) => {
                       <div className="space-y-1.5">
                         <div className="flex justify-between">
                           <span className="text-[#484848]">RESCUED</span>
-                          <span className="text-[#00D98F] font-bold">${data?.amount?.toLocaleString()} USDC</span>
+                          <span className="text-pos font-bold">${data?.amount?.toLocaleString()} USDC</span>
                         </div>
                         <div className="flex justify-between border-t border-white/5 pt-1">
                           <span className="text-[#484848]">LATENCY</span>
-                          <span className="text-[#00A3FF]">{data?.latency_ms?.toFixed(0)}ms</span>
+                          <span className="text-accent">{data?.latency_ms?.toFixed(0)}ms</span>
                         </div>
                       </div>
                     )}
@@ -165,7 +163,7 @@ export const EventFeed = memo<EventFeedProps>(({ events, maxItems = 10 }) => {
                         <span className="text-white font-bold">{data?.symbol}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-[#484848]">MARGIN</span>
-                          <span className={`font-bold ${data?.margin_ratio < 0.12 ? 'text-[#FF3B3B]' : 'text-[#00D98F]'}`}>
+                          <span className={`font-bold ${data?.margin_ratio < 0.12 ? 'text-neg' : 'text-pos'}`}>
                             {(data?.margin_ratio * 100).toFixed(1)}%
                           </span>
                         </div>
@@ -174,14 +172,14 @@ export const EventFeed = memo<EventFeedProps>(({ events, maxItems = 10 }) => {
                     {type === 'ANALYTICS_UPDATE' && (
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
                         <span className="text-[#484848]">TOTAL VOL</span>
-                        <span className="text-[#00D98F] text-right">${data?.total_rescued_usdc?.toLocaleString()}</span>
+                        <span className="text-pos text-right">${data?.total_rescued_usdc?.toLocaleString()}</span>
                         <span className="text-[#484848]">AVG LATENCY</span>
-                        <span className="text-[#00A3FF] text-right">{data?.avg_latency_ms}ms</span>
+                        <span className="text-accent text-right">{data?.avg_latency_ms}ms</span>
                       </div>
                     )}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })
         )}

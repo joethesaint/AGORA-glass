@@ -59,7 +59,7 @@ class VaultService:
         """
         if not self.private_key or os.getenv("LIVE_MODE", "false").lower() != "true":
             self.logger.info(f"MOCK VAULT RELEASE: Authorizing {amount} USDC for {recipient}")
-            await asyncio.sleep(0.15)
+            await asyncio.sleep(0.04)  # Fast-path mock: 40ms (was 150ms)
             return "0xSIMULATED_VAULT_TX"
 
         if self.vault_address == "0x0000000000000000000000000000000000000000":

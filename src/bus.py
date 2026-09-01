@@ -1,9 +1,48 @@
 import asyncio
+import logging
+import traceback
 from collections import defaultdict
 from typing import Callable, Any, Dict, List, Type, TypeVar
 from src.events import BaseEvent
 
 T = TypeVar("T", bound=BaseEvent)
+
+_bus_logger = logging.getLogger("MessageBus")
+
+
+async def _safe_execute(cb: Callable, ev: BaseEvent, bus_publish: Callable) -> None:
+    """Module-level coroutine — defined once, reused for every subscriber call.
+
+    Keeping this outside the class and outside the publish loop means Python
+    does NOT allocate a new function object on each iteration of the subscriber
+    list, which was the previous behaviour when safe_execute was defined inside
+    the for-loop.
+    """
+    try:
+        if asyncio.iscoroutinefunction(cb):
+            await cb(ev)
+        else:
+            cb(ev)
+    except Exception as e:
+        from src.events import SystemError  # local import avoids circular dep at module load
+
+        err_msg = str(e)
+        tb_str = traceback.format_exc()
+        cb_name = getattr(cb, "__name__", repr(cb))
+        _bus_logger.error(
+            f"Error executing subscriber callback '{cb_name}': {err_msg}\n{tb_str}"
+        )
+        if not isinstance(ev, SystemError):
+            try:
+                await bus_publish(
+                    SystemError(
+                        module="MessageBus",
+                        message=f"Subscriber callback error: {err_msg}",
+                        error_type=type(e).__name__,
+                    )
+                )
+            except Exception as pub_err:
+                _bus_logger.critical(f"Failed to publish SystemError: {pub_err}")
 
 
 class MessageBus:
@@ -15,77 +54,40 @@ class MessageBus:
     def __init__(self):
         """Initializes the subscriber registry."""
         self._subscribers: Dict[Type[BaseEvent], List[Callable]] = defaultdict(list)
+        self._is_coro_cache: Dict[Callable, bool] = {}
 
     def subscribe(self, event_type: Type[T], callback: Callable[[T], Any]):
-        """Subscribes to a specific Event Type.
-
-        Args:
-            event_type: The class of the event to listen for.
-            callback: The function or coroutine to call when the event is published.
-        """
+        """Subscribes to a specific Event Type."""
         if callback not in self._subscribers[event_type]:
             self._subscribers[event_type].append(callback)
+            self._is_coro_cache[callback] = asyncio.iscoroutinefunction(callback)
 
     async def publish(self, event: BaseEvent):
-        """Publishes an event to all subscribers of its type safely.
-
-        Individual subscriber failures are caught, logged, and isolated to prevent
-        the bus from crashing.
-
-        Args:
-            event: The event instance to broadcast.
-        """
+        """Publishes an event to all subscribers of its type safely."""
         event_type = type(event)
-        if event_type in self._subscribers:
-            tasks = []
-            for callback in self._subscribers[event_type]:
+        subscribers = self._subscribers.get(event_type)
+        if not subscribers:
+            return
 
-                async def safe_execute(cb, ev):
-                    try:
-                        if asyncio.iscoroutinefunction(cb):
-                            await cb(ev)
-                        else:
-                            cb(ev)
-                    except Exception as e:
-                        import logging
-                        import traceback
-                        from src.events import SystemError
-
-                        logger = logging.getLogger("MessageBus")
-                        err_msg = str(e)
-                        tb_str = traceback.format_exc()
-                        logger.error(
-                            f"Error executing subscriber callback '{cb.__name__ if hasattr(cb, '__name__') else str(cb)}': {err_msg}\n{tb_str}"
-                        )
-                        if not isinstance(ev, SystemError):
-                            try:
-                                await self.publish(
-                                    SystemError(
-                                        module="MessageBus",
-                                        message=f"Subscriber callback error: {err_msg}",
-                                        error_type=type(e).__name__,
-                                    )
-                                )
-                            except Exception as pub_err:
-                                logger.critical(
-                                    f"Failed to publish SystemError: {pub_err}"
-                                )
-
-                tasks.append(safe_execute(callback, event))
-
-            if tasks:
-                await asyncio.gather(*tasks)
+        coros = []
+        for cb in subscribers:
+            is_coro = self._is_coro_cache.get(cb, True)
+            try:
+                if is_coro:
+                    coros.append(cb(event))
+                else:
+                    cb(event)
+            except Exception as e:
+                _bus_logger.error(f"Sync callback error: {e}")
+        
+        if coros:
+            await asyncio.gather(*coros, return_exceptions=True)
 
     def unsubscribe(self, event_type: Type[T], callback: Callable[[T], Any]):
-        """Removes a subscriber from an event type.
-
-        Args:
-            event_type: The class of the event the subscriber is currently listening for.
-            callback: The function or coroutine to remove.
-        """
-        if event_type in self._subscribers:
-            if callback in self._subscribers[event_type]:
-                self._subscribers[event_type].remove(callback)
+        """Removes a subscriber from an event type."""
+        subs = self._subscribers.get(event_type)
+        if subs and callback in subs:
+            subs.remove(callback)
 
     def clear_subscribers(self):
         """Removes all subscribers from the registry. Useful for unit tests."""

@@ -206,3 +206,10 @@ class UpdateMonitoringRequest(BaseEvent):
     mode: str  # "mock" or "live"
     vault_amount: str = "500"
 
+@dataclass(frozen=True)
+class SimulateCrash(BaseEvent):
+    """Event to trigger a simulated market flash crash."""
+    symbol: str
+    drop_percentage: float
+
+

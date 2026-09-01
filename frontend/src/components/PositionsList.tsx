@@ -53,12 +53,9 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
     const liquidationPrice = position.liquidationPrice || (position.entryPrice - (position.collateral / position.size));
 
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
+      <div
         onClick={() => onClick?.(position.id)}
-        className="agora-card p-5 space-y-6 cursor-pointer hover:border-[#00A3FF]/50 transition-colors group"
+        className="agora-card p-5 space-y-6 cursor-pointer hover:border-accent/50 transition-colors group animate-in fade-in slide-in-from-bottom-2 duration-300"
       >
         {/* Header */}
         <div className="flex justify-between items-start">
@@ -66,7 +63,7 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
             <div className="flex items-center gap-3 mb-2">
               <div className="flex items-center gap-2">
                 <h4 className="text-lg font-bold text-white tracking-tight">{position.symbol}</h4>
-                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${side === 'LONG' ? 'bg-[#00D98F]/10 text-[#00D98F]' : 'bg-[#FF3B3B]/10 text-[#FF3B3B]'}`}>
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${side === 'LONG' ? 'bg-pos/10 text-pos' : 'bg-neg/10 text-neg'}`}>
                   {side}
                 </span>
               </div>
@@ -81,37 +78,32 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
             }}
             className="p-1.5 hover:bg-white/5 rounded-lg transition-colors border border-transparent hover:border-white/10"
           >
-            <MoreVertical className="w-4 h-4 text-[#8A93A3]" />
+            <MoreVertical className="w-4 h-4 text-muted" />
           </button>
         </div>
 
         {/* Price Info Grid */}
         <div className="grid grid-cols-3 gap-4 py-4 border-y border-white/5">
           <div>
-            <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest mb-1.5">Entry Price</p>
+            <p className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1.5">Entry Price</p>
             <p className="text-xs font-mono text-white">${position.entryPrice.toLocaleString()}</p>
           </div>
           <div>
-            <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest mb-1.5">Current</p>
-            <motion.p
-              key={position.currentPrice}
-              initial={{ opacity: 0.5 }}
-              animate={{ opacity: 1 }}
-              className={`text-xs font-mono font-bold ${priceChange >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}
-            >
+            <p className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1.5">Current</p>
+            <p className={`text-xs font-mono font-bold ${priceChange >= 0 ? 'text-pos' : 'text-neg'}`}>
               ${position.currentPrice.toLocaleString()}
-            </motion.p>
+            </p>
           </div>
           <div>
-            <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest mb-1.5">PnL %</p>
+            <p className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1.5">PnL %</p>
             <div className="flex items-center gap-1">
-              <p className={`text-xs font-mono font-bold ${priceChange >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}>
+              <p className={`text-xs font-mono font-bold ${priceChange >= 0 ? 'text-pos' : 'text-neg'}`}>
                 {priceChange >= 0 ? '+' : ''}{priceChangePercent.toFixed(2)}%
               </p>
               {priceChange >= 0 ? (
-                <ArrowUpRight className="w-3 h-3 text-[#00D98F]" />
+                <ArrowUpRight className="w-3 h-3 text-pos" />
               ) : (
-                <ArrowDownRight className="w-3 h-3 text-[#FF3B3B]" />
+                <ArrowDownRight className="w-3 h-3 text-neg" />
               )}
             </div>
           </div>
@@ -120,15 +112,10 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
         {/* Core Risk Metrics */}
         <div className="grid grid-cols-2 gap-6 bg-white/5 p-4 rounded-xl border border-white/5">
             <div className="space-y-2">
-              <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest text-glow">Margin Ratio</p>
-              <motion.p
-                key={position.marginRatio}
-                initial={{ opacity: 0.5 }}
-                animate={{ opacity: 1 }}
-                className={`text-2xl font-bold font-mono ${position.marginRatio >= 0.12 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'}`}
-              >
+              <p className="text-[9px] text-muted font-bold uppercase tracking-widest text-glow">Margin Ratio</p>
+              <p className={`text-2xl font-bold font-mono ${position.marginRatio >= 0.12 ? 'text-pos' : 'text-neg'}`}>
                 {(position.marginRatio * 100).toFixed(1)}%
-              </motion.p>
+              </p>
               {/* Safety Band Bar */}
               <div className="w-full bg-gray-700/30 h-2 rounded-full overflow-hidden mt-1">
                 <div
@@ -141,38 +128,28 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
               </div>
             </div>
           <div className="space-y-1">
-            <p className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest">Leverage</p>
-            <motion.p
-              key={position.leverage}
-              initial={{ opacity: 0.5 }}
-              animate={{ opacity: 1 }}
-              className={`text-2xl font-bold font-mono ${position.leverage <= 5 ? 'text-[#00A3FF]' : 'text-[#FF3B3B]'}`}
-            >
+            <p className="text-[9px] text-muted font-bold uppercase tracking-widest">Leverage</p>
+            <p className={`text-2xl font-bold font-mono ${position.leverage <= 5 ? 'text-accent' : 'text-neg'}`}>
               {position.leverage.toFixed(1)}x
-            </motion.p>
+            </p>
           </div>
         </div>
 
         {/* PnL and Liquidation Section */}
         <div className="space-y-3">
           <div className="flex justify-between items-center px-1">
-            <span className="text-[9px] text-[#8A93A3] font-bold uppercase tracking-widest">Unrealized PnL</span>
-            <motion.p
-              key={position.unrealizedPnL}
-              initial={{ opacity: 0.5 }}
-              animate={{ opacity: 1 }}
-              className={`text-sm font-mono font-bold ${isUnderwater ? 'text-[#FF3B3B]' : 'text-[#00D98F]'}`}
-            >
+            <span className="text-[9px] text-muted font-bold uppercase tracking-widest">Unrealized PnL</span>
+            <p className={`text-sm font-mono font-bold ${isUnderwater ? 'text-neg' : 'text-pos'}`}>
               {isUnderwater ? '' : '+'}${position.unrealizedPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </motion.p>
+            </p>
           </div>
           
           {position.marginRatio < 0.15 && (
-            <div className="p-3 rounded-lg bg-[#FF3B3B]/10 border border-[#FF3B3B]/20 flex gap-3 items-center">
-              <AlertTriangle className="w-4 h-4 text-[#FF3B3B] flex-shrink-0" />
+            <div className="p-3 rounded-lg bg-neg/10 border border-neg/20 flex gap-3 items-center">
+              <AlertTriangle className="w-4 h-4 text-neg flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-[9px] text-[#FF3B3B] font-bold uppercase tracking-widest">Critical Liquidation Risk</p>
-                <p className="text-[10px] text-[#FF3B3B]/80 font-mono">Price Target: ${liquidationPrice.toLocaleString()}</p>
+                <p className="text-[9px] text-neg font-bold uppercase tracking-widest">Critical Liquidation Risk</p>
+                <p className="text-[10px] text-neg/80 font-mono">Price Target: ${liquidationPrice.toLocaleString()}</p>
               </div>
             </div>
           )}
@@ -180,38 +157,32 @@ export const PositionCardEnhanced = memo<PositionCardEnhancedProps>(
 
         {/* Quick Actions */}
         <div className="grid grid-cols-3 gap-2 pt-2">
-          <motion.button
-            whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={(e) => handleGatedAction(e, onAddMargin)}
-            className="py-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col items-center justify-center gap-1.5 transition-colors relative group/btn"
+            className="py-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 hover:scale-[1.02] hover:bg-white/10 active:scale-[0.98] relative group/btn"
           >
-            {!isConnected && <Lock className="w-2 h-2 absolute top-1.5 right-1.5 text-[#484848] group-hover/btn:text-[#8A93A3]" />}
-            <Plus className="w-3 h-3 text-[#8A93A3]" />
+            {!isConnected && <Lock className="w-2 h-2 absolute top-1.5 right-1.5 text-[#484848] group-hover/btn:text-muted" />}
+            <Plus className="w-3 h-3 text-muted" />
             <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Add Margin</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
-            whileTap={{ scale: 0.98 }}
+          </button>
+          <button
             onClick={(e) => handleGatedAction(e, onDeleverage)}
-            className="py-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col items-center justify-center gap-1.5 transition-colors relative group/btn"
+            className="py-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 hover:scale-[1.02] hover:bg-white/10 active:scale-[0.98] relative group/btn"
           >
-            {!isConnected && <Lock className="w-2 h-2 absolute top-1.5 right-1.5 text-[#484848] group-hover/btn:text-[#8A93A3]" />}
-            <Minus className="w-3 h-3 text-[#8A93A3]" />
+            {!isConnected && <Lock className="w-2 h-2 absolute top-1.5 right-1.5 text-[#484848] group-hover/btn:text-muted" />}
+            <Minus className="w-3 h-3 text-muted" />
             <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Deleverage</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 59, 59, 0.15)' }}
-            whileTap={{ scale: 0.98 }}
+          </button>
+          <button
             onClick={(e) => handleGatedAction(e, onClose)}
-            className="py-2.5 rounded-lg bg-[#FF3B3B]/10 border border-[#FF3B3B]/10 flex flex-col items-center justify-center gap-1.5 transition-colors relative group/btn"
+            className="py-2.5 rounded-lg bg-neg/10 border border-neg/10 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 hover:scale-[1.02] hover:bg-neg/20 active:scale-[0.98] relative group/btn"
           >
-            {!isConnected && <Lock className="w-2 h-2 absolute top-1.5 right-1.5 text-[#FF3B3B]/40 group-hover/btn:text-[#FF3B3B]" />}
-            <X className="w-3 h-3 text-[#FF3B3B]" />
-            <span className="text-[8px] font-bold text-[#FF3B3B] uppercase tracking-tighter">Close Pos</span>
-          </motion.button>
+            {!isConnected && <Lock className="w-2 h-2 absolute top-1.5 right-1.5 text-neg/40 group-hover/btn:text-neg" />}
+            <X className="w-3 h-3 text-neg" />
+            <span className="text-[8px] font-bold text-neg uppercase tracking-tighter">Close Pos</span>
+          </button>
         </div>
-      </motion.div>
+      </div>
     );
   }
 );
@@ -232,11 +203,7 @@ export const PositionsList = memo<PositionsListProps>(
     const warningCount = positions.filter((p) => p.leverage > 3 && p.leverage <= 5).length;
 
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-6"
-      >
+      <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
         {/* Summary Stats */}
         <div className="agora-card p-4 flex gap-6 items-center">
           <div>
@@ -277,7 +244,7 @@ export const PositionsList = memo<PositionsListProps>(
             ))}
           </div>
         )}
-      </motion.div>
+      </div>
     );
   }
 );

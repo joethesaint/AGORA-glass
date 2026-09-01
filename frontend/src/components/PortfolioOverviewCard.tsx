@@ -33,21 +33,21 @@ export const PortfolioOverviewCard = memo<PortfolioOverviewCardProps>(
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-lg font-bold text-white">Portfolio Overview</h3>
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#00D98F] animate-pulse" />
-                <span className="text-[8px] font-bold text-[#00D98F] uppercase tracking-tighter">Live</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-pos animate-pulse" />
+                <span className="text-[8px] font-bold text-pos uppercase tracking-tighter">Live</span>
               </div>
             </div>
-            <p className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">
+            <p className="text-[10px] text-muted font-bold uppercase tracking-widest">
               Monitoring: {positionCount} active {positionCount === 1 ? 'position' : 'positions'}
             </p>
           </div>
           <div
             className={`px-3 py-1 rounded-lg border text-[10px] font-mono tracking-widest bg-glow ${
               health === 'critical'
-                ? 'bg-[#FF3B3B]/10 text-[#FF3B3B] border-[#FF3B3B]/20'
+                ? 'bg-neg/10 text-neg border-neg/20'
                 : health === 'healthy'
-                ? 'bg-[#00D98F]/10 text-[#00D98F] border-[#00D98F]/20'
-                : 'bg-[#8A93A3]/10 text-[#8A93A3] border-[#8A93A3]/20'
+                ? 'bg-pos/10 text-pos border-pos/20'
+                : 'bg-muted/10 text-muted border-muted/20'
             }`}
           >
             {health.toUpperCase()}
@@ -61,7 +61,7 @@ export const PortfolioOverviewCard = memo<PortfolioOverviewCardProps>(
               <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
                 <Wallet className="w-3.5 h-3.5 text-indigo-400" />
               </div>
-              <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Total Value</span>
+              <span className="text-[10px] text-muted font-bold uppercase tracking-widest">Total Value</span>
             </div>
             <div>
               <motion.p
@@ -79,17 +79,17 @@ export const PortfolioOverviewCard = memo<PortfolioOverviewCardProps>(
           {/* Avg Margin */}
           <div className="space-y-3 border-b border-white/5 sm:border-none pb-6 sm:pb-0">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-[#00D98F]/10 border border-[#00D98F]/20">
-                <Activity className="w-3.5 h-3.5 text-[#00D98F]" />
+              <div className="p-1.5 rounded-lg bg-pos/10 border border-pos/20">
+                <Activity className="w-3.5 h-3.5 text-pos" />
               </div>
-              <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Avg Margin</span>
+              <span className="text-[10px] text-muted font-bold uppercase tracking-widest">Avg Margin</span>
             </div>
             <div>
               <motion.p
                 key={avgMarginRatio}
                 initial={{ opacity: 0.5 }}
                 animate={{ opacity: 1 }}
-                className="text-2xl font-bold text-[#00D98F]"
+                className="text-2xl font-bold text-pos"
               >
                 {(avgMarginRatio * 100).toFixed(1)}%
               </motion.p>
@@ -100,17 +100,17 @@ export const PortfolioOverviewCard = memo<PortfolioOverviewCardProps>(
           {/* Avg Leverage */}
           <div className="space-y-3 border-b border-white/5 sm:border-none pb-6 sm:pb-0">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-[#00A3FF]/10 border border-[#00A3FF]/20">
-                <TrendingUp className="w-3.5 h-3.5 text-[#00A3FF]" />
+              <div className="p-1.5 rounded-lg bg-accent/10 border border-accent/20">
+                <TrendingUp className="w-3.5 h-3.5 text-accent" />
               </div>
-              <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Avg Leverage</span>
+              <span className="text-[10px] text-muted font-bold uppercase tracking-widest">Avg Leverage</span>
             </div>
             <div>
               <motion.p
                 key={avgLeverage}
                 initial={{ opacity: 0.5 }}
                 animate={{ opacity: 1 }}
-                className="text-2xl font-bold text-[#00A3FF]"
+                className="text-2xl font-bold text-accent"
               >
                 {avgLeverage.toFixed(1)}x
               </motion.p>
@@ -121,17 +121,17 @@ export const PortfolioOverviewCard = memo<PortfolioOverviewCardProps>(
           {/* Critical Alerts */}
           <div className="space-y-3 pb-2 sm:pb-0">
             <div className="flex items-center gap-2">
-              <div className={`p-1.5 rounded-lg ${criticalPositions > 0 ? 'bg-[#FF3B3B]/10 border-[#FF3B3B]/20' : 'bg-[#00D98F]/10 border-[#00D98F]/20'}`}>
-                <AlertTriangle className={`w-3.5 h-3.5 ${criticalPositions > 0 ? 'text-[#FF3B3B]' : 'text-[#00D98F]'}`} />
+              <div className={`p-1.5 rounded-lg ${criticalPositions > 0 ? 'bg-neg/10 border-neg/20' : 'bg-pos/10 border-pos/20'}`}>
+                <AlertTriangle className={`w-3.5 h-3.5 ${criticalPositions > 0 ? 'text-neg' : 'text-pos'}`} />
               </div>
-              <span className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest">Risk Exposure</span>
+              <span className="text-[10px] text-muted font-bold uppercase tracking-widest">Risk Exposure</span>
             </div>
             <div>
               <motion.p
                 key={criticalPositions}
                 initial={{ opacity: 0.5 }}
                 animate={{ opacity: 1 }}
-                className={`text-2xl font-bold ${criticalPositions > 0 ? 'text-[#FF3B3B]' : 'text-[#00D98F]'}`}
+                className={`text-2xl font-bold ${criticalPositions > 0 ? 'text-neg' : 'text-pos'}`}
               >
                 {criticalPositions} CRITICAL
               </motion.p>

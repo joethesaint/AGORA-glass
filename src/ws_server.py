@@ -75,9 +75,9 @@ class WebSocketServer(BaseComponent):
                 self.clients.remove(client)
 
     def _serialize_event(self, event):
-        """Converts dataclass event to a dictionary, handling nested objects."""
-        import dataclasses
-        return dataclasses.asdict(event)
+        """Fast converts dataclass event to a dictionary."""
+        # Using event.__dict__ is 10x-100x faster than dataclasses.asdict() in hot loops
+        return getattr(event, "__dict__", str(event))
 
     async def handle_messages(self, websocket):
         """Handles incoming messages from a client."""
@@ -142,6 +142,49 @@ class WebSocketServer(BaseComponent):
                         event_type="MONITORING_CONFIG_APPLIED",
                         payload={"account": account, "mode": mode}
                     ))
+                    
+                elif data.get("type") == "KILL_SWITCH":
+                    self.logger.warning("kill_switch_triggered", source="frontend_dashboard")
+                    from src.events import TradingSignal, RiskVerdict
+                    from src.bus import bus
+                    # Broadcast the tripped state back to the UI
+                    await self.on_event(WSSignal(
+                        event_type="KILL_SWITCH_TRIPPED",
+                        payload={"status": "ARMED", "routing": "A-book"}
+                    ))
+                    # Trigger an immediate de-risk/rescue for all exposure
+                    await bus.publish(TradingSignal(
+                        symbol="ALL",
+                        action="DE_RISK",
+                        reason="Manual Kill-Switch Tripped via Dashboard",
+                        amount=1.0, 
+                        price=0.0
+                    ))
+                
+                elif data.get("type") == "SIMULATE_FLASH_CRASH":
+                    from src.events import SimulateCrash
+                    from src.bus import bus
+                    await bus.publish(SimulateCrash(
+                        symbol=data.get("symbol", "BTC-PERP"),
+                        drop_percentage=float(data.get("drop", 0.20))
+                    ))
+                    self.logger.warning("flash_crash_triggered", source="dashboard")
+                    await self.on_event(WSSignal(
+                        event_type="MODE_CHANGED",
+                        payload={"mode": "Flash Crash Activated!"}
+                    ))
+                
+                elif data.get("type") == "HEDGE_POSITION":
+                    from src.events import TradingSignal
+                    from src.bus import bus
+                    await bus.publish(TradingSignal(
+                        symbol=data.get("symbol", "BTC-PERP"),
+                        action="HEDGE",
+                        reason="Manual Hedge via Dashboard",
+                        amount=float(data.get("amount", 1.0)), 
+                        price=0.0
+                    ))
+                    self.logger.info("manual_hedge_triggered", source="dashboard")
             except Exception as e:
                 self.logger.error("ws_message_error", error=str(e))
 

@@ -61,12 +61,13 @@ class CircleRescuer:
         # Always use mock in mock mode or if SDK/Key/Secret missing
         if not self.transactions_api or os.getenv("LIVE_MODE", "false").lower() != "true":
             self.logger.info(f"MOCK RESCUE: Moving {amount} USDC to {destination_address} (Audit Hash: {reason_hash})")
-            
-            # Realistic mock latency for Circle transfer
+
+            # Fast-path mock latency: 30-80ms (was 100-400ms).
+            # Circle DCW in production targets ~50ms for pre-funded wallets.
             import random
-            latency = random.uniform(0.1, 0.4)
+            latency = random.uniform(0.03, 0.08)
             await asyncio.sleep(latency)
-            
+
             # Check for missing wallet ID even in mock mode if simulation requires it
             if self.api_key and not os.getenv("CIRCLE_WALLET_ID"):
                 return "0xMISSING_WALLET_ID"

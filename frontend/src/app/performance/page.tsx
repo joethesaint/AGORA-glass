@@ -8,7 +8,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   AreaChart,
   Area,
   BarChart,
@@ -18,6 +17,7 @@ import {
   Cell,
   Legend,
 } from 'recharts';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 import {
   TrendingUp,
   Clock,
@@ -68,7 +68,7 @@ const generateHourlyData = () => {
   return data;
 };
 
-const COLORS = ['#00A3FF', '#00D98F', '#FF6B35', '#FFB800', '#A855F7'];
+const COLORS = ['var(--color-accent)', 'var(--color-pos)', '#FF6B35', '#FFB800', '#A855F7'];
 
 interface StatCardProps {
   title: string;
@@ -89,7 +89,7 @@ const StatCard = ({ title, value, change, icon, trend }: StatCardProps) => (
       {change !== undefined && (
         <div
           className={`flex items-center gap-1 text-xs font-mono ${
-            trend === 'up' ? 'text-[#00D98F]' : trend === 'down' ? 'text-[#FF3B3B]' : 'text-[#8A93A3]'
+            trend === 'up' ? 'text-pos' : trend === 'down' ? 'text-neg' : 'text-muted'
           }`}
         >
           {trend === 'up' ? (
@@ -102,7 +102,7 @@ const StatCard = ({ title, value, change, icon, trend }: StatCardProps) => (
       )}
     </div>
     <p className="text-2xl font-bold text-white font-mono">{value}</p>
-    <p className="text-xs text-[#8A93A3] mt-1">{title}</p>
+    <p className="text-xs text-muted mt-1">{title}</p>
   </motion.div>
 );
 
@@ -114,6 +114,10 @@ const timeRanges = [
 ];
 
 export default function PerformancePage() {
+  const { ref: rescuedChartRef, width: rescuedChartWidth } = useContainerWidth<HTMLDivElement>();
+  const { ref: latencyChartRef, width: latencyChartWidth } = useContainerWidth<HTMLDivElement>();
+  const { ref: successChartRef, width: successChartWidth } = useContainerWidth<HTMLDivElement>();
+  const { ref: hourlyChartRef, width: hourlyChartWidth } = useContainerWidth<HTMLDivElement>();
   const [timeRange, setTimeRange] = useState(7);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -157,7 +161,7 @@ export default function PerformancePage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Performance Analytics</h1>
-          <p className="text-sm text-[#8A93A3] mt-1">
+          <p className="text-sm text-muted mt-1">
             Monitor rescue operations, latency metrics, and system performance
           </p>
         </div>
@@ -169,8 +173,8 @@ export default function PerformancePage() {
                 onClick={() => setTimeRange(range.value)}
                 className={`px-3 py-1.5 text-xs font-mono rounded-md transition-colors ${
                   timeRange === range.value
-                    ? 'bg-[#00A3FF] text-white'
-                    : 'text-[#8A93A3] hover:text-white'
+                    ? 'bg-accent text-white'
+                    : 'text-muted hover:text-white'
                 }`}
               >
                 {range.label}
@@ -179,13 +183,13 @@ export default function PerformancePage() {
           </div>
           <button
             onClick={handleRefresh}
-            className={`p-2 bg-[#111111] border border-[#1e1e1e] rounded-lg hover:border-[#00A3FF] transition-colors ${
+            className={`p-2 bg-[#111111] border border-[#1e1e1e] rounded-lg hover:border-accent transition-colors ${
               isLoading ? 'animate-spin' : ''
             }`}
           >
-            <RefreshCw size={16} className="text-[#8A93A3]" />
+            <RefreshCw size={16} className="text-muted" />
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#111111] border border-[#1e1e1e] rounded-lg text-sm text-[#8A93A3] hover:border-[#00A3FF] hover:text-white transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#111111] border border-[#1e1e1e] rounded-lg text-sm text-muted hover:border-accent hover:text-white transition-colors">
             <Download size={14} />
             Export
           </button>
@@ -199,21 +203,21 @@ export default function PerformancePage() {
           value={formatCurrency(stats.totalRescued)}
           change={12.5}
           trend="up"
-          icon={<DollarSign size={18} className="text-[#00D98F]" />}
+          icon={<DollarSign size={18} className="text-pos" />}
         />
         <StatCard
           title="Avg Latency"
           value={`${stats.avgLatency}ms`}
           change={-8.2}
           trend="up"
-          icon={<Clock size={18} className="text-[#00A3FF]" />}
+          icon={<Clock size={18} className="text-accent" />}
         />
         <StatCard
           title="Success Rate"
           value={`${stats.avgSuccessRate}%`}
           change={0.5}
           trend="up"
-          icon={<Shield size={18} className="text-[#00D98F]" />}
+          icon={<Shield size={18} className="text-pos" />}
         />
         <StatCard
           title="Total Rescues"
@@ -229,91 +233,89 @@ export default function PerformancePage() {
         {/* Rescued Value Over Time */}
         <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
           <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <TrendingUp size={16} className="text-[#00D98F]" />
+            <TrendingUp size={16} className="text-pos" />
             Rescued Value Over Time
           </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={performanceData}>
-                <defs>
-                  <linearGradient id="rescuedGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#00D98F" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#00D98F" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
-                <XAxis
-                  dataKey="date"
-                  stroke="#484848"
-                  fontSize={10}
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="#484848"
-                  fontSize={10}
-                  tickLine={false}
-                  tickFormatter={(v) => formatCurrency(v)}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#111111',
-                    border: '1px solid #1e1e1e',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value) => [formatCurrency(value as number), 'Rescued']}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="rescued"
-                  stroke="#00D98F"
-                  fill="url(#rescuedGradient)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div ref={rescuedChartRef} className="h-64">
+            <AreaChart width={rescuedChartWidth} height={256} data={performanceData}>
+              <defs>
+                <linearGradient id="rescuedGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-pos)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--color-pos)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+              <XAxis
+                dataKey="date"
+                stroke="#484848"
+                fontSize={10}
+                tickLine={false}
+              />
+              <YAxis
+                stroke="#484848"
+                fontSize={10}
+                tickLine={false}
+                tickFormatter={(v) => formatCurrency(v)}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#111111',
+                  border: '1px solid #1e1e1e',
+                  borderRadius: '8px',
+                }}
+                formatter={(value) => [formatCurrency(value as number), 'Rescued']}
+              />
+              <Area
+                type="monotone"
+                dataKey="rescued"
+                stroke="var(--color-pos)"
+                fill="url(#rescuedGradient)"
+                strokeWidth={2}
+                isAnimationActive={false}
+              />
+            </AreaChart>
           </div>
         </div>
 
         {/* Latency Over Time */}
         <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
           <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Clock size={16} className="text-[#00A3FF]" />
+            <Clock size={16} className="text-accent" />
             Average Latency
           </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
-                <XAxis
-                  dataKey="date"
-                  stroke="#484848"
-                  fontSize={10}
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="#484848"
-                  fontSize={10}
-                  tickLine={false}
-                  domain={[200, 600]}
-                  tickFormatter={(v) => `${v}ms`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#111111',
-                    border: '1px solid #1e1e1e',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value) => [`${value}ms`, 'Latency']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="latency"
-                  stroke="#00A3FF"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <div ref={latencyChartRef} className="h-64">
+            <LineChart width={latencyChartWidth} height={256} data={performanceData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+              <XAxis
+                dataKey="date"
+                stroke="#484848"
+                fontSize={10}
+                tickLine={false}
+              />
+              <YAxis
+                stroke="#484848"
+                fontSize={10}
+                tickLine={false}
+                domain={[200, 600]}
+                tickFormatter={(v) => `${v}ms`}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#111111',
+                  border: '1px solid #1e1e1e',
+                  borderRadius: '8px',
+                }}
+                formatter={(value) => [`${value}ms`, 'Latency']}
+              />
+              <Line
+                type="monotone"
+                dataKey="latency"
+                stroke="var(--color-accent)"
+                strokeWidth={2}
+                dot={false}
+                isAnimationActive={false}
+              />
+            </LineChart>
           </div>
         </div>
       </div>
@@ -323,43 +325,42 @@ export default function PerformancePage() {
         {/* Success Rate */}
         <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
           <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Shield size={16} className="text-[#00D98F]" />
+            <Shield size={16} className="text-pos" />
             Success Rate Trend
           </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
-                <XAxis
-                  dataKey="date"
-                  stroke="#484848"
-                  fontSize={10}
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="#484848"
-                  fontSize={10}
-                  tickLine={false}
-                  domain={[90, 100]}
-                  tickFormatter={(v) => `${v}%`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#111111',
-                    border: '1px solid #1e1e1e',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value) => [`${(value as number).toFixed(1)}%`, 'Success Rate']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="successRate"
-                  stroke="#00D98F"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <div ref={successChartRef} className="h-64">
+            <LineChart width={successChartWidth} height={256} data={performanceData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+              <XAxis
+                dataKey="date"
+                stroke="#484848"
+                fontSize={10}
+                tickLine={false}
+              />
+              <YAxis
+                stroke="#484848"
+                fontSize={10}
+                tickLine={false}
+                domain={[90, 100]}
+                tickFormatter={(v) => `${v}%`}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#111111',
+                  border: '1px solid #1e1e1e',
+                  borderRadius: '8px',
+                }}
+                formatter={(value) => [`${(value as number).toFixed(1)}%`, 'Success Rate']}
+              />
+              <Line
+                type="monotone"
+                dataKey="successRate"
+                stroke="var(--color-pos)"
+                strokeWidth={2}
+                dot={false}
+                isAnimationActive={false}
+              />
+            </LineChart>
           </div>
         </div>
 
@@ -369,31 +370,29 @@ export default function PerformancePage() {
             <Activity size={16} className="text-[#FF6B35]" />
             Hourly Activity (Last 24h)
           </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={hourlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
-                <XAxis
-                  dataKey="hour"
-                  stroke="#484848"
-                  fontSize={10}
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="#484848"
-                  fontSize={10}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#111111',
-                    border: '1px solid #1e1e1e',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Bar dataKey="rescues" fill="#FF6B35" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div ref={hourlyChartRef} className="h-64">
+            <BarChart width={hourlyChartWidth} height={256} data={hourlyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+              <XAxis
+                dataKey="hour"
+                stroke="#484848"
+                fontSize={10}
+                tickLine={false}
+              />
+              <YAxis
+                stroke="#484848"
+                fontSize={10}
+                tickLine={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#111111',
+                  border: '1px solid #1e1e1e',
+                  borderRadius: '8px',
+                }}
+              />
+              <Bar dataKey="rescues" fill="#FF6B35" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+            </BarChart>
           </div>
         </div>
       </div>
@@ -401,12 +400,12 @@ export default function PerformancePage() {
       {/* Detailed Metrics Table */}
       <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
         <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-          <Calendar size={16} className="text-[#00A3FF]" />
+          <Calendar size={16} className="text-accent" />
           Daily Performance Breakdown
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-[#0a0907] text-[#8A93A3]">
+            <thead className="bg-[#0a0907] text-muted">
               <tr>
                 <th className="text-left p-3 font-medium">Date</th>
                 <th className="text-right p-3 font-medium">Rescued</th>
@@ -420,17 +419,17 @@ export default function PerformancePage() {
               {performanceData.slice().reverse().map((day, i) => (
                 <tr key={i} className="hover:bg-[#1E2532]/30 transition-colors">
                   <td className="p-3 text-white font-medium">{day.date}</td>
-                  <td className="p-3 text-right text-[#00D98F] font-mono">
+                  <td className="p-3 text-right text-pos font-mono">
                     {formatCurrency(day.rescued)}
                   </td>
-                  <td className="p-3 text-right text-[#00A3FF] font-mono">
+                  <td className="p-3 text-right text-accent font-mono">
                     {day.latency}ms
                   </td>
-                  <td className="p-3 text-right text-[#00D98F] font-mono">
+                  <td className="p-3 text-right text-pos font-mono">
                     {day.successRate.toFixed(1)}%
                   </td>
                   <td className="p-3 text-right text-white font-mono">{day.rescues}</td>
-                  <td className="p-3 text-right text-[#8A93A3] font-mono">
+                  <td className="p-3 text-right text-muted font-mono">
                     {formatCurrency(day.volume)}
                   </td>
                 </tr>

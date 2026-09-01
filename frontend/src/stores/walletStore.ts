@@ -1,5 +1,14 @@
 import { create } from 'zustand';
-import { ethers } from 'ethers';
+// ethers is only needed inside connect()'s web3 branch, but this store is
+// used unconditionally from App.tsx's very first render — a static import
+// here would ship the whole library in the initial bundle regardless of
+// whether a visitor ever clicks "connect wallet". Loaded dynamically instead.
+
+interface OnboardingData {
+  account: string;
+  vaultAmount: string;
+  isMock: boolean;
+}
 
 interface WalletState {
   address: string | null;
@@ -14,7 +23,11 @@ interface WalletState {
   setIsModalOpen: (isOpen: boolean) => void;
   isOnboarded: boolean;
   setOnboarded: (status: boolean) => void;
+  onboardingData: OnboardingData | null;
+  setOnboardingData: (data: OnboardingData | null) => void;
 }
+
+const isClient = typeof window !== 'undefined';
 
 export const useWalletStore = create<WalletState>((set, get) => ({
   address: process.env.NODE_ENV === 'development' ? '0xDevMockAddress' : null,
@@ -24,12 +37,38 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   connectionType: process.env.NODE_ENV === 'development' ? 'web2' : null,
   chain: process.env.NODE_ENV === 'development' ? 'Arc Testnet (Dev)' : null,
   balance: process.env.NODE_ENV === 'development' ? '10000.00' : '0.00',
-  isOnboarded: false,
-  setOnboarded: (status) => set({ isOnboarded: status }),
+  isOnboarded: isClient ? localStorage.getItem('glass-onboarded') === 'true' : false,
+  setOnboarded: (status) => {
+    if (isClient) {
+      localStorage.setItem('glass-onboarded', String(status));
+    }
+    set({ isOnboarded: status });
+  },
+  onboardingData: (() => {
+    if (!isClient) return null;
+    const raw = localStorage.getItem('glass-onboarding-data');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  })(),
+  setOnboardingData: (data) => {
+    if (isClient) {
+      if (data) {
+        localStorage.setItem('glass-onboarding-data', JSON.stringify(data));
+      } else {
+        localStorage.removeItem('glass-onboarding-data');
+      }
+    }
+    set({ onboardingData: data });
+  },
   setIsModalOpen: (isOpen) => set({ isModalOpen: isOpen }),
   connect: async (type: 'web2' | 'web3') => {
-    // In development, auto‑connect mock wallet instantly
-    if (process.env.NODE_ENV === 'development') {
+    // In development, auto‑connect mock wallet instantly UNLESS a real Web3 wallet is requested and available
+    const hasEthereum = typeof window !== 'undefined' && !!(window as any).ethereum;
+    if (process.env.NODE_ENV === 'development' && !(type === 'web3' && hasEthereum)) {
       console.log('🛡️ GLASS: Dev mode auto‑connect wallet');
       set({
         address: '0xDevMockAddress',
@@ -38,7 +77,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
         isModalOpen: false,
         connectionType: type,
         chain: 'Arc Testnet (Dev)',
-        balance: '10000.00',
+        balance: '10,000.00',
       });
       return;
     }
@@ -47,6 +86,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
     try {
       if (type === 'web3') {
         if (typeof window !== 'undefined' && (window as any).ethereum) {
+          const { ethers } = await import('ethers');
           const provider = new ethers.BrowserProvider((window as any).ethereum);
           const accounts = await provider.send("eth_requestAccounts", []);
           const address = accounts[0];

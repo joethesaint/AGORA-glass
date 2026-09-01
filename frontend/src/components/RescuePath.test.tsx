@@ -29,7 +29,7 @@ describe('RescuePath Component', () => {
     expect(verifiedLabels.length).toBe(3); // Pinning, Releasing, Bridging should all be active
     expect(screen.getByText('Arc Pinning').parentElement?.textContent).toContain('VERIFIED');
     expect(screen.getByText('Vault Release').parentElement?.textContent).toContain('VERIFIED');
-    expect(screen.getByText('Gateway Transfer').parentElement?.textContent).toContain('VERIFIED');
+    expect(screen.getByText('Circle Transfer').parentElement?.textContent).toContain('VERIFIED');
   });
 
   it('shows releasing stage and previous stages', () => {
@@ -38,6 +38,6 @@ describe('RescuePath Component', () => {
     expect(verifiedLabels.length).toBe(2); // Pinning and Releasing
     expect(screen.getByText('Arc Pinning').parentElement?.textContent).toContain('VERIFIED');
     expect(screen.getByText('Vault Release').parentElement?.textContent).toContain('VERIFIED');
-    expect(screen.getByText('Gateway Transfer').parentElement?.textContent).not.toContain('VERIFIED');
+    expect(screen.getByText('Circle Transfer').parentElement?.textContent).not.toContain('VERIFIED');
   });
 });

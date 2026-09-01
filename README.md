@@ -15,8 +15,14 @@ a practical impossibility.
 
 **Project GLASS** is an autonomous "Perp Safety Copilot" that defy the gravity
 of market crashes through two fundamental pillars:
-*   **Sub-500ms Cross-Chain Rescues:** Utilizing **Circle Gateway** to move USDC
-    from a unified inventory directly to endangered positions in under half a second.
+*   **Sub-500ms Rescue Dispatch:** A parallelized rescue pipeline — Circle
+    Developer-Controlled Wallets for the USDC transfer, alongside an Arc vault
+    authorization call — targets sub-500ms end-to-end. **Currently proven only
+    in mock mode** (`scripts/benchmark_latency.py`, all-simulated legs); the
+    live path has real-network SDK code but has never been run against real
+    Circle/Arc infrastructure or benchmarked. True cross-chain unification via
+    **Circle Gateway** (Circle's actual multi-chain product) is not yet
+    integrated — see `docs/GAP_ANALYSIS.md` for that roadmap item.
 *   **"Glass-Box" Transparency:** Every risk assessment and rescue decision is
     backed by a structured **Reasoning-Trace**, permanently hashed and pinned
     to the **Arc Network** for trustless verification.
@@ -36,7 +42,7 @@ flowchart TD
         Monitor["PerpMonitor\n(Fetches live positions)"]
         Engine["RiskEngine\n(Assesses margin & leverage)"]
         Tracer["ReasoningTracer\n(JSON trace + SHA256 hash)"]
-        Dispatcher["RescueDispatcher\n(Gateway mock + Vault call)"]
+        Dispatcher["RescueDispatcher\n(Circle DCW transfer + Vault call)"]
         Bus(("MessageBus"))
 
         Monitor -->|position_update| Bus
@@ -54,9 +60,7 @@ flowchart TD
     end
 
     subgraph CircleStack["Circle Financial Stack"]
-        Gateway["Circle Gateway (mock)\nsub-500ms cross-chain"]
-        Wallets["Dev-Controlled Wallets"]
-        AppKit["Circle App Kit (frontend)"]
+        Wallets["Dev-Controlled Wallets\n(create_transaction, mock)"]
         CLI["Arc CLI\n(RPC, updates, context)"]
     end
 
@@ -67,7 +71,7 @@ flowchart TD
     Bus -.->|"WebSocket bridge"| UI
     Tracer -->|store hash tx| Registry
     Dispatcher -->|rescue release| Vault
-    Dispatcher -->|initiate transfer| Gateway
+    Dispatcher -->|initiate transfer| Wallets
     Vault -.->|funds managed by| Wallets
     UI -.->|read events| Registry
 
@@ -85,11 +89,25 @@ AGORA-glass features a modular, extensible agent framework inspired by the **Tra
 Read the comprehensive guide here: **[Multi-Agent Architecture & TradingAgents Integration](./docs/PLUGINS_AND_AGENTS.md)**
 
 ### Off-Chain Python Sentinel
-The core logic resides in a Python-based sentinel. Crucially, the internal `MessageBus` is built using **Python `asyncio` queues**, not OS-level threads. This ensures non-blocking, lightning-fast I/O coordination that can match the sub-second finality of the Arc Network and the millisecond response times of the Circle Gateway API.
+The core logic resides in a Python-based sentinel. Crucially, the internal `MessageBus` is built using **Python `asyncio` queues**, not OS-level threads. This ensures non-blocking, lightning-fast I/O coordination designed to match the sub-second finality of the Arc Network and the response times of Circle's Developer-Controlled Wallets API — real-network latency for both has not yet been benchmarked (see §1).
 
 ---
 
-## 3. Operator Details (Protocol Mastery)
+## 3. Quick Start: Running the Agent
+
+To quickly get the sentinel up and running in your local environment, follow these steps:
+
+1.  **Bootstrap Environment:** Run `source .workflows/setup-env_improved.md` instructions to set up your `.env` and virtual environment.
+2.  **Start the Agent:**
+    ```bash
+    # Mock mode (Simulated data)
+    python src/main.py --mode mock
+    ```
+3.  **Detailed Guide:** For a full walkthrough including live trading, WebSocket bridging, and on-chain verification, see the **[Run-Agent Workflow Guide](./.workflows/run-agent_improved.md)**.
+
+---
+
+## 4. Operator Details (Protocol Mastery)
 
 ### Dual-Decimal Architecture
 Working on the Arc Network requires precision. Project GLASS correctly handles Arc's specific dual-decimal USDC environment:

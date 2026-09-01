@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, DollarSign, Activity, ShieldCheck, Wifi, WifiOff } from 'lucide-react';
 
@@ -8,44 +8,52 @@ interface LiveMetricsHeaderProps {
   latencyMs: number;
   totalRescued: number;
   agentStatus: string;
-  agentName: string;
+  agentName?: string;
   connectionStatus?: 'connecting' | 'connected' | 'disconnected';
 }
 
-export const LiveMetricsHeader = ({ latencyMs, totalRescued, agentStatus, agentName = 'SENTINEL', connectionStatus = 'connected' }: LiveMetricsHeaderProps) => {
-  const latencyStatus = latencyMs > 500 ? 'slow' : 'fast';
+// Rendered from page.tsx's whole-store subscription, so this re-renders on
+// every WS tick unless props are unchanged — memo lets it skip re-rendering
+// (and re-evaluating its motion.div hover targets) when an unrelated store
+// field updated but latencyMs/totalRescued/agentStatus/connectionStatus didn't.
+export const LiveMetricsHeader = memo(function LiveMetricsHeader({ latencyMs, totalRescued, agentStatus, agentName = 'SENTINEL', connectionStatus = 'connected' }: LiveMetricsHeaderProps) {
+  // Real number, not clamped — a value at or above the sub-500ms target is
+  // the thing this KPI exists to surface. 'medium' gives a warn tier before
+  // the hard 'slow'/red state, matching how the rest of the dashboard grades
+  // latency (see AVG99/VaR-style thresholds elsewhere).
+  const latencyStatus = latencyMs <= 500 ? 'fast' : latencyMs <= 800 ? 'medium' : 'slow';
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-      <MetricCard 
-        label="E2E Engine Latency" 
-        value={`${latencyMs.toFixed(0)}ms`} 
-        icon={<Clock className="w-4 h-4 text-[#00A3FF]" />} 
+      <MetricCard
+        label="E2E Engine Latency"
+        value={`${latencyMs.toFixed(0)}ms`}
+        icon={<Clock className="w-4 h-4 text-accent" />}
         description="Sub-500ms target"
         status={latencyStatus}
       />
       <MetricCard 
         label="Total Rescued Equity" 
         value={`$${totalRescued.toLocaleString()}`} 
-        icon={<DollarSign className="w-4 h-4 text-[#00D98F]" />} 
+        icon={<DollarSign className="w-4 h-4 text-pos" />} 
         description="USDC moved to safety"
       />
       <MetricCard 
         label={`${agentName} Status`} 
         value={agentStatus} 
-        icon={<ShieldCheck className={`w-4 h-4 ${agentStatus.toUpperCase() === 'PROTECTING' || agentStatus.toUpperCase() === 'TRADING' ? 'text-[#00D98F]' : 'text-[#8A93A3]'}`} />} 
+        icon={<ShieldCheck className={`w-4 h-4 ${agentStatus.toUpperCase() === 'PROTECTING' || agentStatus.toUpperCase() === 'TRADING' ? 'text-pos' : 'text-muted'}`} />} 
         status={agentStatus.toUpperCase()}
         description="Live on Arc Testnet"
       />
       <MetricCard 
         label="Bridge Connection" 
         value={connectionStatus.toUpperCase()} 
-        icon={connectionStatus === 'connected' ? <Wifi className="w-4 h-4 text-[#00D98F]" /> : <WifiOff className="w-4 h-4 text-[#FF3B3B]" />} 
+        icon={connectionStatus === 'connected' ? <Wifi className="w-4 h-4 text-pos" /> : <WifiOff className="w-4 h-4 text-neg" />} 
         status={connectionStatus === 'connected' ? 'connected' : 'disconnected'}
         description={connectionStatus === 'connected' ? 'Websocket Active' : 'Waiting for Bridge...'}
       />
     </div>
   );
-};
+});
 
 const MetricCard = ({ label, value, icon, status, description }: { label: string, value: string, icon: React.ReactNode, status?: string, description: string }) => (
   <motion.div 
@@ -56,8 +64,8 @@ const MetricCard = ({ label, value, icon, status, description }: { label: string
       {icon}
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-[10px] text-[#8A93A3] font-bold uppercase tracking-widest mb-0.5">{label}</p>
-      <p className={`text-lg lg:text-xl font-bold font-mono tracking-tight ${status === 'PROTECTING' || status === 'connected' || status === 'fast' ? 'text-[#00D98F] text-glow' : status === 'disconnected' || status === 'slow' ? 'text-[#FF3B3B]' : 'text-white'}`}>
+      <p className="text-[10px] text-muted font-bold uppercase tracking-widest mb-0.5">{label}</p>
+      <p className={`text-lg lg:text-xl font-bold font-mono tracking-tight ${status === 'PROTECTING' || status === 'connected' || status === 'fast' ? 'text-pos text-glow' : status === 'disconnected' || status === 'slow' ? 'text-neg' : status === 'medium' ? 'text-warn' : 'text-white'}`}>
         {value}
       </p>
       <p className="text-[9px] text-[#484848] font-mono mt-1 uppercase tracking-tighter">{description}</p>
@@ -65,10 +73,10 @@ const MetricCard = ({ label, value, icon, status, description }: { label: string
     
     {/* Decorative background pulse for active status */}
     {(status === 'PROTECTING' || status === 'connected') && (
-      <div className="absolute right-0 top-0 bottom-0 w-1 bg-[#00D98F]/30" />
+      <div className="absolute right-0 top-0 bottom-0 w-1 bg-pos/30" />
     )}
     {status === 'disconnected' && (
-      <div className="absolute right-0 top-0 bottom-0 w-1 bg-[#FF3B3B]/30" />
+      <div className="absolute right-0 top-0 bottom-0 w-1 bg-neg/30" />
     )}
   </motion.div>
 );

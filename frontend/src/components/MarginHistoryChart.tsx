@@ -8,15 +8,16 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
 } from 'recharts';
 import { motion } from 'framer-motion';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 
 interface MarginHistoryChartProps {
   data: { timestamp: number; ratio: number }[];
 }
 
 export const MarginHistoryChart = memo<MarginHistoryChartProps>(({ data }) => {
+  const { ref: chartRef, width } = useContainerWidth<HTMLDivElement>();
   const chartData = useMemo(
     () =>
       data.map((point) => ({
@@ -47,51 +48,55 @@ export const MarginHistoryChart = memo<MarginHistoryChartProps>(({ data }) => {
         <div className="flex gap-6 text-right">
           <div>
             <p className="text-[10px] text-[#787878] uppercase tracking-widest">Current</p>
-            <p className="text-xl font-bold text-[#00D98F]">{currentMargin}%</p>
+            <p className="text-xl font-bold text-pos">{currentMargin}%</p>
           </div>
           <div>
             <p className="text-[10px] text-[#787878] uppercase tracking-widest">Average</p>
-            <p className="text-xl font-bold text-[#00A3FF]">{avgMargin}%</p>
+            <p className="text-xl font-bold text-accent">{avgMargin}%</p>
           </div>
         </div>
       </div>
 
-      <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height={256}>
-          <LineChart data={chartData} margin={{ top: 5, right: 10, left: -30, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
-            <XAxis
-              dataKey="time"
-              stroke="#787878"
-              tick={{ fill: '#787878', fontSize: 10 }}
-              interval={Math.floor(chartData.length / 4)}
-            />
-            <YAxis
-              stroke="#787878"
-              tick={{ fill: '#787878', fontSize: 10 }}
-              domain={[0, 50]}
-              label={{ value: '%', angle: -90, position: 'insideLeft' }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#1e1e1e',
-                border: '1px solid #3a3a3a',
-                borderRadius: 4,
-              }}
-              labelStyle={{ color: '#787878' }}
-              formatter={(value: any) => `${value}%`}
-            />
-            <Line
-              type="monotone"
-              dataKey="margin"
-              stroke="#00D98F"
-              strokeWidth={2}
-              dot={{ fill: '#00D98F', r: 3 }}
-              activeDot={{ r: 5 }}
-              isAnimationActive={true}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      {/* No ResponsiveContainer: it re-measures (getBoundingClientRect) far
+          more aggressively than an actual resize needs. width is tracked by
+          one ResizeObserver via useContainerWidth instead, and passed to
+          LineChart directly as a real pixel value. dot={false} also drops
+          per-point circle positioning-along-curve math (up to 50 points) —
+          only the hovered activeDot renders. */}
+      <div ref={chartRef} className="h-64 w-full">
+        <LineChart width={width} height={256} data={chartData} margin={{ top: 5, right: 10, left: -30, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+          <XAxis
+            dataKey="time"
+            stroke="#787878"
+            tick={{ fill: '#787878', fontSize: 10 }}
+            interval={Math.floor(chartData.length / 4)}
+          />
+          <YAxis
+            stroke="#787878"
+            tick={{ fill: '#787878', fontSize: 10 }}
+            domain={[0, 50]}
+            label={{ value: '%', angle: -90, position: 'insideLeft' }}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: '#1e1e1e',
+              border: '1px solid #3a3a3a',
+              borderRadius: 4,
+            }}
+            labelStyle={{ color: '#787878' }}
+            formatter={(value: any) => `${value}%`}
+          />
+          <Line
+            type="monotone"
+            dataKey="margin"
+            stroke="var(--color-pos)"
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 5, fill: 'var(--color-pos)' }}
+            isAnimationActive={false}
+          />
+        </LineChart>
       </div>
 
       <div className="mt-4 p-3 bg-[#0B0E14] border border-[#1e1e1e] rounded text-[10px] text-[#787878]">

@@ -11,7 +11,7 @@ export default function AboutPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00A3FF]/10 border border-[#00A3FF]/20 text-[#00A3FF] text-[10px] font-bold uppercase tracking-widest"
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] font-bold uppercase tracking-widest"
         >
           <Shield className="w-3 h-3" /> The Antigravity Protocol
         </motion.div>
@@ -27,7 +27,7 @@ export default function AboutPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-lg text-[#8A93A3] max-w-2xl mx-auto leading-relaxed"
+          className="text-lg text-muted max-w-2xl mx-auto leading-relaxed"
         >
           An autonomous, ultra-low-latency risk management agent designed to protect perpetual futures traders from liquidations in under 500ms.
         </motion.p>
@@ -36,12 +36,12 @@ export default function AboutPage() {
       {/* The Core Pillars */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <FeatureCard 
-          icon={<Zap className="w-6 h-6 text-[#00A3FF]" />}
+          icon={<Zap className="w-6 h-6 text-accent" />}
           title="Sub-500ms Rescue"
           description="In high-volatility markets, human reaction times are too slow. GLASS acts as your automated financial bodyguard, detecting risk and injecting margin instantly."
         />
         <FeatureCard 
-          icon={<Eye className="w-6 h-6 text-[#00D98F]" />}
+          icon={<Eye className="w-6 h-6 text-pos" />}
           title="Glass-Box Transparency"
           description="Every decision generates a cryptographic reasoning trace pinned to the Arc blockchain. Unlike 'black-box' bots, GLASS proves exactly why it moved funds."
         />
@@ -54,11 +54,11 @@ export default function AboutPage() {
 
       {/* How it Works */}
       <section className="agora-card p-12 space-y-12 overflow-hidden relative">
-        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-[#00A3FF]/5 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
         
         <div className="relative z-10 text-center space-y-4">
           <h2 className="text-3xl font-bold text-white tracking-tight">The Rescue Protocol</h2>
-          <p className="text-[#8A93A3] max-w-xl mx-auto">A seamless integration between the Arc and Circle stacks.</p>
+          <p className="text-muted max-w-xl mx-auto">A seamless integration between the Arc and Circle stacks.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 relative z-10">
@@ -77,10 +77,10 @@ export default function AboutPage() {
             title="Reasoning Proof" 
             desc="If a risk threshold is breached, the agent generates a reasoning trace and pins the hash to the Arc Network."
           />
-          <Step 
-            number="04" 
-            title="Instant Bridging" 
-            desc="USDC is moved via Circle Gateway and injected as margin into your position in under 500ms."
+          <Step
+            number="04"
+            title="Instant Transfer"
+            desc="USDC is moved via Circle's Developer-Controlled Wallets and injected as margin into your position, targeting sub-500ms end-to-end."
           />
         </div>
       </section>
@@ -121,7 +121,7 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, titl
       {icon}
     </div>
     <h3 className="text-xl font-bold text-white">{title}</h3>
-    <p className="text-sm text-[#8A93A3] leading-relaxed">{description}</p>
+    <p className="text-sm text-muted leading-relaxed">{description}</p>
   </motion.div>
 );
 
@@ -129,10 +129,10 @@ const Step = ({ number, title, desc }: { number: string, title: string, desc: st
   <div className="space-y-4">
     <div className="text-4xl font-black text-white/10 tracking-tighter">{number}</div>
     <h4 className="text-lg font-bold text-white">{title}</h4>
-    <p className="text-xs text-[#8A93A3] leading-relaxed">{desc}</p>
+    <p className="text-xs text-muted leading-relaxed">{desc}</p>
   </div>
 );
 
 const TechBadge = ({ name }: { name: string }) => (
-  <span className="text-xs font-mono font-bold tracking-widest text-[#8A93A3]">{name}</span>
+  <span className="text-xs font-mono font-bold tracking-widest text-muted">{name}</span>
 );

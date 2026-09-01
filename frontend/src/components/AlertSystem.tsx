@@ -34,17 +34,17 @@ const alertIcons = {
 };
 
 const severityColors = {
-  low: 'border-[#8A93A3] text-[#8A93A3]',
+  low: 'border-muted text-muted',
   medium: 'border-[#FFB800] text-[#FFB800]',
   high: 'border-[#FF6B35] text-[#FF6B35]',
-  critical: 'border-[#FF3B3B] text-[#FF3B3B]',
+  critical: 'border-neg text-neg',
 };
 
 const bgColors = {
-  low: 'bg-[#8A93A3]/10',
+  low: 'bg-muted/10',
   medium: 'bg-[#FFB800]/10',
   high: 'bg-[#FF6B35]/10',
-  critical: 'bg-[#FF3B3B]/10',
+  critical: 'bg-neg/10',
 };
 
 export const AlertSystem = ({ settings }: AlertSystemProps) => {
@@ -194,9 +194,9 @@ export const AlertSystem = ({ settings }: AlertSystemProps) => {
           onClick={() => setIsOpen(!isOpen)}
           className="relative p-2 hover:bg-[#1E2532] rounded-lg transition-colors"
         >
-          <Bell size={18} className="text-[#8A93A3]" />
+          <Bell size={18} className="text-muted" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#FF3B3B] rounded-full text-[10px] text-white flex items-center justify-center font-mono">
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-neg rounded-full text-[10px] text-white flex items-center justify-center font-mono">
               {unreadCount}
             </span>
           )}
@@ -214,17 +214,17 @@ export const AlertSystem = ({ settings }: AlertSystemProps) => {
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-[#1E2532]">
                 <h3 className="font-semibold text-white flex items-center gap-2">
-                  <Bell size={16} className="text-[#00A3FF]" />
+                  <Bell size={16} className="text-accent" />
                   Alerts
                   {unreadCount > 0 && (
-                    <span className="text-xs text-[#FF3B3B]">({unreadCount})</span>
+                    <span className="text-xs text-neg">({unreadCount})</span>
                   )}
                 </h3>
                 <div className="flex gap-2">
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllAsRead}
-                      className="text-xs text-[#8A93A3] hover:text-white transition-colors"
+                      className="text-xs text-muted hover:text-white transition-colors"
                     >
                       Mark all read
                     </button>
@@ -232,7 +232,7 @@ export const AlertSystem = ({ settings }: AlertSystemProps) => {
                   {alerts.length > 0 && (
                     <button
                       onClick={clearAll}
-                      className="text-xs text-[#FF3B3B] hover:text-white transition-colors"
+                      className="text-xs text-neg hover:text-white transition-colors"
                     >
                       Clear all
                     </button>
@@ -254,7 +254,7 @@ export const AlertSystem = ({ settings }: AlertSystemProps) => {
                       <div
                         key={alert.id}
                         className={`p-4 border-b border-[#1E2532] hover:bg-[#1E2532]/30 transition-colors ${
-                          !alert.read ? 'bg-[#00A3FF]/5' : ''
+                          !alert.read ? 'bg-accent/5' : ''
                         }`}
                         onClick={() => markAsRead(alert.id)}
                       >
@@ -277,7 +277,7 @@ export const AlertSystem = ({ settings }: AlertSystemProps) => {
                                 <X size={12} />
                               </button>
                             </div>
-                            <p className="text-xs text-[#8A93A3] mt-1 line-clamp-2">
+                            <p className="text-xs text-muted mt-1 line-clamp-2">
                               {alert.message}
                             </p>
                             <p className="text-[10px] text-[#484848] mt-2">
@@ -313,7 +313,7 @@ export const AlertSystem = ({ settings }: AlertSystemProps) => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-white">{toast.title}</p>
-                  <p className="text-xs text-[#8A93A3] truncate">{toast.message}</p>
+                  <p className="text-xs text-muted truncate">{toast.message}</p>
                 </div>
                 <button
                   onClick={() => dismissAlert(toast.id)}

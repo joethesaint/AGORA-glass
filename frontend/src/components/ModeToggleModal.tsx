@@ -37,7 +37,7 @@ export const ModeToggleModal = ({ isOpen, onClose, onConfirm, targetMode }: Prop
               <div className={`p-4 rounded-2xl ${
                 targetMode === 'trading' 
                   ? 'bg-purple-500/10 text-purple-500' 
-                  : 'bg-[#00A3FF]/10 text-[#00A3FF]'
+                  : 'bg-accent/10 text-accent'
               }`}>
                 {targetMode === 'trading' ? <Zap className="w-8 h-8" /> : <ShieldCheck className="w-8 h-8" />}
               </div>
@@ -50,7 +50,7 @@ export const ModeToggleModal = ({ isOpen, onClose, onConfirm, targetMode }: Prop
             <div className={`p-4 rounded-xl border flex gap-4 ${
               targetMode === 'trading'
                 ? 'bg-red-500/5 border-red-500/20 text-red-200'
-                : 'bg-[#00A3FF]/5 border-[#00A3FF]/20 text-[#00A3FF]/80'
+                : 'bg-accent/5 border-accent/20 text-accent/80'
             }`}>
               <div className="mt-1">
                 <AlertTriangle className="w-5 h-5 shrink-0" />
@@ -74,8 +74,8 @@ export const ModeToggleModal = ({ isOpen, onClose, onConfirm, targetMode }: Prop
                 "Arc Network Reason Pinning",
                 "Vault Authorization Required"
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3 text-xs text-[#8A93A3] font-medium">
-                  <div className="w-1 h-1 rounded-full bg-[#00A3FF]" />
+                <div key={i} className="flex items-center gap-3 text-xs text-muted font-medium">
+                  <div className="w-1 h-1 rounded-full bg-accent" />
                   {item}
                 </div>
               ))}
@@ -87,9 +87,9 @@ export const ModeToggleModal = ({ isOpen, onClose, onConfirm, targetMode }: Prop
                 id="dontAsk" 
                 checked={dontAskAgain}
                 onChange={(e) => setDontAskAgain(e.target.checked)}
-                className="w-4 h-4 rounded border-white/10 bg-white/5 text-[#00A3FF] focus:ring-0 focus:ring-offset-0 transition-all cursor-pointer"
+                className="w-4 h-4 rounded border-white/10 bg-white/5 text-accent focus:ring-0 focus:ring-offset-0 transition-all cursor-pointer"
               />
-              <label htmlFor="dontAsk" className="text-xs text-[#8A93A3] font-medium cursor-pointer hover:text-white transition-colors">
+              <label htmlFor="dontAsk" className="text-xs text-muted font-medium cursor-pointer hover:text-white transition-colors">
                 Do not ask me again for this session
               </label>
             </div>
@@ -97,7 +97,7 @@ export const ModeToggleModal = ({ isOpen, onClose, onConfirm, targetMode }: Prop
             <div className="flex gap-4 pt-2">
               <button 
                 onClick={onClose} 
-                className="flex-1 px-6 py-3 rounded-xl text-sm font-bold text-[#8A93A3] hover:bg-white/5 hover:text-white transition-all border border-transparent hover:border-white/10"
+                className="flex-1 px-6 py-3 rounded-xl text-sm font-bold text-muted hover:bg-white/5 hover:text-white transition-all border border-transparent hover:border-white/10"
               >
                 Cancel
               </button>
@@ -110,7 +110,7 @@ export const ModeToggleModal = ({ isOpen, onClose, onConfirm, targetMode }: Prop
                 className={`flex-1 px-6 py-3 rounded-xl font-black text-sm transition-all shadow-lg ${
                   targetMode === 'trading'
                     ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-500/20'
-                    : 'bg-[#00A3FF] hover:bg-[#00B2FF] text-white shadow-[#00A3FF]/20'
+                    : 'bg-accent hover:bg-[#00B2FF] text-white shadow-accent/20'
                 }`}
               >
                 Confirm

@@ -13,4 +13,19 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Backstop vendor split alongside the route/component-level
+        // lazy-loading in App.tsx and page.tsx — keeps a heavy dep that ends
+        // up eagerly pulled into some future route from silently ballooning
+        // the shared chunk again.
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-charts': ['recharts'],
+          'vendor-motion': ['framer-motion'],
+        },
+      },
+    },
+  },
 });

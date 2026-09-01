@@ -52,36 +52,47 @@ class RescueDispatcher(BaseComponent):
         # - Job Settle (Commerce/ERC-8183)
         # - Execute (Financial/Circle)
         # We run them in parallel to minimize rescue latency.
-        arc_task = asyncio.create_task(self.pinner.pin(event.reason_hash))
-        vault_task = asyncio.create_task(self.vault.release_funds(
-            amount=event.rescue_amount_usdc,
-            recipient=event.account,
-            reason_hash=event.reason_hash
-        ))
-        job_task = asyncio.create_task(self.jobs.create_and_settle_rescue_job(
-            amount_usdc=event.rescue_amount_usdc,
-            reason_hash=event.reason_hash
-        ))
+        # We run the Arc transparency and governance tasks completely in the background 
+        # so they don't block the critical-path financial rescue latency.
+        background_tasks = [
+            asyncio.create_task(self.pinner.pin(event.reason_hash)),
+            asyncio.create_task(self.vault.release_funds(
+                amount=event.rescue_amount_usdc,
+                recipient=event.account,
+                reason_hash=event.reason_hash
+            )),
+            asyncio.create_task(self.jobs.create_and_settle_rescue_job(
+                amount_usdc=event.rescue_amount_usdc,
+                reason_hash=event.reason_hash
+            ))
+        ]
         
+        # UI notification only — nothing downstream depends on this completing
+        # before the financial rescue starts, so it's scheduled like the other
+        # background tasks rather than awaited inline. Previously this sat
+        # between task creation and the critical-path await below, meaning a
+        # slow/stalled dashboard websocket client (ws_server broadcasts with a
+        # 1s timeout per connection) could delay the start of the real money
+        # movement for a notification purpose.
         from src.events import BridgeInitiated
-        await self.publish(BridgeInitiated(
+        background_tasks.append(asyncio.create_task(self.publish(BridgeInitiated(
             reason_hash=event.reason_hash,
             target_chain="Circle_Gateway"
-        ))
-        
-        circle_task = asyncio.create_task(self.rescuer.rescue(
-            amount=event.rescue_amount_usdc,
-            destination_address=event.account,
-            reason_hash=event.reason_hash,
-        ))
+        ))))
 
-        # Wait for all actions to complete
-        results = await asyncio.gather(arc_task, vault_task, job_task, circle_task, return_exceptions=True)
-        arc_tx_hash, vault_tx_hash, job_status, circle_tx_id = results[0], results[1], results[2], results[3]
+        # CRITICAL PATH: Await only the financial execution for latency measurement
+        try:
+            circle_tx_id = await self.rescuer.rescue(
+                amount=event.rescue_amount_usdc,
+                destination_address=event.account,
+                reason_hash=event.reason_hash,
+            )
+        except Exception as e:
+            circle_tx_id = f"FAILED: {e}"
 
         latency_ms = (time.time() - start_time) * 1000
 
-        # 3. Notification & Persistence
+        # 3. Notification & Persistence (Announced immediately!)
         status = "SUCCESS" if circle_tx_id and "FAILED" not in str(circle_tx_id) else "FAILED"
 
         await self.publish(
@@ -97,11 +108,9 @@ class RescueDispatcher(BaseComponent):
         self.logger.info(
             "rescue_cycle_finished",
             status=status,
-            pin_tx=arc_tx_hash,
-            vault_tx=vault_tx_hash,
-            job_status=job_status,
             rescue_tx=circle_tx_id,
-            latency_ms=f"{latency_ms:.2f}ms"
+            latency_ms=f"{latency_ms:.2f}ms",
+            background_tasks_pending=len(background_tasks)
         )
 
 

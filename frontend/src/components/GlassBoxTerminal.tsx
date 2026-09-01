@@ -17,10 +17,10 @@ export const GlassBoxTerminal: React.FC<{ signals: any[], rescueMetrics: RescueM
       </div>
 
       <div className="space-y-1.5">
-        {signals.map((s, i) => (
-          <p key={i}>
+        {signals.map((s) => (
+          <p key={`${s.timestamp}-${s.event_type}-${JSON.stringify(s.payload).length}`}>
             <span className="text-[#484848]">[{new Date(s.timestamp * 1000).toLocaleTimeString()}]</span>{' '}
-            <span className="text-[#00A3FF]">{s.event_type}</span>{' '}
+            <span className="text-accent">{s.event_type}</span>{' '}
             <span className="text-[#f0f0f0]">{JSON.stringify(s.payload)}</span>
           </p>
         ))}

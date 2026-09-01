@@ -8,15 +8,16 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
 } from 'recharts';
 import { motion } from 'framer-motion';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 
 interface LeverageChartProps {
   data: { timestamp: number; leverage: number }[];
 }
 
 export const LeverageChart = memo<LeverageChartProps>(({ data }) => {
+  const { ref: chartRef, width } = useContainerWidth<HTMLDivElement>();
   const chartData = useMemo(
     () =>
       data.map((point) => ({
@@ -37,9 +38,9 @@ export const LeverageChart = memo<LeverageChartProps>(({ data }) => {
   );
 
   const getLeverageColor = (lev: number): string => {
-    if (lev > 5) return '#FF3B3B';
-    if (lev > 3) return '#F5A623';
-    return '#00D98F';
+    if (lev > 5) return 'var(--color-neg)';
+    if (lev > 3) return 'var(--color-warn)';
+    return 'var(--color-pos)';
   };
 
   return (
@@ -72,47 +73,47 @@ export const LeverageChart = memo<LeverageChartProps>(({ data }) => {
         </div>
       </div>
 
-      <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height={256}>
-          <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -30, bottom: 5 }}>
-            <defs>
-              <linearGradient id="colorLeverage" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={getLeverageColor(parseFloat(currentLeverage))} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={getLeverageColor(parseFloat(currentLeverage))} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
-            <XAxis
-              dataKey="time"
-              stroke="#787878"
-              tick={{ fill: '#787878', fontSize: 10 }}
-              interval={Math.floor(chartData.length / 4)}
-            />
-            <YAxis
-              stroke="#787878"
-              tick={{ fill: '#787878', fontSize: 10 }}
-              domain={[0, 6]}
-              label={{ value: 'x', angle: -90, position: 'insideLeft' }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#1e1e1e',
-                border: '1px solid #3a3a3a',
-                borderRadius: 4,
-              }}
-              labelStyle={{ color: '#787878' }}
-              formatter={(value: any) => `${value}x`}
-            />
-            <Area
-              type="monotone"
-              dataKey="leverage"
-              stroke={getLeverageColor(parseFloat(currentLeverage))}
-              fillOpacity={1}
-              fill="url(#colorLeverage)"
-              isAnimationActive={true}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+      {/* No ResponsiveContainer — see MarginHistoryChart for why. width is
+          tracked by one ResizeObserver via useContainerWidth instead. */}
+      <div ref={chartRef} className="h-64 w-full">
+        <AreaChart width={width} height={256} data={chartData} margin={{ top: 5, right: 10, left: -30, bottom: 5 }}>
+          <defs>
+            <linearGradient id="colorLeverage" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={getLeverageColor(parseFloat(currentLeverage))} stopOpacity={0.3} />
+              <stop offset="95%" stopColor={getLeverageColor(parseFloat(currentLeverage))} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+          <XAxis
+            dataKey="time"
+            stroke="#787878"
+            tick={{ fill: '#787878', fontSize: 10 }}
+            interval={Math.floor(chartData.length / 4)}
+          />
+          <YAxis
+            stroke="#787878"
+            tick={{ fill: '#787878', fontSize: 10 }}
+            domain={[0, 6]}
+            label={{ value: 'x', angle: -90, position: 'insideLeft' }}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: '#1e1e1e',
+              border: '1px solid #3a3a3a',
+              borderRadius: 4,
+            }}
+            labelStyle={{ color: '#787878' }}
+            formatter={(value: any) => `${value}x`}
+          />
+          <Area
+            type="monotone"
+            dataKey="leverage"
+            stroke={getLeverageColor(parseFloat(currentLeverage))}
+            fillOpacity={1}
+            fill="url(#colorLeverage)"
+            isAnimationActive={false}
+          />
+        </AreaChart>
       </div>
 
       <div className="mt-4 p-3 bg-[#0B0E14] border border-[#1e1e1e] rounded text-[10px] text-[#787878]">

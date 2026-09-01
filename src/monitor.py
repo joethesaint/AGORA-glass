@@ -16,10 +16,23 @@ class PerpMonitor(BaseComponent):
         self.account_address = account_address or os.getenv("MONITOR_ACCOUNT")
         self._loop = None
         self._info = None
+        self.mock_states = {}
         
         if self.mode == "live" and not self.account_address:
             self.logger.error("position_fetch_failure", reason="MONITOR_ACCOUNT_NOT_SET")
             self.mode = "mock"
+            
+        from src.events import SimulateCrash
+        self.subscribe(SimulateCrash, self.on_simulate_crash)
+
+    async def on_simulate_crash(self, event):
+        if self.mode == "mock":
+            state = self.mock_states.get(event.symbol)
+            if state:
+                state["price"] *= (1.0 - event.drop_percentage)
+                state["margin"] = max(0.01, state["margin"] - (event.drop_percentage * 2))  # Force margin drop
+                state["leverage"] *= (1.0 + event.drop_percentage)  # Force leverage spike
+                self.logger.warning("mock_position_crashed", symbol=event.symbol, new_margin=state["margin"])
 
     async def run(self):
         self.logger.info("monitor_started", mode=self.mode)
@@ -36,19 +49,20 @@ class PerpMonitor(BaseComponent):
         symbols = ["BTC-PERP", "ETH-PERP", "SOL-PERP"]
         
         # Initial states
-        states = {
-            sym: {
-                "margin": random.uniform(0.2, 0.4),
-                "leverage": random.uniform(2.0, 4.0),
-                "price": 60000.0 if "BTC" in sym else (3000.0 if "ETH" in sym else 140.0)
-            } for sym in symbols
-        }
+        if not self.mock_states:
+            self.mock_states = {
+                sym: {
+                    "margin": random.uniform(0.2, 0.4),
+                    "leverage": random.uniform(2.0, 4.0),
+                    "price": 60000.0 if "BTC" in sym else (3000.0 if "ETH" in sym else 140.0)
+                } for sym in symbols
+            }
 
         self.logger.info("mock_positions_running", account="0xMOCK", symbols=symbols)
 
         while True:
             for symbol in symbols:
-                state = states[symbol]
+                state = self.mock_states[symbol]
                 
                 # Small random changes
                 state["margin"] += random.uniform(-0.02, 0.015) # Tendency to drift down slightly
@@ -80,8 +94,9 @@ class PerpMonitor(BaseComponent):
                     )
                 )
             
-            # High frequency updates for a "fast" feel
-            await asyncio.sleep(1.0)
+            # 4Hz updates — 4x higher resolution than before (was 1.0s)
+            # Matches realistic exchange feed cadence for position monitoring.
+            await asyncio.sleep(0.25)
 
     async def _run_live_loop(self):
         """Live position monitoring using high-speed WebSockets and polling."""
@@ -112,7 +127,15 @@ class PerpMonitor(BaseComponent):
     async def _poll_user_state(self):
         """Fetches and publishes the latest user position state."""
         try:
-            user_state = self._info.user_state(self.account_address)
+            # self._info.user_state is a synchronous Hyperliquid SDK call;
+            # run it off the event loop (same pattern as circle_rescuer.py's
+            # synchronous SDK call) so a slow/hanging HTTP request here can't
+            # stall the whole asyncio loop — including dispatch of a CRITICAL
+            # risk_verdict racing against it.
+            loop = asyncio.get_event_loop()
+            user_state = await loop.run_in_executor(
+                None, lambda: self._info.user_state(self.account_address)
+            )
             positions = user_state.get("assetPositions", [])
 
             if not positions:

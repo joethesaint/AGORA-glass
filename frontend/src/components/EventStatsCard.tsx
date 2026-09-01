@@ -36,15 +36,15 @@ export const EventStatsCard = memo<EventStatsCardProps>(({ events, lifetimeCount
       type: 'PositionUpdate',
       label: 'Position Updates',
       icon: Activity,
-      color: 'text-[#00A3FF]',
-      bgColor: 'bg-[#00A3FF]/10',
+      color: 'text-accent',
+      bgColor: 'bg-accent/10',
     },
     {
       type: 'RiskVerdict',
       label: 'Risk Verdicts',
       icon: AlertCircle,
-      color: 'text-[#F5A623]',
-      bgColor: 'bg-[#F5A623]/10',
+      color: 'text-warn',
+      bgColor: 'bg-warn/10',
     },
     {
       type: 'ReasoningTrace',
@@ -57,8 +57,8 @@ export const EventStatsCard = memo<EventStatsCardProps>(({ events, lifetimeCount
       type: 'RescueComplete',
       label: 'Rescue Complete',
       icon: Zap,
-      color: 'text-[#00D98F]',
-      bgColor: 'bg-[#00D98F]/10',
+      color: 'text-pos',
+      bgColor: 'bg-pos/10',
     },
   ];
 
@@ -94,7 +94,7 @@ export const EventStatsCard = memo<EventStatsCardProps>(({ events, lifetimeCount
                 <div className="flex items-center gap-2 font-mono text-[10px]">
                   <span className="text-[#F2F2F2] font-semibold">{count}</span>
                   <span className="text-[#484848]">/</span>
-                  <span className="text-[#8A93A3]">{lifetimeCountForType}</span>
+                  <span className="text-muted">{lifetimeCountForType}</span>
                 </div>
               </div>
               <div className="w-full h-1.5 bg-[#1e1e1e] rounded overflow-hidden">
@@ -114,7 +114,7 @@ export const EventStatsCard = memo<EventStatsCardProps>(({ events, lifetimeCount
       <div className="mt-6 pt-6 border-t border-[#1e1e1e] grid grid-cols-2 gap-4">
         <div>
           <p className="text-[10px] text-[#787878] uppercase tracking-widest">Buffer Events</p>
-          <p className="text-2xl font-bold text-[#00A3FF]">{total}</p>
+          <p className="text-2xl font-bold text-accent">{total}</p>
         </div>
         <div>
           <p className="text-[10px] text-[#787878] uppercase tracking-widest">Lifetime Events</p>

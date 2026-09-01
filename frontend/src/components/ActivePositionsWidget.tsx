@@ -72,7 +72,7 @@ export const ActivePositionsWidget: React.FC<{ data: PositionData }> = ({ data }
             initial={{ width: 0 }}
             animate={{ width: `${gaugeWidth}%` }}
             transition={{ type: "spring", stiffness: 100, damping: 20 }}
-            style={{ backgroundColor: status === 'critical' ? '#FF3B3B' : status === 'warning' ? '#F5A623' : '#00D98F' }} 
+            style={{ backgroundColor: status === 'critical' ? 'var(--color-neg)' : status === 'warning' ? 'var(--color-warn)' : 'var(--color-pos)' }} 
           />
         </div>
       </div>

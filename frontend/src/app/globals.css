@@ -6,14 +6,67 @@
 }
 
 @theme {
-  --color-background: #060608;
+  --color-background: #0B0E14;
   --color-foreground: #F2F2F2;
-  --color-accent: var(--accent, #00D98F);
+  --color-accent: var(--accent, #00A3FF);
   --color-accent-blue: var(--accent, #00A3FF);
   --color-muted: #8A93A3;
+  --color-border: #1E2532;
+  --color-surface: #111111;
+  --color-pos: #00D98F;
+  --color-neg: #FF3B3B;
+  --color-warn: #F5A623;
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-shadow: rgba(0, 0, 0, 0.4);
+}
+
+/* ─── Terminal theme — quant-desk register ───
+   Re-declares the same tokens above under [data-theme="terminal"], plus a
+   handful of structural overrides on the shared glass/card utilities.
+   --accent keeps deferring to the user's chosen accent color (set inline on
+   documentElement by ThemeProvider/Settings) regardless of theme; only its
+   *fallback* changes here. */
+[data-theme="terminal"] {
+  --color-background: #0e0f12;
+  --color-foreground: #e6e9ef;
+  --color-accent: var(--accent, #ff5f56);
+  --color-accent-blue: var(--accent, #ff5f56);
+  --color-muted: #8a8f99;
+  --color-border: #262a33;
+  --color-surface: #15171b;
+  --color-pos: #4ade80;
+  --color-neg: #ff5f56;
+  --color-warn: #fbbf24;
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(230, 233, 239, 0.12);
+  --glass-shadow: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="terminal"] body {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  background-image: none;
+}
+
+[data-theme="terminal"] .agora-card,
+[data-theme="terminal"] .glass,
+[data-theme="terminal"] .glass-morphism {
+  border-radius: 4px;
+}
+
+[data-theme="terminal"] .glass-text {
+  background: none;
+  -webkit-text-fill-color: unset;
+  color: var(--color-foreground);
+  filter: none;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: -0.02em;
+}
+
+[data-theme="terminal"] .glass-text:hover {
+  filter: none;
+  animation: none;
+  color: var(--color-accent);
 }
 
 @utility glass {
@@ -44,12 +97,10 @@
   font-family: var(--font-inter);
   font-weight: 800;
   letter-spacing: -0.05em;
-  background: linear-gradient(
-    135deg, 
-    rgba(255, 255, 255, 0.9) 0%, 
-    rgba(255, 255, 255, 0.4) 50%, 
-    rgba(255, 255, 255, 0.9) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0.9) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -69,9 +120,11 @@
     background-position: 0% center;
     opacity: 1;
   }
+
   50% {
     opacity: 0.8;
   }
+
   100% {
     background-position: 200% center;
     opacity: 1;
@@ -92,7 +145,7 @@
     color: var(--color-foreground);
     font-family: var(--font-inter), ui-sans-serif, system-ui;
     -webkit-font-smoothing: antialiased;
-    background-image: 
+    background-image:
       radial-gradient(circle at 0% 0%, rgba(0, 217, 143, 0.05) 0%, transparent 50%),
       radial-gradient(circle at 100% 100%, rgba(0, 163, 255, 0.05) 0%, transparent 50%);
     background-attachment: fixed;
@@ -115,57 +168,3 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.15);
 }
-
-/* Monarch Quant Terminal Utilities */
-@utility terminal-dropdown {
-  background-color: #060608;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #F2F2F2;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 4px;
-  outline: none;
-  transition: border-color 0.2s ease;
-  cursor: pointer;
-
-  &:focus {
-    border-color: #00F3FF;
-  }
-}
-
-@utility terminal-go-btn {
-  background-color: #D4AF37;
-  color: #000000;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: bold;
-  padding: 4px 12px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: #E5C158;
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
-@utility quant-grid-cell {
-  display: flex;
-  flex-direction: column;
-  padding: 12px;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  font-family: var(--font-mono);
-
-  &:nth-child(2n) {
-    border-right: none;
-  }
-}
-

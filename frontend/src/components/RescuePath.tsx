@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Zap, Lock, ArrowRight } from 'lucide-react';
 
@@ -11,15 +11,18 @@ interface RescuePathProps {
 const steps = [
   { id: 'pinning', label: 'Arc Pinning', icon: Shield },
   { id: 'releasing', label: 'Vault Release', icon: Lock },
-  { id: 'bridging', label: 'Gateway Transfer', icon: Zap },
+  { id: 'bridging', label: 'Circle Transfer', icon: Zap },
 ];
 
-export const RescuePath = ({ stage }: RescuePathProps) => {
+// Only `stage` drives this component's output — memo so it doesn't re-render
+// (and re-evaluate every step's framer-motion animate target) on WS ticks
+// that don't touch rescueStage.
+export const RescuePath = memo(function RescuePath({ stage }: RescuePathProps) {
   return (
     <div className="agora-card p-6 relative overflow-hidden">
       <div className="flex justify-between items-center mb-8">
         <h3 className="text-sm font-bold text-white uppercase tracking-widest">Rescue Pipeline</h3>
-        <div className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] text-[#8A93A3] font-mono">
+        <div className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] text-muted font-mono">
           E2E LATENCY: DYNAMIC
         </div>
       </div>
@@ -42,8 +45,8 @@ export const RescuePath = ({ stage }: RescuePathProps) => {
                   initial={false}
                   animate={{
                     backgroundColor: isActive ? 'rgba(0, 217, 143, 0.1)' : 'rgba(255, 255, 255, 0.02)',
-                    borderColor: isActive ? '#00D98F' : 'rgba(255, 255, 255, 0.05)',
-                    color: isActive ? '#00D98F' : '#484848',
+                    borderColor: isActive ? 'var(--color-pos)' : 'rgba(255, 255, 255, 0.05)',
+                    color: isActive ? 'var(--color-pos)' : '#484848',
                     scale: isCurrent ? 1.15 : 1,
                     boxShadow: isActive ? '0 0 15px rgba(0, 217, 143, 0.2)' : 'none'
                   }}
@@ -53,7 +56,7 @@ export const RescuePath = ({ stage }: RescuePathProps) => {
                   {isCurrent && (
                     <motion.div 
                       layoutId="active-glow"
-                      className="absolute inset-0 rounded-xl bg-[#00D98F]/20 blur-md -z-10"
+                      className="absolute inset-0 rounded-xl bg-pos/20 blur-md -z-10"
                     />
                   )}
                 </motion.div>
@@ -65,7 +68,7 @@ export const RescuePath = ({ stage }: RescuePathProps) => {
                     <motion.span 
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="text-[8px] text-[#00D98F] font-mono mt-0.5"
+                      className="text-[8px] text-pos font-mono mt-0.5"
                     >
                       VERIFIED
                     </motion.span>
@@ -77,7 +80,7 @@ export const RescuePath = ({ stage }: RescuePathProps) => {
                   <motion.div 
                     animate={{ 
                       opacity: stage === 'complete' || (isActive && stage !== step.id) ? 1 : 0.2,
-                      backgroundColor: stage === 'complete' || (isActive && stage !== step.id) ? '#00D98F' : 'rgba(255, 255, 255, 0.05)'
+                      backgroundColor: stage === 'complete' || (isActive && stage !== step.id) ? 'var(--color-pos)' : 'rgba(255, 255, 255, 0.05)'
                     }}
                     className="h-[1px] w-full"
                   />
@@ -89,4 +92,4 @@ export const RescuePath = ({ stage }: RescuePathProps) => {
       </div>
     </div>
   );
-};
+});

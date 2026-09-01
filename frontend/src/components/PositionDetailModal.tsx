@@ -12,10 +12,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   Area,
   AreaChart,
 } from 'recharts';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 
 interface PositionDetailModalProps {
   position: Position | null;
@@ -46,10 +46,10 @@ const formatTime = (timestamp: number) => {
 };
 
 const getRiskLevel = (marginRatio: number) => {
-  if (marginRatio < 0.1) return { level: 'Critical', color: '#FF3B3B', icon: AlertTriangle };
+  if (marginRatio < 0.1) return { level: 'Critical', color: 'var(--color-neg)', icon: AlertTriangle };
   if (marginRatio < 0.2) return { level: 'Warning', color: '#FF6B35', icon: AlertTriangle };
   if (marginRatio < 0.3) return { level: 'Monitor', color: '#FFB800', icon: Clock };
-  return { level: 'Healthy', color: '#00D98F', icon: TrendingUp };
+  return { level: 'Healthy', color: 'var(--color-pos)', icon: TrendingUp };
 };
 
 export const PositionDetailModal = ({
@@ -61,6 +61,7 @@ export const PositionDetailModal = ({
   onClosePosition,
 }: PositionDetailModalProps) => {
   const { isConnected, setIsModalOpen } = useWalletStore();
+  const { ref: historyChartRef, width: historyChartWidth } = useContainerWidth<HTMLDivElement>();
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'actions'>('overview');
   const [marginAmount, setMarginAmount] = useState('');
   const [deleverageAmount, setDeleverageAmount] = useState('');
@@ -157,14 +158,14 @@ export const PositionDetailModal = ({
               <div className="flex items-center justify-between p-6 border-b border-[#1E2532]">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-[#1E2532] flex items-center justify-center">
-                    <span className="text-xl font-bold text-[#00A3FF]">
+                    <span className="text-xl font-bold text-accent">
                       {position.symbol.split('-')[0].slice(0, 3)}
                     </span>
                   </div>
                   <div>
                     <div className="flex items-center gap-3">
                       <h2 className="text-xl font-bold text-white">{position.symbol}</h2>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${position.side === 'LONG' ? 'bg-[#00D98F]/10 text-[#00D98F]' : 'bg-[#FF3B3B]/10 text-[#FF3B3B]'}`}>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${position.side === 'LONG' ? 'bg-pos/10 text-pos' : 'bg-neg/10 text-neg'}`}>
                         {position.side || 'LONG'}
                       </span>
                     </div>
@@ -178,7 +179,7 @@ export const PositionDetailModal = ({
                       >
                         {riskInfo.level}
                       </span>
-                      <span className="text-xs text-[#8A93A3]">
+                      <span className="text-xs text-muted">
                         {position.leverage.toFixed(1)}x Leverage
                       </span>
                     </div>
@@ -188,7 +189,7 @@ export const PositionDetailModal = ({
                   onClick={onClose}
                   className="p-2 hover:bg-[#1E2532] rounded-lg transition-colors"
                 >
-                  <X size={20} className="text-[#8A93A3]" />
+                  <X size={20} className="text-muted" />
                 </button>
               </div>
 
@@ -204,8 +205,8 @@ export const PositionDetailModal = ({
                     onClick={() => setActiveTab(tab.id as typeof activeTab)}
                     className={`flex items-center gap-2 px-4 py-3 text-sm border-b-2 transition-colors ${
                       activeTab === tab.id
-                        ? 'border-[#00A3FF] text-[#00A3FF]'
-                        : 'border-transparent text-[#8A93A3] hover:text-white'
+                        ? 'border-accent text-accent'
+                        : 'border-transparent text-muted hover:text-white'
                     }`}
                   >
                     <tab.icon size={14} />
@@ -221,22 +222,22 @@ export const PositionDetailModal = ({
                     {/* Key Metrics Grid */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-4">
-                        <p className="text-xs text-[#8A93A3] mb-1">Current Price</p>
+                        <p className="text-xs text-muted mb-1">Current Price</p>
                         <p className="text-lg font-bold text-white font-mono">
                           {formatCurrency(position.currentPrice)}
                         </p>
                       </div>
                       <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-4">
-                        <p className="text-xs text-[#8A93A3] mb-1">Entry Price</p>
+                        <p className="text-xs text-muted mb-1">Entry Price</p>
                         <p className="text-lg font-bold text-white font-mono">
                           {formatCurrency(position.entryPrice)}
                         </p>
                       </div>
                       <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-4">
-                        <p className="text-xs text-[#8A93A3] mb-1">P&L</p>
+                        <p className="text-xs text-muted mb-1">P&L</p>
                         <p
                           className={`text-lg font-bold font-mono ${
-                            position.unrealizedPnL >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'
+                            position.unrealizedPnL >= 0 ? 'text-pos' : 'text-neg'
                           }`}
                         >
                           {position.unrealizedPnL >= 0 ? '+' : ''}
@@ -244,7 +245,7 @@ export const PositionDetailModal = ({
                         </p>
                         <p
                           className={`text-xs font-mono ${
-                            pnlPercentage >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'
+                            pnlPercentage >= 0 ? 'text-pos' : 'text-neg'
                           }`}
                         >
                           {pnlPercentage >= 0 ? '+' : ''}
@@ -252,11 +253,11 @@ export const PositionDetailModal = ({
                         </p>
                       </div>
                       <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-4">
-                        <p className="text-xs text-[#8A93A3] mb-1">Margin Ratio</p>
+                        <p className="text-xs text-muted mb-1">Margin Ratio</p>
                         <p
                           className={`text-lg font-bold font-mono ${
-                            riskInfo.color === '#FF3B3B'
-                              ? 'text-[#FF3B3B]'
+                            riskInfo.color === 'var(--color-neg)'
+                              ? 'text-neg'
                               : riskInfo.color === '#FF6B35'
                               ? 'text-[#FF6B35]'
                               : 'text-white'
@@ -270,25 +271,25 @@ export const PositionDetailModal = ({
                     {/* Secondary Metrics */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-4">
-                        <p className="text-xs text-[#8A93A3] mb-1">Position Size</p>
+                        <p className="text-xs text-muted mb-1">Position Size</p>
                         <p className="text-lg font-bold text-white font-mono">
                           {position.size} {position.symbol.split('-')[0]}
                         </p>
                       </div>
                       <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-4">
-                        <p className="text-xs text-[#8A93A3] mb-1">Collateral</p>
+                        <p className="text-xs text-muted mb-1">Collateral</p>
                         <p className="text-lg font-bold text-white font-mono">
                           {formatCurrency(position.collateral)}
                         </p>
                       </div>
                       <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-4">
-                        <p className="text-xs text-[#8A93A3] mb-1">Position Value</p>
+                        <p className="text-xs text-muted mb-1">Position Value</p>
                         <p className="text-lg font-bold text-white font-mono">
                           {formatCurrency(position.size * position.currentPrice)}
                         </p>
                       </div>
                       <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-4">
-                        <p className="text-xs text-[#8A93A3] mb-1">Liq. Price (Est.)</p>
+                        <p className="text-xs text-muted mb-1">Liq. Price (Est.)</p>
                         <p className="text-lg font-bold text-[#FF6B35] font-mono">
                           {formatCurrency(position.entryPrice * 0.85)}
                         </p>
@@ -298,57 +299,56 @@ export const PositionDetailModal = ({
                     {/* Price Chart */}
                     <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-4">
                       <h3 className="text-sm font-semibold text-white mb-4">Price History (24h)</h3>
-                      <div className="h-48">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={mockHistory}>
-                            <defs>
-                              <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop
-                                  offset="5%"
-                                  stopColor="#00A3FF"
-                                  stopOpacity={0.3}
-                                />
-                                <stop
-                                  offset="95%"
-                                  stopColor="#00A3FF"
-                                  stopOpacity={0}
-                                />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
-                            <XAxis
-                              dataKey="timestamp"
-                              tickFormatter={(t) => formatTime(t)}
-                              stroke="#484848"
-                              fontSize={10}
-                            />
-                            <YAxis
-                              domain={['dataMin - 100', 'dataMax + 100']}
-                              stroke="#484848"
-                              fontSize={10}
-                              tickFormatter={(v) => `$${v.toLocaleString()}`}
-                            />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: '#111111',
-                                border: '1px solid #1e1e1e',
-                                borderRadius: '8px',
-                              }}
-                              labelFormatter={(t) => formatTime(t as number)}
-                              formatter={(value: any) => [
-                                formatCurrency(Number(value)),
-                                'Price',
-                              ]}
-                            />
-                            <Area
-                              type="monotone"
-                              dataKey="price"
-                              stroke="#00A3FF"
-                              fill="url(#priceGradient)"
-                              strokeWidth={2}
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
+                      <div ref={historyChartRef} className="h-48">
+                        <AreaChart width={historyChartWidth} height={192} data={mockHistory}>
+                          <defs>
+                            <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop
+                                offset="5%"
+                                stopColor="var(--color-accent)"
+                                stopOpacity={0.3}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="var(--color-accent)"
+                                stopOpacity={0}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                          <XAxis
+                            dataKey="timestamp"
+                            tickFormatter={(t) => formatTime(t)}
+                            stroke="#484848"
+                            fontSize={10}
+                          />
+                          <YAxis
+                            domain={['dataMin - 100', 'dataMax + 100']}
+                            stroke="#484848"
+                            fontSize={10}
+                            tickFormatter={(v) => `$${v.toLocaleString()}`}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: '#111111',
+                              border: '1px solid #1e1e1e',
+                              borderRadius: '8px',
+                            }}
+                            labelFormatter={(t) => formatTime(t as number)}
+                            formatter={(value: any) => [
+                              formatCurrency(Number(value)),
+                              'Price',
+                            ]}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="price"
+                            stroke="var(--color-accent)"
+                            fill="url(#priceGradient)"
+                            strokeWidth={2}
+                            isAnimationActive={false}
+                          />
+                        </AreaChart>
                       </div>
                     </div>
                   </div>
@@ -359,7 +359,7 @@ export const PositionDetailModal = ({
                     <h3 className="text-sm font-semibold text-white mb-4">Position History</h3>
                     <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl overflow-hidden">
                       <table className="w-full text-sm">
-                        <thead className="bg-[#0a0907] text-[#8A93A3]">
+                        <thead className="bg-[#0a0907] text-muted">
                           <tr>
                             <th className="text-left p-3 font-medium">Time</th>
                             <th className="text-left p-3 font-medium">Price</th>
@@ -387,7 +387,7 @@ export const PositionDetailModal = ({
                     {/* Add Margin */}
                     <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6">
                       <div className="flex items-center gap-2 mb-4">
-                        <Plus size={18} className="text-[#00D98F]" />
+                        <Plus size={18} className="text-pos" />
                         <h3 className="text-sm font-semibold text-white">Add Margin</h3>
                       </div>
                       <div className="flex gap-3">
@@ -396,11 +396,11 @@ export const PositionDetailModal = ({
                           value={marginAmount}
                           onChange={(e) => setMarginAmount(e.target.value)}
                           placeholder="Amount in USDC"
-                          className="flex-1 px-4 py-2 bg-[#0a0907] border border-[#1e1e1e] rounded-lg text-white text-sm font-mono placeholder-[#484848] focus:outline-none focus:border-[#00A3FF]"
+                          className="flex-1 px-4 py-2 bg-[#0a0907] border border-[#1e1e1e] rounded-lg text-white text-sm font-mono placeholder-[#484848] focus:outline-none focus:border-accent"
                         />
                         <button
                           onClick={() => handleGatedAction(handleAddMargin)}
-                          className="px-6 py-2 bg-[#00D98F] text-white rounded-lg hover:bg-[#00C77E] transition-colors font-medium flex items-center gap-2"
+                          className="px-6 py-2 bg-pos text-white rounded-lg hover:bg-[#00C77E] transition-colors font-medium flex items-center gap-2"
                         >
                           {!isConnected && <Lock size={12} />}
                           Add
@@ -411,7 +411,7 @@ export const PositionDetailModal = ({
                           <button
                             key={amt}
                             onClick={() => setMarginAmount(amt.toString())}
-                            className="px-3 py-1 text-xs bg-[#0a0907] border border-[#1e1e1e] rounded text-[#8A93A3] hover:border-[#00A3FF] hover:text-white transition-colors"
+                            className="px-3 py-1 text-xs bg-[#0a0907] border border-[#1e1e1e] rounded text-muted hover:border-accent hover:text-white transition-colors"
                           >
                             +${amt}
                           </button>
@@ -431,7 +431,7 @@ export const PositionDetailModal = ({
                           value={deleverageAmount}
                           onChange={(e) => setDeleverageAmount(e.target.value)}
                           placeholder="Reduce by % (e.g., 20)"
-                          className="flex-1 px-4 py-2 bg-[#0a0907] border border-[#1e1e1e] rounded-lg text-white text-sm font-mono placeholder-[#484848] focus:outline-none focus:border-[#00A3FF]"
+                          className="flex-1 px-4 py-2 bg-[#0a0907] border border-[#1e1e1e] rounded-lg text-white text-sm font-mono placeholder-[#484848] focus:outline-none focus:border-accent"
                         />
                         <button
                           onClick={() => handleGatedAction(handleDeleverage)}
@@ -446,7 +446,7 @@ export const PositionDetailModal = ({
                           <button
                             key={pct}
                             onClick={() => setDeleverageAmount(pct.toString())}
-                            className="px-3 py-1 text-xs bg-[#0a0907] border border-[#1e1e1e] rounded text-[#8A93A3] hover:border-[#00A3FF] hover:text-white transition-colors"
+                            className="px-3 py-1 text-xs bg-[#0a0907] border border-[#1e1e1e] rounded text-muted hover:border-accent hover:text-white transition-colors"
                           >
                             -{pct}%
                           </button>
@@ -455,17 +455,17 @@ export const PositionDetailModal = ({
                     </div>
 
                     {/* Force Close */}
-                    <div className="bg-[#FF3B3B]/5 border border-[#FF3B3B]/20 rounded-xl p-6">
+                    <div className="bg-neg/5 border border-neg/20 rounded-xl p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="text-sm font-semibold text-[#FF3B3B]">Close Position</h3>
-                          <p className="text-xs text-[#8A93A3] mt-1">
+                          <h3 className="text-sm font-semibold text-neg">Close Position</h3>
+                          <p className="text-xs text-muted mt-1">
                             This will close the entire position at current market price
                           </p>
                         </div>
                         <button
                           onClick={() => handleGatedAction(handleForceClose)}
-                          className="px-6 py-2 bg-[#FF3B3B] text-white rounded-lg hover:bg-[#E82A2A] transition-colors font-medium flex items-center gap-2"
+                          className="px-6 py-2 bg-neg text-white rounded-lg hover:bg-[#E82A2A] transition-colors font-medium flex items-center gap-2"
                         >
                           {!isConnected && <Lock size={12} />}
                           Close Position

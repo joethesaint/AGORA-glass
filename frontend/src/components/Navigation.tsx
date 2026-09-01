@@ -25,8 +25,8 @@ export const Navigation = () => {
             key={link.href}
             to={link.href}
             className={`text-sm transition-colors ${pathname === link.href
-                ? 'text-[#00A3FF] font-semibold'
-                : 'text-[#8A93A3] hover:text-[#F2F2F2]'
+                ? 'text-accent font-semibold'
+                : 'text-muted hover:text-foreground'
               }`}
           >
             {link.name}
@@ -37,9 +37,9 @@ export const Navigation = () => {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="md:hidden p-2 hover:bg-[#1E2532] rounded-lg transition-colors"
+        className="md:hidden p-2 hover:bg-border rounded-lg transition-colors"
       >
-        {isOpen ? <X size={18} className="text-[#8A93A3]" /> : <Menu size={18} className="text-[#8A93A3]" />}
+        {isOpen ? <X size={18} className="text-muted" /> : <Menu size={18} className="text-muted" />}
       </button>
 
       {/* Mobile Menu */}
@@ -61,15 +61,15 @@ export const Navigation = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="md:hidden fixed right-0 top-0 bottom-0 w-64 bg-[#0B0E14] border-l border-[#1E2532] z-50 p-6 space-y-4"
+              className="md:hidden fixed right-0 top-0 bottom-0 w-64 bg-background border-l border-border z-50 p-6 space-y-4"
             >
               <div className="flex items-center justify-between mb-8">
                 <span className="text-lg font-bold text-white">Menu</span>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-[#1E2532] rounded-lg transition-colors"
+                  className="p-2 hover:bg-border rounded-lg transition-colors"
                 >
-                  <X size={18} className="text-[#8A93A3]" />
+                  <X size={18} className="text-muted" />
                 </button>
               </div>
 
@@ -79,8 +79,8 @@ export const Navigation = () => {
                   to={link.href}
                   onClick={() => setIsOpen(false)}
                   className={`block px-4 py-3 rounded-lg transition-colors ${pathname === link.href
-                      ? 'bg-[#00A3FF]/10 text-[#00A3FF] font-semibold'
-                      : 'text-[#8A93A3] hover:bg-[#1E2532] hover:text-[#F2F2F2]'
+                      ? 'bg-accent/10 text-accent font-semibold'
+                      : 'text-muted hover:bg-border hover:text-foreground'
                     }`}
                 >
                   {link.name}

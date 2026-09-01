@@ -6,7 +6,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
@@ -15,6 +14,7 @@ import {
   Legend,
   Cell,
 } from 'recharts';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 import {
   Activity,
   TrendingUp,
@@ -97,10 +97,10 @@ const generateRiskHeatmap = (): { positions: string[]; timeframes: string[]; dat
 // Generate scenario analysis data
 const generateScenarioData = (): ScenarioData[] => {
   return [
-    { scenario: 'Base Case', pnl: 12500, probability: 50, color: '#00D98F' },
-    { scenario: 'Bull (+20%)', pnl: 28000, probability: 25, color: '#00A3FF' },
+    { scenario: 'Base Case', pnl: 12500, probability: 50, color: 'var(--color-pos)' },
+    { scenario: 'Bull (+20%)', pnl: 28000, probability: 25, color: 'var(--color-accent)' },
     { scenario: 'Bear (-20%)', pnl: -8500, probability: 15, color: '#FF6B35' },
-    { scenario: 'Crash (-40%)', pnl: -22000, probability: 7, color: '#FF3B3B' },
+    { scenario: 'Crash (-40%)', pnl: -22000, probability: 7, color: 'var(--color-neg)' },
     { scenario: 'Moon (+50%)', pnl: 45000, probability: 3, color: '#A855F7' },
   ];
 };
@@ -110,17 +110,17 @@ const generateAllocationData = (): AllocationData[] => {
   return [
     { name: 'BTC', value: 35, color: '#FF6B35' },
     { name: 'ETH', value: 30, color: '#627EEA' },
-    { name: 'SOL', value: 15, color: '#00D98F' },
+    { name: 'SOL', value: 15, color: 'var(--color-pos)' },
     { name: 'AVAX', value: 10, color: '#E84142' },
-    { name: 'Others', value: 10, color: '#8A93A3' },
+    { name: 'Others', value: 10, color: 'var(--color-muted)' },
   ];
 };
 
 const riskColors = {
-  low: '#00D98F',
+  low: 'var(--color-pos)',
   medium: '#FFB800',
   high: '#FF6B35',
-  critical: '#FF3B3B',
+  critical: 'var(--color-neg)',
 };
 
 interface StatCardProps {
@@ -141,12 +141,13 @@ const StatCard = ({ title, value, subtitle, icon, trend }: StatCardProps) => (
       <div className="p-2 bg-[#0a0907] rounded-lg">{icon}</div>
     </div>
     <p className="text-2xl font-bold text-white font-mono">{value}</p>
-    <p className="text-xs text-[#8A93A3] mt-1">{title}</p>
+    <p className="text-xs text-muted mt-1">{title}</p>
     {subtitle && <p className="text-[10px] text-[#484848] mt-0.5">{subtitle}</p>}
   </motion.div>
 );
 
 export default function AnalyticsPage() {
+  const { ref: allocationChartRef, width: allocationChartWidth } = useContainerWidth<HTMLDivElement>();
   const [isLoading, setIsLoading] = useState(false);
   const { signals, status } = useAgentSignals();
 
@@ -168,9 +169,9 @@ export default function AnalyticsPage() {
     setAllocationData([
       { name: 'BTC', value: 35, color: '#FF6B35' },
       { name: 'ETH', value: 30, color: '#627EEA' },
-      { name: 'SOL', value: 15, color: '#00D98F' },
+      { name: 'SOL', value: 15, color: 'var(--color-pos)' },
       { name: 'AVAX', value: 10, color: '#E84142' },
-      { name: 'Others', value: 10, color: '#8A93A3' },
+      { name: 'Others', value: 10, color: 'var(--color-muted)' },
     ]);
   }, []);
 
@@ -219,28 +220,28 @@ export default function AnalyticsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Advanced Analytics</h1>
-          <p className="text-sm text-[#8A93A3] mt-1">
+          <p className="text-sm text-muted mt-1">
             Risk analysis, correlation matrices, and scenario modeling
           </p>
           <div className="flex items-center gap-2 mt-2">
             <span className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500' : 'bg-red-500'}`} />
-            <span className="text-xs text-[#8A93A3] uppercase">{status}</span>
+            <span className="text-xs text-muted uppercase">{status}</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#111111] border border-[#1e1e1e] rounded-lg text-sm text-[#8A93A3] hover:border-[#00A3FF] hover:text-white transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#111111] border border-[#1e1e1e] rounded-lg text-sm text-muted hover:border-accent hover:text-white transition-colors">
             <Filter size={14} />
             Filters
           </button>
           <button
             onClick={handleRefresh}
-            className={`p-2 bg-[#111111] border border-[#1e1e1e] rounded-lg hover:border-[#00A3FF] transition-colors ${
+            className={`p-2 bg-[#111111] border border-[#1e1e1e] rounded-lg hover:border-accent transition-colors ${
               isLoading ? 'animate-spin' : ''
             }`}
           >
-            <RefreshCw size={16} className="text-[#8A93A3]" />
+            <RefreshCw size={16} className="text-muted" />
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#111111] border border-[#1e1e1e] rounded-lg text-sm text-[#8A93A3] hover:border-[#00A3FF] hover:text-white transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#111111] border border-[#1e1e1e] rounded-lg text-sm text-muted hover:border-accent hover:text-white transition-colors">
             <Download size={14} />
             Export
           </button>
@@ -253,13 +254,13 @@ export default function AnalyticsPage() {
           title="Portfolio Value"
           value={formatCurrency(portfolioMetrics.totalValue)}
           subtitle="Live via WebSocket"
-          icon={<Layers size={18} className="text-[#00A3FF]" />}
+          icon={<Layers size={18} className="text-accent" />}
         />
         <StatCard
           title="Sharpe Ratio"
           value={portfolioMetrics.sharpeRatio}
           subtitle="Risk-adjusted return"
-          icon={<TrendingUp size={18} className="text-[#00D98F]" />}
+          icon={<TrendingUp size={18} className="text-pos" />}
         />
         <StatCard
           title="Max Drawdown"
@@ -271,7 +272,7 @@ export default function AnalyticsPage() {
           title="VaR (95%)"
           value={formatCurrency(portfolioMetrics.var95)}
           subtitle="Daily value at risk"
-          icon={<Target size={18} className="text-[#FF3B3B]" />}
+          icon={<Target size={18} className="text-neg" />}
         />
       </div>
 
@@ -290,7 +291,7 @@ export default function AnalyticsPage() {
                 {riskHeatmap.timeframes.map((tf) => (
                   <div
                     key={tf}
-                    className="p-2 text-xs text-[#8A93A3] text-center font-mono"
+                    className="p-2 text-xs text-muted text-center font-mono"
                   >
                     {tf}
                   </div>
@@ -330,7 +331,7 @@ export default function AnalyticsPage() {
                   className="w-3 h-3 rounded"
                   style={{ backgroundColor: color }}
                 />
-                <span className="text-xs text-[#8A93A3] capitalize">{level}</span>
+                <span className="text-xs text-muted capitalize">{level}</span>
               </div>
             ))}
           </div>
@@ -343,7 +344,7 @@ export default function AnalyticsPage() {
         {correlationData && (
           <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
             <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-              <Layers size={16} className="text-[#00A3FF]" />
+              <Layers size={16} className="text-accent" />
               Asset Correlation Matrix
             </h3>
             <div className="overflow-x-auto">
@@ -354,7 +355,7 @@ export default function AnalyticsPage() {
                   {correlationData.assets.slice(0, 8).map((asset) => (
                     <div
                       key={asset}
-                      className="p-1 text-[10px] text-[#8A93A3] text-center font-mono"
+                      className="p-1 text-[10px] text-muted text-center font-mono"
                     >
                       {asset}
                     </div>
@@ -408,7 +409,7 @@ export default function AnalyticsPage() {
                     <span className="text-sm text-white">{scenario.scenario}</span>
                     <span
                       className={`text-sm font-mono font-semibold ${
-                        scenario.pnl >= 0 ? 'text-[#00D98F]' : 'text-[#FF3B3B]'
+                        scenario.pnl >= 0 ? 'text-pos' : 'text-neg'
                       }`}
                     >
                       {scenario.pnl >= 0 ? '+' : ''}
@@ -425,7 +426,7 @@ export default function AnalyticsPage() {
                         }}
                       />
                     </div>
-                    <span className="text-xs text-[#8A93A3] font-mono w-10 text-right">
+                    <span className="text-xs text-muted font-mono w-10 text-right">
                       {scenario.probability}%
                     </span>
                   </div>
@@ -440,34 +441,33 @@ export default function AnalyticsPage() {
       {allocationData && (
         <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
           <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Activity size={16} className="text-[#00D98F]" />
+            <Activity size={16} className="text-pos" />
             Portfolio Allocation
           </h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={allocationData}>
-                  <PolarGrid stroke="#1e1e1e" />
-                  <PolarAngleAxis
-                    dataKey="name"
-                    tick={{ fill: '#8A93A3', fontSize: 12 }}
-                  />
-                  <PolarRadiusAxis
-                    angle={30}
-                    domain={[0, 40]}
-                    tick={{ fill: '#484848', fontSize: 10 }}
-                    tickCount={4}
-                  />
-                  <Radar
-                    name="Allocation"
-                    dataKey="value"
-                    stroke="#00A3FF"
-                    fill="#00A3FF"
-                    fillOpacity={0.3}
-                  />
-                  <Legend />
-                </RadarChart>
-              </ResponsiveContainer>
+            <div ref={allocationChartRef} className="h-64">
+              <RadarChart width={allocationChartWidth} height={256} data={allocationData}>
+                <PolarGrid stroke="#1e1e1e" />
+                <PolarAngleAxis
+                  dataKey="name"
+                  tick={{ fill: 'var(--color-muted)', fontSize: 12 }}
+                />
+                <PolarRadiusAxis
+                  angle={30}
+                  domain={[0, 40]}
+                  tick={{ fill: '#484848', fontSize: 10 }}
+                  tickCount={4}
+                />
+                <Radar
+                  name="Allocation"
+                  dataKey="value"
+                  stroke="var(--color-accent)"
+                  fill="var(--color-accent)"
+                  fillOpacity={0.3}
+                  isAnimationActive={false}
+                />
+                <Legend />
+              </RadarChart>
             </div>
             <div className="flex flex-col justify-center space-y-4">
               {allocationData.map((item) => (
@@ -486,7 +486,7 @@ export default function AnalyticsPage() {
                       }}
                     />
                   </div>
-                  <span className="text-sm font-mono text-[#8A93A3] w-12 text-right">
+                  <span className="text-sm font-mono text-muted w-12 text-right">
                     {item.value}%
                   </span>
                 </div>

@@ -11,9 +11,9 @@ interface Props {
 export const MarketRegimeBadge = ({ regime, volatility }: Props) => {
   const getColors = () => {
     switch (regime) {
-      case 'EXTREME_VOLATILITY': return 'text-[#FF3B3B] bg-[#FF3B3B]/10 border-[#FF3B3B]/20';
-      case 'RISK_OFF': return 'text-[#F5A623] bg-[#F5A623]/10 border-[#F5A623]/20';
-      default: return 'text-[#00D98F] bg-[#00D98F]/10 border-[#00D98F]/20';
+      case 'EXTREME_VOLATILITY': return 'text-neg bg-neg/10 border-neg/20';
+      case 'RISK_OFF': return 'text-warn bg-warn/10 border-warn/20';
+      default: return 'text-pos bg-pos/10 border-pos/20';
     }
   };
 

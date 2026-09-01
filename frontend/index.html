@@ -5,6 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AGORA Dashboard</title>
+    <script>
+      // Apply the saved theme before React mounts to avoid a flash of the
+      // wrong theme on load/refresh. Mirrors the read in themeStore.ts.
+      (function () {
+        try {
+          var raw = localStorage.getItem('agora-settings');
+          var theme = raw ? JSON.parse(raw).appearance?.theme : null;
+          document.documentElement.setAttribute('data-theme', theme === 'terminal' ? 'terminal' : 'glass');
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'glass');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

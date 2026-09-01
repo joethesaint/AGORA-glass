@@ -6,37 +6,22 @@ import { OnboardingWizard } from './OnboardingWizard';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isConnected } = useWalletStore();
-  const [isOnboarded, setIsOnboarded] = useState(false);
-  const [config, setConfig] = useState<{ account: string; vaultAmount: string; isMock: boolean } | null>(null);
+  const { isConnected, onboardingData, isOnboarded: walletIsOnboarded, setOnboardingData, setOnboarded } = useWalletStore();
   const [isReady, setIsReady] = useState(false);
 
-  // Check if we have persistent onboarding data
+  // Mark ready on mount to avoid hydration mismatch
   useEffect(() => {
-    try {
-      const savedConfig = localStorage.getItem('agora_sentinel_config');
-      if (savedConfig) {
-        const parsed = JSON.parse(savedConfig);
-        setConfig(parsed);
-        setIsOnboarded(true);
-      }
-    } catch (err) {
-      console.error('🛡️ GLASS: Failed to parse onboarding config', err);
-      localStorage.removeItem('agora_sentinel_config');
-    } finally {
-      setIsReady(true);
-    }
+    setIsReady(true);
   }, []);
-
-  const handleOnboardingComplete = (data: { account: string; vaultAmount: string; isMock: boolean }) => {
-    localStorage.setItem('agora_sentinel_config', JSON.stringify(data));
-    setConfig(data);
-    setIsOnboarded(true);
-  };
 
   if (!isReady) return <div className="min-h-screen bg-[#0B0E14]" />;
 
-  const isAuthorized = (isConnected || config?.isMock) && isOnboarded;
+  const isAuthorized = (isConnected || onboardingData?.isMock) && walletIsOnboarded;
+
+  const handleOnboardingComplete = (data: { account: string; vaultAmount: string; isMock: boolean }) => {
+    setOnboardingData(data);
+    setOnboarded(true);
+  };
 
   return (
     <div className="relative min-h-screen bg-[#0B0E14]">
