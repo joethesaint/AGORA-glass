@@ -1,5 +1,5 @@
-import asyncio
-import random
+import hashlib
+import json
 from src.base import BaseComponent
 from src.events import PositionUpdate, RiskVerdict, ReasoningTrace
 
@@ -38,6 +38,7 @@ class TradingAgent(BaseComponent):
                 rescue_amount_usdc=0,
                 evidence=[f"Margin {event.margin_ratio:.2f} < 0.20"],
                 risk_rating="MEDIUM",
-                reason_hash=f"0x{random.getrandbits(256):064x}",
-                reasoning_text=reasoning
+                reason_hash="0x" + hashlib.sha256(json.dumps(reasoning, sort_keys=True).encode()).hexdigest(),
+                reasoning_text=json.dumps(reasoning, sort_keys=True),
+                symbol=event.symbol,
             ))

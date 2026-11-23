@@ -5,6 +5,7 @@ import { AgentSignal, EventType } from '@/types/agent';
 import { AgentSignalSchema } from '@/types/schemas';
 import { triggerAlert } from '@/components/AlertSystem';
 import { useAnalyticsStore } from '@/stores/analyticsStore';
+import { DEMO_MODE, startDemoReplay } from '@/demo/demoReplay';
 
 let globalWs: WebSocket | null = null;
 let isConnecting = false;
@@ -123,6 +124,21 @@ export function useInitAgentSignals(url: string = 'ws://localhost:8765') {
       
       batch.forEach(raw => processSignal(raw));
     };
+
+    if (DEMO_MODE) {
+      // Hosted demo: no agent to connect to, so replay a recorded run.
+      isConnecting = false;
+      useAnalyticsStore.getState().setWsStatus('connected');
+      flushInterval = setInterval(flushMessages, 100);
+      startDemoReplay(
+        (raw) => messageBuffer.push(raw),
+        (err) => {
+          console.error('GLASS demo: could not load the recording', err);
+          useAnalyticsStore.getState().setWsStatus('disconnected');
+        },
+      );
+      return;
+    }
 
     const connect = () => {
       useAnalyticsStore.getState().setWsStatus('connecting');

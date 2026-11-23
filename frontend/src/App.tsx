@@ -10,6 +10,8 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { useWalletStore } from "@/stores/walletStore";
 import { sendWebSocketSignal, useInitAgentSignals } from "@/hooks/useAgentSignals";
+import { DEMO_MODE } from "@/demo/demoReplay";
+import { DemoBanner } from "@/demo/DemoBanner";
 
 // Pages — lazy-loaded per route so a visitor only downloads the page they land
 // on (e.g. /analytics and /performance both pull in recharts) instead of every
@@ -29,7 +31,7 @@ function App() {
   // Initialize the websocket connection ONCE, without triggering re-renders here.
   useInitAgentSignals();
 
-  if (!isOnboarded) {
+  if (!isOnboarded && !DEMO_MODE) {
     return (
       <ThemeProvider>
         <OnboardingWizard
@@ -47,11 +49,12 @@ function App() {
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-background text-foreground font-sans">
+        {DEMO_MODE && <DemoBanner />}
         <header className="flex justify-between items-center px-4 lg:px-6 py-4 border-b border-border sticky top-0 bg-background/80 backdrop-blur-sm z-50">
           <div className='flex items-center gap-4 lg:gap-8'>
             <button
               onClick={() => {
-                window.location.href = '/';
+                window.location.href = import.meta.env.BASE_URL;
               }}
               className="flex flex-col text-left hover:opacity-80 transition-opacity"
             >

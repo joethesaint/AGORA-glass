@@ -29,11 +29,31 @@ class RescueDispatcher(BaseComponent):
         self.vault = VaultService()
         self.jobs = JobService()
         
+        # Positions with a rescue in flight. The engine re-checks every tick,
+        # so without this one falling position would start a rescue per tick.
+        self._in_flight: set = set()
+
         self.subscribe(ReasoningTrace, self.on_reasoning_trace)
 
     @safe_handler("RescueDispatcher")
     async def on_reasoning_trace(self, event: ReasoningTrace):
         """Processes a reasoning trace to initiate on-chain and financial actions."""
+        # Only the sentinel's rescue decisions move money. Other agents' traces
+        # (e.g. the comparative trading agent's DELEVERAGE) are for audit only.
+        if event.action != "RESCUE_INITIATED":
+            return
+        key = (event.account, event.symbol)
+        if key in self._in_flight:
+            self.logger.debug("rescue_skipped_in_flight", account=event.account, symbol=event.symbol)
+            return
+        self._in_flight.add(key)
+        try:
+            await self._run_rescue(event)
+        finally:
+            self._in_flight.discard(key)
+
+    async def _run_rescue(self, event: ReasoningTrace):
+        """Runs one rescue cycle for a sentinel trace."""
         self.logger.info("rescue_cycle_start", reason_hash=event.reason_hash)
 
         # Notify that rescue is initiated
@@ -101,7 +121,8 @@ class RescueDispatcher(BaseComponent):
                 tx_hash=str(circle_tx_id) or "0xFAILED",
                 amount=event.rescue_amount_usdc,
                 reason_hash=event.reason_hash,
-                latency_ms=latency_ms
+                latency_ms=latency_ms,
+                symbol=event.symbol,
             )
         )
 

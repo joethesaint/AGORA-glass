@@ -22,8 +22,25 @@ class PerpMonitor(BaseComponent):
             self.logger.error("position_fetch_failure", reason="MONITOR_ACCOUNT_NOT_SET")
             self.mode = "mock"
             
-        from src.events import SimulateCrash
+        from src.events import SimulateCrash, RescueComplete
         self.subscribe(SimulateCrash, self.on_simulate_crash)
+        self.subscribe(RescueComplete, self.on_rescue_complete)
+
+    async def on_rescue_complete(self, event):
+        """Mock mode: a successful rescue tops the position back up.
+
+        Adds 10 points of margin (at least the 25% target) and caps leverage
+        at 5x (Cheng et al. 2021), so the simulation shows a position
+        recovering instead of staying critical forever. The lift also ends a
+        falling trend, which the engine treats as critical on its own.
+        """
+        if self.mode != "mock" or event.status != "SUCCESS":
+            return
+        state = self.mock_states.get(event.symbol)
+        if state:
+            state["margin"] = min(0.6, max(state["margin"] + 0.10, 0.25))
+            state["leverage"] = min(state["leverage"], 5.0)
+            self.logger.info("mock_position_rescued", symbol=event.symbol, new_margin=state["margin"])
 
     async def on_simulate_crash(self, event):
         if self.mode == "mock":
@@ -65,11 +82,12 @@ class PerpMonitor(BaseComponent):
                 state = self.mock_states[symbol]
                 
                 # Small random changes
-                state["margin"] += random.uniform(-0.02, 0.015) # Tendency to drift down slightly
+                state["margin"] += random.uniform(-0.010, 0.009)  # slow drift, slightly downward
                 state["price"] *= (1 + random.normalvariate(0, 0.001))
 
-                # Occasionally spike leverage or drop margin to trigger the engine
-                if random.random() < 0.1:
+                # Occasional shock (about one every 25 s per symbol at 4 Hz)
+                # pushes leverage past 5x so the engine has something to rescue
+                if random.random() < 0.01:
                     state["margin"] -= 0.08
                     state["leverage"] += 0.8
 

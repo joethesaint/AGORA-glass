@@ -95,6 +95,7 @@ class ReasoningTrace(BaseEvent):
         risk_rating (str): The risk rating string.
         reason_hash (str): The hex string hash of the reasoning text.
         reasoning_text (str): The full text explanation of the decision.
+        symbol (str): The position's market, when the trace is about one position.
     """
 
     agent_id: str
@@ -107,6 +108,7 @@ class ReasoningTrace(BaseEvent):
     risk_rating: str
     reason_hash: str
     reasoning_text: str
+    symbol: str = ""
 
 
 @dataclass(frozen=True)
@@ -142,6 +144,7 @@ class RescueComplete(BaseEvent):
         amount (float): The final amount moved.
         reason_hash (str): The hash of the reasoning trace that triggered this rescue.
         latency_ms (float): The time taken for the rescue cycle in milliseconds.
+        symbol (str): The position's market, when known.
     """
 
     status: str
@@ -149,6 +152,7 @@ class RescueComplete(BaseEvent):
     amount: float
     reason_hash: str
     latency_ms: float
+    symbol: str = ""
 
 
 @dataclass(frozen=True)

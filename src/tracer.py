@@ -98,6 +98,7 @@ class ReasoningTracer(BaseComponent):
             risk_rating="CRITICAL",
             reason_hash=f"0x{reason_hash}",
             reasoning_text=payload_json,  # Store full payload for verification
+            symbol=event.symbol,
         )
 
 
