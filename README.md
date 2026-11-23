@@ -2,6 +2,8 @@
 
 An AI agent that watches leveraged perpetual-futures positions and steps in before they are liquidated. Every decision it makes is written up as a reasoning trace, and the trace's hash is stored on Circle's Arc network, so anyone can check afterwards why the agent acted.
 
+**Live demo:** https://joethesaint.github.io/AGORA-glass/ (replays a recorded run of the agent on simulated positions; no real funds)
+
 Built by a team of four in two weeks for the **Agora Agents hackathon** (Circle × Arc, May 2026), tracks RFB 01 (perp trading agent) and RFB 06 (social trading intelligence).
 
 ## What works today
@@ -14,7 +16,7 @@ Built by a team of four in two weeks for the **Agora Agents hackathon** (Circle 
 | Reasoning tracer | Working, tested. JSON trace plus SHA-256 hash | `src/tracer.py` |
 | Rescue dispatcher | Working in mock mode. Live Circle and Arc calls are coded but have not been run against real infrastructure | `src/dispatcher.py`, `src/services/` |
 | Contracts | `AttributionRegistry`, `Vault` (agent-gated), `BondEscrow` | `contracts/contracts/` |
-| Dashboard | Vite + React, live over WebSocket | `frontend/` |
+| Dashboard | Vite + React, live over WebSocket; a demo mode replays a recorded run | `frontend/` |
 
 Not done yet: cross-chain moves through Circle Gateway, a measured live latency figure, and real users. The sub-500 ms rescue target has only been met in mock mode (`scripts/benchmark_latency.py`). See `docs/GAP_ANALYSIS.md`.
 
