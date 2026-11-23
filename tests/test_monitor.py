@@ -44,5 +44,8 @@ async def test_perp_monitor_mock_publish(monkeypatch):
     
     assert len(received_updates) >= 3
     assert received_updates[0].symbol == "BTC-PERP"
-    assert received_updates[0].margin_ratio == 0.35 # Updated to match monitor.py
-    assert received_updates[2].margin_ratio == 0.09
+    # The mock feed is a random walk, so check its contract, not fixed values
+    for update in received_updates:
+        assert 0.05 <= update.margin_ratio <= 0.6
+        assert update.leverage > 0
+        assert update.current_price > 0

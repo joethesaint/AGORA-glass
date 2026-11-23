@@ -66,14 +66,15 @@ class PerpMonitor(BaseComponent):
                 
                 # Small random changes
                 state["margin"] += random.uniform(-0.02, 0.015) # Tendency to drift down slightly
-                state["margin"] = max(0.05, min(0.6, state["margin"]))
-                
                 state["price"] *= (1 + random.normalvariate(0, 0.001))
-                
+
                 # Occasionally spike leverage or drop margin to trigger the engine
                 if random.random() < 0.1:
                     state["margin"] -= 0.08
                     state["leverage"] += 0.8
+
+                # Clamp after the spike so a mock margin ratio is never negative
+                state["margin"] = max(0.05, min(0.6, state["margin"]))
 
                 self.logger.info(
                     "position_fetch_success",

@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import traceback
 from collections import defaultdict
 from typing import Callable, Any, Dict, List, Type, TypeVar
 from src.events import BaseEvent
@@ -8,41 +7,6 @@ from src.events import BaseEvent
 T = TypeVar("T", bound=BaseEvent)
 
 _bus_logger = logging.getLogger("MessageBus")
-
-
-async def _safe_execute(cb: Callable, ev: BaseEvent, bus_publish: Callable) -> None:
-    """Module-level coroutine — defined once, reused for every subscriber call.
-
-    Keeping this outside the class and outside the publish loop means Python
-    does NOT allocate a new function object on each iteration of the subscriber
-    list, which was the previous behaviour when safe_execute was defined inside
-    the for-loop.
-    """
-    try:
-        if asyncio.iscoroutinefunction(cb):
-            await cb(ev)
-        else:
-            cb(ev)
-    except Exception as e:
-        from src.events import SystemError  # local import avoids circular dep at module load
-
-        err_msg = str(e)
-        tb_str = traceback.format_exc()
-        cb_name = getattr(cb, "__name__", repr(cb))
-        _bus_logger.error(
-            f"Error executing subscriber callback '{cb_name}': {err_msg}\n{tb_str}"
-        )
-        if not isinstance(ev, SystemError):
-            try:
-                await bus_publish(
-                    SystemError(
-                        module="MessageBus",
-                        message=f"Subscriber callback error: {err_msg}",
-                        error_type=type(e).__name__,
-                    )
-                )
-            except Exception as pub_err:
-                _bus_logger.critical(f"Failed to publish SystemError: {pub_err}")
 
 
 class MessageBus:
@@ -70,18 +34,46 @@ class MessageBus:
             return
 
         coros = []
+        coro_cbs = []
         for cb in subscribers:
             is_coro = self._is_coro_cache.get(cb, True)
             try:
                 if is_coro:
                     coros.append(cb(event))
+                    coro_cbs.append(cb)
                 else:
                     cb(event)
             except Exception as e:
-                _bus_logger.error(f"Sync callback error: {e}")
-        
+                await self._report_error(cb, event, e)
+
         if coros:
-            await asyncio.gather(*coros, return_exceptions=True)
+            results = await asyncio.gather(*coros, return_exceptions=True)
+            for cb, result in zip(coro_cbs, results):
+                if isinstance(result, Exception):
+                    await self._report_error(cb, event, result)
+
+    async def _report_error(self, cb: Callable, event: BaseEvent, err: Exception) -> None:
+        """Logs a subscriber failure and publishes it as a SystemError event.
+
+        A failing subscriber never stops the others. A SystemError handler that
+        fails is only logged, so an error can never loop back into the bus.
+        """
+        from src.events import SystemError  # local import avoids circular dep at module load
+
+        cb_name = getattr(cb, "__name__", repr(cb))
+        _bus_logger.error(f"Subscriber '{cb_name}' failed: {err}")
+        if isinstance(event, SystemError):
+            return
+        try:
+            await self.publish(
+                SystemError(
+                    module="MessageBus",
+                    message=f"Subscriber callback error: {err}",
+                    error_type=type(err).__name__,
+                )
+            )
+        except Exception as pub_err:
+            _bus_logger.critical(f"Failed to publish SystemError: {pub_err}")
 
     def unsubscribe(self, event_type: Type[T], callback: Callable[[T], Any]):
         """Removes a subscriber from an event type."""

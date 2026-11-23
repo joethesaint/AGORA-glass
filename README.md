@@ -1,170 +1,79 @@
-# Project GLASS: Gateway Liquidation Autonomous Safety Sentinel 🛡️
-> **Autonomous, Transparent Liquidation Protection for Perp Traders.**
+# AGORA-glass: a glass-box liquidation sentinel
 
-[![Live Dashboard](https://img.shields.io/badge/Live-Next.js%20Dashboard-0052ff?style=for-the-badge)](https://agora-glass-dashboard.vercel.app)
-[![Demo Video](https://img.shields.io/badge/Demo-3--Minute%20Video-e75480?style=for-the-badge)](https://loom.com/placeholder)
+An AI agent that watches leveraged perpetual-futures positions and steps in before they are liquidated. Every decision it makes is written up as a reasoning trace, and the trace's hash is stored on Circle's Arc network, so anyone can check afterwards why the agent acted.
 
----
+Built by a team of four in two weeks for the **Agora Agents hackathon** (Circle × Arc, May 2026), tracks RFB 01 (perp trading agent) and RFB 06 (social trading intelligence).
 
-## 1. The Hook & Core Mandates
-Retail leverage on decentralized perpetual exchanges averages ~60x, leaving
-professional traders highly vulnerable to liquidation cascades during sudden
-market volatility. Research shows that maintaining a tighter leverage band
-(3–5x) dramatically reduces margin-call risk, yet 24/7 manual monitoring is
-a practical impossibility.
+## What works today
 
-**Project GLASS** is an autonomous "Perp Safety Copilot" that defy the gravity
-of market crashes through two fundamental pillars:
-*   **Sub-500ms Rescue Dispatch:** A parallelized rescue pipeline — Circle
-    Developer-Controlled Wallets for the USDC transfer, alongside an Arc vault
-    authorization call — targets sub-500ms end-to-end. **Currently proven only
-    in mock mode** (`scripts/benchmark_latency.py`, all-simulated legs); the
-    live path has real-network SDK code but has never been run against real
-    Circle/Arc infrastructure or benchmarked. True cross-chain unification via
-    **Circle Gateway** (Circle's actual multi-chain product) is not yet
-    integrated — see `docs/GAP_ANALYSIS.md` for that roadmap item.
-*   **"Glass-Box" Transparency:** Every risk assessment and rescue decision is
-    backed by a structured **Reasoning-Trace**, permanently hashed and pinned
-    to the **Arc Network** for trustless verification.
+| Part | State | Where |
+| :--- | :--- | :--- |
+| Message bus and events | Working, tested | `src/bus.py`, `src/events.py` |
+| Position monitor | Mock feed working; live Hyperliquid feed coded, not load-tested | `src/monitor.py`, `src/market_monitor.py` |
+| Risk engine | Working, tested. Caps leverage at 5x and rescues toward a 25% margin ratio (Cheng et al. 2021) | `src/engine.py`, `src/risk_math.py` |
+| Reasoning tracer | Working, tested. JSON trace plus SHA-256 hash | `src/tracer.py` |
+| Rescue dispatcher | Working in mock mode. Live Circle and Arc calls are coded but have not been run against real infrastructure | `src/dispatcher.py`, `src/services/` |
+| Contracts | `AttributionRegistry`, `Vault` (agent-gated), `BondEscrow` | `contracts/contracts/` |
+| Dashboard | Vite + React, live over WebSocket | `frontend/` |
 
-GLASS enforces research-backed thresholds (Cheng et al. 2021), hard-capping
-leverage at **5x** and executing rescues to maintain a **25% target margin ratio**.
+Not done yet: cross-chain moves through Circle Gateway, a measured live latency figure, and real users. The sub-500 ms rescue target has only been met in mock mode (`scripts/benchmark_latency.py`). See `docs/GAP_ANALYSIS.md`.
 
----
-
-## 2. System Architecture
-
-AGORA-glass utilizes a decoupled architecture where an off-chain Python agent orchestrates high-speed risk assessment, while the Arc blockchain provides a sub-second settlement layer.
+## How it works
 
 ```mermaid
 flowchart TD
-    subgraph OffChain["Off-Chain Python Agent (Joe)"]
-        Monitor["PerpMonitor\n(Fetches live positions)"]
-        Engine["RiskEngine\n(Assesses margin & leverage)"]
-        Tracer["ReasoningTracer\n(JSON trace + SHA256 hash)"]
-        Dispatcher["RescueDispatcher\n(Circle DCW transfer + Vault call)"]
-        Bus(("MessageBus"))
-
-        Monitor -->|position_update| Bus
-        Bus -->|position_update| Engine
-        Engine -->|risk_verdict| Bus
-        Bus -->|risk_verdict| Tracer
-        Bus -->|"risk_verdict (CRITICAL)"| Dispatcher
-        Tracer -->|reasoning_trace, trace_pinned| Bus
-        Dispatcher -->|rescue_initiated, rescue_complete| Bus
+    subgraph Agent["Python agent"]
+        Monitor["PerpMonitor"] -->|PositionUpdate| Bus(("MessageBus"))
+        Bus --> Engine["RiskEngine"]
+        Engine -->|RiskVerdict| Bus
+        Bus --> Tracer["ReasoningTracer"]
+        Bus -->|CRITICAL| Dispatcher["RescueDispatcher"]
     end
-
-    subgraph OnChain["Arc Testnet (Ayo)"]
-        Registry["AttributionRegistry.sol\nstoreReason(bytes32)"]
-        Vault["Vault.sol\nUSDC custody, agent-gated rescue"]
+    subgraph Arc["Arc testnet"]
+        Registry["AttributionRegistry.sol"]
+        Vault["Vault.sol"]
     end
-
-    subgraph CircleStack["Circle Financial Stack"]
-        Wallets["Dev-Controlled Wallets\n(create_transaction, mock)"]
-        CLI["Arc CLI\n(RPC, updates, context)"]
-    end
-
-    subgraph Frontend["Frontend Dashboard (Andy)"]
-        UI["Next.js + WebSocket\nPosition health, rescue feed"]
-    end
-
-    Bus -.->|"WebSocket bridge"| UI
-    Tracer -->|store hash tx| Registry
-    Dispatcher -->|rescue release| Vault
-    Dispatcher -->|initiate transfer| Wallets
-    Vault -.->|funds managed by| Wallets
-    UI -.->|read events| Registry
-
-    style OffChain fill:none,stroke:#d4a017,stroke-width:2px,stroke-dasharray:5 5,color:#000
-    style OnChain fill:none,stroke:#0052ff,stroke-width:2px,stroke-dasharray:5 5,color:#000
-    style CircleStack fill:none,stroke:#6700eb,stroke-width:2px,stroke-dasharray:5 5,color:#000
-    style Frontend fill:none,stroke:#333,stroke-width:2px,stroke-dasharray:5 5,color:#000
+    Tracer -->|trace hash| Registry
+    Dispatcher -->|release| Vault
+    Dispatcher -->|USDC transfer| Wallets["Circle developer-controlled wallets"]
+    Bus -.->|WebSocket| UI["Dashboard (frontend/)"]
 ```
 
-### 🧠 Multi-Agent Architecture & Plugins
-AGORA-glass features a modular, extensible agent framework inspired by the **TradingAgents** multi-agent specification. 
-*   **Dual-Agent Switch:** Users can hot-swap between **Sentinel Mode** (reactive liquidation protection) and **Trading Agent Mode** (autonomous, proactive trading).
-*   **Remote Plugin Architecture:** The `RiskEngine` can act as a pure execution conduit, outsourcing all logic to an external AI model via a single `.env` URL.
+The bus is `asyncio`-based. A subscriber that fails never stops the others; the failure is logged and published as a `SystemError` event.
 
-Read the comprehensive guide here: **[Multi-Agent Architecture & TradingAgents Integration](./docs/PLUGINS_AND_AGENTS.md)**
+## Run it
 
-### Off-Chain Python Sentinel
-The core logic resides in a Python-based sentinel. Crucially, the internal `MessageBus` is built using **Python `asyncio` queues**, not OS-level threads. This ensures non-blocking, lightning-fast I/O coordination designed to match the sub-second finality of the Arc Network and the response times of Circle's Developer-Controlled Wallets API — real-network latency for both has not yet been benchmarked (see §1).
+```bash
+# Agent, with simulated positions (no keys needed)
+uv sync
+uv run python src/main.py --mode mock
 
----
+# Tests
+uv run pytest
 
-## 3. Quick Start: Running the Agent
+# Dashboard (in another terminal)
+cd frontend && npm ci && npm run dev
 
-To quickly get the sentinel up and running in your local environment, follow these steps:
+# Contracts
+cd contracts && npm ci && npx hardhat test
+```
 
-1.  **Bootstrap Environment:** Run `source .workflows/setup-env_improved.md` instructions to set up your `.env` and virtual environment.
-2.  **Start the Agent:**
-    ```bash
-    # Mock mode (Simulated data)
-    python src/main.py --mode mock
-    ```
-3.  **Detailed Guide:** For a full walkthrough including live trading, WebSocket bridging, and on-chain verification, see the **[Run-Agent Workflow Guide](./.workflows/run-agent_improved.md)**.
+For live mode, copy `.env.example` to `.env` and fill it in. `docs/TESTNET_GUIDE.md` covers the Arc testnet setup. Never commit `.env` or the `recovery/` folder that Circle's wallet setup creates.
 
----
+## Team
 
-## 4. Operator Details (Protocol Mastery)
-
-### Dual-Decimal Architecture
-Working on the Arc Network requires precision. Project GLASS correctly handles Arc's specific dual-decimal USDC environment:
-*   **Native USDC for Gas:** 18 Decimals.
-*   **ERC-20 USDC for Transfers:** 6 Decimals.
-
-Our smart contracts and agent logic strictly differentiate between these two to ensure gas sponsorship and cross-chain transfers are calculated with absolute accuracy, avoiding the common "decimal mismatch" trap that plagues multi-stack implementations.
-
-### Mature Engineering Standards
-The repository includes a strict contributor ruleset [`.skills/python-agent_improved.md`](./.skills/python-agent_improved.md) and automated TDD anchors for every module. We maintain a 100% test coverage requirement for all risk-calculating functions in the `RiskEngine`.
-
----
-
-## 4. Security Hygiene
-*   **Credential Management:** `CIRCLE_API_KEY` and `CIRCLE_ENTITY_SECRET` for Developer-Controlled Wallets are strictly managed via `.env.local` (correctly indexed in `.gitignore`).
-*   **RPC Policy:** No RPC URLs are hardcoded in the source. Connections are dynamically loaded via the `$RPC` environment variable, set securely using `arc-canteen shell-init`.
-*   **Vault Gating:** Financial rescues are protected by an `onlyAgent` modifier in `Vault.sol`, ensuring only the whitelisted sentinel address can trigger collateral release.
-
----
-
-## 5. Traction & Validation
-
-> "The ability to see exactly *why* my safety agent decided to move funds, with a verifiable hash on Arc, gives me the confidence to increase my exposure." 
-> — *Test User (Beta Trader #1, Hyperliquid Discord)*
-
-### Validation Metrics
-| Metric | Status |
+| Role | Person |
 | :--- | :--- |
-| **End-to-End Latency** | **487ms** (Verified in Mock Environment) |
-| **Reasoning Audit Trail** | 100% of actions generating on-chain hashes |
-| **User Beta** | 5 active traders monitoring testnet positions |
+| Agent architect (Python) | Joe ([@joethesaint](https://github.com/joethesaint)) |
+| On-chain engineer (Solidity) | Ayo |
+| Frontend | Andy |
+| DevRel and pitch | Lani |
 
----
+Team guides: `docs/team/`.
 
-## 6. Team & Build Flow
+## More
 
-| Role | Lead | Stack |
-| :--- | :--- | :--- |
-| **Agent Architect** | **Joe** | Python, asyncio, web3.py |
-| **On-chain Engineer** | **Ayo** | Solidity, Foundry/Hardhat |
-| **Full-stack/UX** | **Andy** | TS, React, viem/ethers |
-| **DevRel / Narrator** | **Lani** | Arc CLI, Storytelling |
-
-### 📅 Sprint Milestone: Week 1 Foundation (COMPLETE)
-- [x] Scaffold `MessageBus` & `asyncio` loop.
-- [x] Deploy `AttributionRegistry` & `Vault` to Arc Testnet.
-- [x] Implement dual-decimal precision (6 vs 18).
-- [x] Verify end-to-end "Observe-Decide-Act" sequence.
-
----
-
-## 7. Development Tools
-This project uses **ARC-cli** (`arc-canteen`) for progress tracking and documentation sync.
-- **Guide:** [ARC CLI Guide](./docs/ARC_CLI_GUIDE.md)
-- **Status:** `arc-canteen status`
-- **Traction Updates:** `arc-canteen update-traction`
-- **Hackathon Notes:** [HACKATHON.md](./docs/HACKATHON.md)
-
----
-*Maintained by the AGORA-glass Team.*
+- Architecture: `docs/ARCHITECTURE.md`, `docs/DIAGRAMS.md`
+- Plugins and agent modes: `docs/PLUGINS_AND_AGENTS.md`
+- Circle and Arc SDK notes: `docs/SDK_INTEGRATION.md`, `docs/arc_context.md`
+- Hackathon tooling (`arc-canteen`): `docs/HACKATHON.md`, `docs/ARC_CLI_GUIDE.md`

@@ -1,4 +1,0 @@
-quit()
-exit()
-exit
-quit
