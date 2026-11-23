@@ -1,0 +1,95 @@
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export const Navigation = () => {
+  const { pathname } = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const links = [
+    { name: 'Dashboard', href: '/' },
+    { name: 'Transparency', href: '/transparency' },
+    { name: 'Analytics', href: '/analytics' },
+    { name: 'Performance', href: '/performance' },
+    { name: 'About', href: '/about' },
+    { name: 'Settings', href: '/settings' },
+  ];
+
+  return (
+    <>
+      {/* Desktop Navigation */}
+      <nav className="hidden md:flex gap-6">
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            to={link.href}
+            className={`text-sm transition-colors ${pathname === link.href
+                ? 'text-accent font-semibold'
+                : 'text-muted hover:text-foreground'
+              }`}
+          >
+            {link.name}
+          </Link>
+        ))}
+      </nav>
+
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="md:hidden p-2 hover:bg-border rounded-lg transition-colors"
+      >
+        {isOpen ? <X size={18} className="text-muted" /> : <Menu size={18} className="text-muted" />}
+      </button>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="md:hidden fixed inset-0 bg-black/50 z-40"
+            />
+
+            {/* Menu */}
+            <motion.nav
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="md:hidden fixed right-0 top-0 bottom-0 w-64 bg-background border-l border-border z-50 p-6 space-y-4"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <span className="text-lg font-bold text-white">Menu</span>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 hover:bg-border rounded-lg transition-colors"
+                >
+                  <X size={18} className="text-muted" />
+                </button>
+              </div>
+
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`block px-4 py-3 rounded-lg transition-colors ${pathname === link.href
+                      ? 'bg-accent/10 text-accent font-semibold'
+                      : 'text-muted hover:bg-border hover:text-foreground'
+                    }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </motion.nav>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
